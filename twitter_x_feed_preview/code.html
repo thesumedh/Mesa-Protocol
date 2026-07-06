@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#76777d",
+                        "on-primary-container": "#7c839b",
+                        "on-background": "#191c1e",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#004395",
+                        "on-primary": "#ffffff",
+                        "background": "#f7f9fb",
+                        "on-surface-variant": "#45464d",
+                        "surface-bright": "#f7f9fb",
+                        "on-secondary-container": "#00714d",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#6cf8bb",
+                        "primary-fixed": "#dae2fd",
+                        "on-primary-fixed": "#131b2e",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#adc6ff",
+                        "tertiary-fixed": "#d8e2ff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary": "#006c49",
+                        "on-tertiary-fixed": "#001a42",
+                        "surface-container": "#eceef0",
+                        "surface-container-high": "#e6e8ea",
+                        "secondary-fixed-dim": "#4edea3",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container-low": "#f2f4f6",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#002113",
+                        "inverse-surface": "#2d3133",
+                        "surface-dim": "#d8dadc",
+                        "surface": "#f7f9fb",
+                        "primary-fixed-dim": "#bec6e0",
+                        "outline-variant": "#c6c6cd",
+                        "on-tertiary-container": "#3980f4",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#001a42",
+                        "tertiary": "#000000",
+                        "secondary-fixed": "#6ffbbe",
+                        "inverse-primary": "#bec6e0",
+                        "on-surface": "#191c1e",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "primary": "#000000",
+                        "on-secondary-fixed-variant": "#005236",
+                        "surface-tint": "#565e74",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary-container": "#131b2e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "margin-mobile": "16px",
+                        "xs": "4px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "margin-desktop": "48px",
+                        "gutter": "24px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Public Sans"],
+                        "headline-xl": ["Public Sans"],
+                        "body-lg": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "label-sm": ["Public Sans"],
+                        "headline-lg-mobile": ["Public Sans"],
+                        "headline-md": ["Public Sans"],
+                        "headline-lg": ["Public Sans"],
+                        "body-sm": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Public Sans', sans-serif;
+            background-color: #f7f9fb;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .twitter-container {
+            max-width: 600px;
+            width: 100%;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid #e2e8f0;
+        }
+        .vote-bar-shadow {
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+        }
+    </style>
+</head>
+<body class="flex justify-center items-start pt-12 min-h-screen">
+<div class="twitter-container px-4">
+<!-- Twitter Post Container -->
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md">
+<!-- Header: Profile Info -->
+<div class="p-md flex items-start gap-sm">
+<div class="flex-shrink-0">
+<div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional circular profile avatar for a fintech protocol. It features a minimalist geometric logo of a mesa or plateau in deep navy blue on a crisp white background. The lighting is clean and corporate, reflecting a modern light-mode aesthetic with a sense of financial stability and community trust." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFknSeyKaLitHGg4BIv-hkPFZb8150d-jG0SfALE4xp7q2P0FRMSjnMk2xvVlRqOj_giXDifmV4JHvroUSVbA_xC0hqLqIKpn-n3udy_EnYbDcVS86qTf-tax4WPosF73la-J6-0L7glyacHIoYlNj5zkkx5E-lmk1HA-LhhjAaX32-n_xmTcpTLMq9kf3E9wjFSqtxeNnVVB6IRCwujGgHpEnSIuzK8u9U1FbttP0JjDvG-u_MgAAE_Lg2xxycvmvG9IOFmSzDHEA"/>
+</div>
+</div>
+<div class="flex-grow">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<span class="font-label-md text-label-md text-primary">Mesa Protocol</span>
+<span class="material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">@mesaprotocol · 2h</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-primary mt-xs">
+                        📢 New Governance Proposal: MIP-24 is now live for community voting! We're proposing an update to the ROSCA Liquidity Pool incentives. 
+                        <br/><br/>
+                        Have your say on the future of Mesa. Vote now! 👇
+                    </p>
+</div>
+</div>
+<!-- Summary Card with Large Image -->
+<div class="mx-md mb-md border border-outline-variant rounded-xl overflow-hidden cursor-pointer group transition-all">
+<!-- Large Image Section -->
+<div class="relative aspect-[1.91/1] overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A high-fidelity fintech graphic for Mesa Protocol Governance. The scene features abstract 3D financial charts and a golden glowing orb representing a vote being cast. The color palette is composed of deep navy, emerald green, and pristine whites, with a clean corporate lighting setup. The text 'Mesa Governance' is visible in a bold, professional font." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAP9rTjO2xoWV1xPbP6YQq0k_u7RHDxachXCNGcA5hhy-e3uJ-bNuo2m6jK_SF4nj7XO7PPgVM-qHoHMlMy7zD87za2FBYfV-LaI9uTNRQjFYIb5Z7uYCa_iKyfgBl7SSe_1CiijDPSxU-dG9c2ljpZKXD0hwF84pTOMTMyvbkMJkgvS-lSX7dD8qPFzGNYTaiR0nF1t9zl1BP1GCk4M0LoqO_RC_ADIdjfKn2dgM3tvroh4KPpT7lADZa27knmXfc8T9GAkORBHTFW"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-md">
+<span class="text-white font-label-md text-label-md flex items-center gap-xs">
+<span class="material-symbols-outlined text-white">open_in_new</span> mesa.finance/gov
+                        </span>
+</div>
+</div>
+<!-- Card Details Section -->
+<div class="p-md bg-surface-container-lowest">
+<span class="font-label-sm text-label-sm text-on-surface-variant tracking-wider uppercase">GOVERNANCE PROPOSAL</span>
+<h3 class="font-headline-md text-headline-md text-primary mt-xs">MIP-24: ROSCA Yield Optimization &amp; Incentives Layer</h3>
+<!-- Voting Results Bar -->
+<div class="mt-lg">
+<div class="flex justify-between items-end mb-xs">
+<span class="font-label-md text-label-md text-primary">Current Results</span>
+<span class="font-label-md text-label-md text-on-surface-variant">42.5k Votes</span>
+</div>
+<div class="h-10 w-full bg-surface-container rounded-lg flex overflow-hidden vote-bar-shadow border border-outline-variant/10">
+<!-- Yes Bar (72%) -->
+<div class="h-full bg-secondary-container flex items-center px-md transition-all duration-1000" style="width: 72%;">
+<span class="font-label-md text-label-md text-on-secondary-container whitespace-nowrap">Yes (72%)</span>
+</div>
+<!-- No Bar (28%) -->
+<div class="h-full bg-error-container/30 flex items-center justify-end px-md transition-all duration-1000" style="width: 28%;">
+<span class="font-label-md text-label-md text-on-error-container whitespace-nowrap">No (28%)</span>
+</div>
+</div>
+</div>
+<!-- Footer Info (Countdown) -->
+<div class="mt-md pt-md border-t border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<div class="flex items-center gap-xs text-secondary">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+<span class="font-label-md text-label-md">Time Left: 2d 14h 05m</span>
+</div>
+</div>
+<div class="bg-primary text-on-primary px-lg py-sm rounded-full font-label-md text-label-md hover:bg-on-primary-fixed-variant transition-colors">
+                            Vote Now
+                        </div>
+</div>
+</div>
+</div>
+<!-- Twitter Interactions -->
+<div class="px-md pb-md flex items-center justify-between border-t border-outline-variant pt-sm">
+<div class="flex items-center gap-sm text-on-surface-variant group cursor-pointer">
+<div class="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-primary-fixed/20 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+</div>
+<span class="font-body-sm text-body-sm">124</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant group cursor-pointer">
+<div class="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-secondary-container/20 group-hover:text-on-secondary-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">cached</span>
+</div>
+<span class="font-body-sm text-body-sm">482</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant group cursor-pointer">
+<div class="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-error-container/20 group-hover:text-error transition-colors">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</div>
+<span class="font-body-sm text-body-sm">1.2k</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant group cursor-pointer">
+<div class="w-8 h-8 rounded-full flex items-center justify-center group-hover:bg-primary-fixed/20 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">bar_chart</span>
+</div>
+<span class="font-body-sm text-body-sm">45k</span>
+</div>
+<div class="flex items-center gap-sm text-on-surface-variant">
+<div class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-primary-fixed/20 hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">ios_share</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Help Tooltip (Visual cue for interaction) -->
+<div class="mt-xl text-center">
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Preview of the <span class="font-bold text-primary">Summary Card with Large Image</span> standard.
+            </p>
+</div>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const buttons = document.querySelectorAll('button, .cursor-pointer');
+            buttons.forEach(btn => {
+                btn.addEventListener('mousedown', () => {
+                    btn.classList.add('scale-95');
+                });
+                btn.addEventListener('mouseup', () => {
+                    btn.classList.remove('scale-95');
+                });
+                btn.addEventListener('mouseleave', () => {
+                    btn.classList.remove('scale-95');
+                });
+            });
+
+            // Simulate real-time interaction for voting
+            const voteBtn = document.querySelector('.bg-primary');
+            voteBtn.addEventListener('click', () => {
+                const currentText = voteBtn.innerText;
+                voteBtn.innerText = 'Redirecting...';
+                voteBtn.classList.replace('bg-primary', 'bg-secondary');
+                setTimeout(() => {
+                    voteBtn.innerText = currentText;
+                    voteBtn.classList.replace('bg-secondary', 'bg-primary');
+                }, 2000);
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mesa Protocol | Proposal MP-042</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#adc6ff",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#f7f9fb",
+                        "surface-container": "#eceef0",
+                        "outline": "#76777d",
+                        "tertiary-fixed": "#d8e2ff",
+                        "secondary": "#006c49",
+                        "on-primary-fixed": "#131b2e",
+                        "surface": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-variant": "#e0e3e5",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-background": "#191c1e",
+                        "primary-container": "#131b2e",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-surface": "#191c1e",
+                        "on-secondary-container": "#00714d",
+                        "error": "#ba1a1a",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "on-primary-container": "#7c839b",
+                        "on-surface-variant": "#45464d",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#e6e8ea",
+                        "primary-fixed": "#dae2fd",
+                        "tertiary": "#000000",
+                        "tertiary-container": "#001a42",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-tertiary-container": "#3980f4",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#001a42",
+                        "inverse-surface": "#2d3133",
+                        "on-secondary-fixed": "#002113",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-tertiary-fixed-variant": "#004395",
+                        "background": "#f7f9fb",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#6cf8bb",
+                        "primary": "#000000",
+                        "inverse-primary": "#bec6e0",
+                        "surface-tint": "#565e74",
+                        "outline-variant": "#c6c6cd",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "lg": "24px",
+                        "margin-mobile": "16px",
+                        "md": "16px",
+                        "margin-desktop": "48px",
+                        "xs": "4px",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Public Sans"],
+                        "label-md": ["Public Sans"],
+                        "headline-xl": ["Public Sans"],
+                        "body-sm": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "headline-md": ["Public Sans"],
+                        "body-lg": ["Public Sans"],
+                        "label-sm": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #f7f9fb;
+            font-family: 'Public Sans', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .vote-bar {
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid #E2E8F0;
+        }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- SideNavBar (Desktop) -->
+<aside class="fixed left-0 top-0 h-full flex flex-col p-md z-40 bg-surface-container-low border-r border-outline-variant w-64 hidden md:flex">
+<div class="mb-xl px-md">
+<h1 class="text-headline-md font-headline-md font-black text-primary">Mesa Protocol</h1>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Community Finance</p>
+</div>
+<nav class="flex-1 space-y-sm">
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined">group_work</span>
+<span class="text-label-md font-label-md">My Circles</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined">explore</span>
+<span class="text-label-md font-label-md">Explore</span>
+</a>
+<!-- Active Tab: Governance -->
+<a class="flex items-center gap-md bg-secondary-container text-on-secondary-container rounded-lg px-md py-sm font-semibold active:scale-95 duration-100" href="#">
+<span class="material-symbols-outlined">gavel</span>
+<span class="text-label-md font-label-md">Governance</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-all rounded-lg group" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="text-label-md font-label-md">Help</span>
+</a>
+</nav>
+<div class="mt-auto">
+<button class="w-full bg-primary text-on-primary py-md rounded-xl font-bold text-label-md hover:opacity-90 transition-opacity">
+                Create New Circle
+            </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-lg md:px-margin-desktop py-sm bg-surface-container-lowest shadow-sm border-b border-outline-variant sticky top-0 z-30">
+<div class="flex items-center gap-md">
+<button class="md:hidden p-sm">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden md:flex items-center gap-xs text-on-surface-variant">
+<span class="text-label-md font-label-md hover:text-primary cursor-pointer">Governance</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-label-md font-label-md text-primary font-bold">MP-042</span>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<div class="hidden lg:flex items-center bg-surface-container rounded-full px-md py-xs gap-sm border border-outline-variant">
+<span class="material-symbols-outlined text-on-surface-variant">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-48" placeholder="Search proposals..." type="text"/>
+</div>
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined p-sm hover:bg-surface-container rounded-full cursor-pointer">notifications</span>
+<span class="material-symbols-outlined p-sm hover:bg-surface-container rounded-full cursor-pointer">settings</span>
+<div class="w-10 h-10 rounded-full bg-primary-fixed-dim border-2 border-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a user in a clean, high-end fintech office environment, rendered with soft lighting and a modern, minimalist aesthetic that emphasizes trust and financial expertise." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAb9FgvQOsXcGuXoy9ZKXk1q9NZIU1GzZSa17Cu_W9qRGTEWX6sktCOrtDDhXpDddI95iDZzCEGaCHAiYtdtZN7npnkQgexqhZbatfWMajctuNT4ddp3oDzYYndthwlC-H-q5lJ4xnszU0O2tKFhMxfebVpZ9hH87HAwFursUc7kCUUjK-qyRkOaC8lteOzlnWLBC7KoUTrbZGKdrj_ZHCqE5SnZfeJ8_3-c8rBLJQ99ITKDOuMI5T18IYa9K3x3SU1FyQhBxMwOUXy"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Proposal Content Area -->
+<div class="flex-1 px-lg md:px-margin-desktop py-xl max-w-[1200px] mx-auto w-full">
+<!-- Header Section -->
+<div class="mb-xl flex flex-col md:flex-row md:items-end justify-between gap-md">
+<div class="space-y-sm">
+<div class="flex items-center gap-sm">
+<span class="px-md py-xs rounded-full bg-secondary-container text-on-secondary-container text-label-sm font-bold uppercase tracking-wider">Voting Open</span>
+<span class="text-label-sm text-on-surface-variant font-medium">MP-042 • Created Mar 24, 2024</span>
+</div>
+<h2 class="text-headline-xl font-headline-xl text-primary leading-tight">Replace Inactive Member: 0x4f...3a1</h2>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-xs px-md py-sm border border-outline-variant rounded-lg text-label-md font-bold hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">share</span> Share
+                    </button>
+<button class="flex items-center gap-xs px-md py-sm border border-outline-variant rounded-lg text-label-md font-bold hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">flag</span> Report
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Left Column: Details -->
+<div class="lg:col-span-8 space-y-gutter">
+<!-- Description Card -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant">
+<h3 class="text-headline-md font-headline-md text-primary mb-md">Rationale</h3>
+<div class="text-body-md text-on-surface-variant space-y-md">
+<p>This proposal addresses the consistent inactivity of member <code class="bg-surface-container px-xs rounded">0x4f...3a1</code> within the Diamond Savings Circle. The member has missed 2 consecutive contribution rounds, which has stalled the rotation and impacted the liquidity available to other participants.</p>
+<p>To ensure the health and continuity of the circle, we propose replacing them with <code class="bg-surface-container px-xs rounded">0x8a...2e4</code>. The new candidate has a verified credit score of 780+ on the Stellar network and has successfully completed 5 previous Mesa Protocol rotations.</p>
+</div>
+</div>
+<!-- Proposed Changes Table -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<h3 class="text-headline-md font-headline-md text-primary mb-md">Proposed Changes</h3>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="border-b border-outline-variant">
+<tr>
+<th class="py-sm text-label-sm font-bold text-on-surface-variant uppercase">Parameter</th>
+<th class="py-sm text-label-sm font-bold text-on-surface-variant uppercase">Old State</th>
+<th class="py-sm text-label-sm font-bold text-on-surface-variant uppercase">New State</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr>
+<td class="py-md text-label-md font-bold">Circle Participant 4</td>
+<td class="py-md text-body-md text-error">0x4f8...3a1 (Inactive)</td>
+<td class="py-md text-body-md text-secondary font-bold">0x8a1...2e4 (Candidate)</td>
+</tr>
+<tr>
+<td class="py-md text-label-md font-bold">Contribution Risk Level</td>
+<td class="py-md text-body-md text-on-surface-variant">High (Missed 2)</td>
+<td class="py-md text-body-md text-secondary font-bold">Low (0 Delinquencies)</td>
+</tr>
+<tr>
+<td class="py-md text-label-md font-bold">Rotation Weight</td>
+<td class="py-md text-body-md text-on-surface-variant">1.0x</td>
+<td class="py-md text-body-md text-on-surface-variant">1.0x</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Discussion Section -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant">
+<div class="flex items-center justify-between mb-lg">
+<h3 class="text-headline-md font-headline-md text-primary">Discussion</h3>
+<span class="text-label-sm font-bold text-on-surface-variant">12 Comments</span>
+</div>
+<div class="space-y-lg">
+<div class="flex gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container flex-shrink-0">
+<img class="w-full h-full rounded-full object-cover" data-alt="A close-up artistic portrait of a diverse digital finance professional in a bright, modern setting with soft pastel highlights and a sophisticated, professional corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-nQzovr3xTNvqPBpCOW_9BUazL149-u4y5bKmkIjYFpJ7DMtstYWJ7403dIMvZSFizmQjq_N6pOKeqp5H7xkM3k-L5siAwc_vRulYNbtc-FXMqrCgOaydd3jQ7EA4pzkfzOwfT29nLkar1TEFzfKBemlBdGs4PjfCJzVhqux2i7-G5m9w5TaFCWEzqAkRbTdpYs47uHpNhpc1LjPHmsbU9ed874QvliptesYNZzJnR84D2gZZnlR3bIJGz_1m1-x8n_fmDX12UNUL"/>
+</div>
+<div class="flex-1 space-y-sm">
+<div class="flex items-center gap-sm">
+<span class="text-label-md font-bold text-primary">stella_dev</span>
+<span class="text-label-sm text-on-surface-variant">2 hours ago</span>
+</div>
+<p class="text-body-md text-on-surface-variant">I've reviewed the candidate's history. Their collateralization ratio is well above the circle's minimum. Fully support this.</p>
+<div class="flex items-center gap-md">
+<button class="flex items-center gap-xs text-label-sm font-bold text-secondary">
+<span class="material-symbols-outlined text-[16px]">thumb_up</span> 14
+                                        </button>
+<button class="text-label-sm font-bold text-on-surface-variant">Reply</button>
+</div>
+</div>
+</div>
+<div class="pt-md border-t border-outline-variant flex gap-md">
+<div class="w-10 h-10 rounded-full bg-primary-fixed-dim flex-shrink-0"></div>
+<div class="flex-1">
+<textarea class="w-full p-md border border-outline-variant rounded-xl text-body-md focus:ring-primary focus:border-primary resize-none h-24 bg-surface-bright" placeholder="Add your perspective..."></textarea>
+<div class="flex justify-end mt-sm">
+<button class="bg-primary text-on-primary px-lg py-sm rounded-lg text-label-md font-bold">Post Comment</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Voting Box & Sidebar -->
+<div class="lg:col-span-4 space-y-gutter">
+<!-- Voting Box -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-lg border border-primary overflow-hidden relative">
+<div class="absolute top-0 right-0 p-lg opacity-10">
+<span class="material-symbols-outlined text-[64px]" style="font-variation-settings: 'FILL' 1;">how_to_vote</span>
+</div>
+<h3 class="text-headline-md font-headline-md text-primary mb-md">Cast Your Vote</h3>
+<div class="mb-lg p-md bg-surface-container rounded-xl border border-outline-variant flex items-center justify-between">
+<div>
+<p class="text-label-sm text-on-surface-variant uppercase tracking-wide">Your Voting Power</p>
+<p class="text-headline-md font-bold text-primary">500 USDC</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-[32px]">verified_user</span>
+</div>
+<!-- Live Results Chart -->
+<div class="space-y-md mb-xl">
+<div class="space-y-xs">
+<div class="flex justify-between text-label-sm font-bold">
+<span>YES</span>
+<span>72% (4,200 USDC)</span>
+</div>
+<div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+<div class="vote-bar h-full bg-secondary" style="width: 72%;"></div>
+</div>
+</div>
+<div class="space-y-xs">
+<div class="flex justify-between text-label-sm font-bold">
+<span>NO</span>
+<span>18% (1,100 USDC)</span>
+</div>
+<div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+<div class="vote-bar h-full bg-error" style="width: 18%;"></div>
+</div>
+</div>
+<div class="space-y-xs">
+<div class="flex justify-between text-label-sm font-bold">
+<span>ABSTAIN</span>
+<span>10% (600 USDC)</span>
+</div>
+<div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+<div class="vote-bar h-full bg-outline" style="width: 10%;"></div>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="grid grid-cols-1 gap-sm">
+<button class="w-full py-md bg-secondary text-on-secondary rounded-xl font-bold text-label-md flex items-center justify-center gap-md hover:opacity-90 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined">check_circle</span> Vote YES
+                            </button>
+<button class="w-full py-md bg-error text-on-error rounded-xl font-bold text-label-md flex items-center justify-center gap-md hover:opacity-90 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined">cancel</span> Vote NO
+                            </button>
+</div>
+</div>
+<!-- Timeline Card -->
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant">
+<h3 class="text-label-md font-bold text-primary mb-lg uppercase tracking-wider">Proposal Timeline</h3>
+<div class="relative space-y-lg pl-lg border-l-2 border-outline-variant ml-sm">
+<div class="relative">
+<div class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-secondary ring-4 ring-secondary-container"></div>
+<p class="text-label-md font-bold text-primary">Created</p>
+<p class="text-body-sm text-on-surface-variant">Mar 24, 10:00 AM</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-secondary ring-4 ring-secondary-container"></div>
+<p class="text-label-md font-bold text-primary">Reached Quorum</p>
+<p class="text-body-sm text-on-surface-variant">Mar 25, 02:30 PM</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-surface-container border-2 border-outline"></div>
+<p class="text-label-md font-bold text-primary">Ends In</p>
+<p class="text-headline-md font-bold text-error">47h 12m</p>
+</div>
+</div>
+</div>
+<!-- Verification Panel -->
+<div class="bg-primary-container p-lg rounded-xl text-on-primary shadow-sm">
+<div class="flex items-center gap-md mb-md">
+<span class="material-symbols-outlined text-secondary-fixed">shield_with_heart</span>
+<h3 class="text-label-md font-bold">On-Chain Verification</h3>
+</div>
+<p class="text-body-sm text-on-primary-container mb-lg">This proposal is executed via a Soroban smart contract on the Stellar network. Code is immutable and open-source.</p>
+<a class="inline-flex items-center gap-xs text-secondary-fixed text-label-md font-bold hover:underline transition-all" href="#">
+                            View Soroban Contract State <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="w-full py-xl px-margin-desktop flex flex-col md:flex-row justify-between items-center mt-auto border-t border-outline-variant bg-surface-container">
+<div class="flex flex-col gap-xs items-center md:items-start mb-lg md:mb-0">
+<span class="text-label-md font-label-md font-bold text-primary">Mesa Protocol</span>
+<p class="text-body-sm font-body-sm text-on-surface-variant">© 2024 Mesa Protocol. Powered by Stellar.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-lg">
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm" href="#">Documentation</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm" href="#">Terms of Service</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm" href="#">Community Support</a>
+</div>
+</footer>
+</main>
+<script>
+        // Simple micro-interaction for vote button scaling
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.classList.add('scale-95');
+            });
+            button.addEventListener('mouseup', () => {
+                button.classList.remove('scale-95');
+            });
+            button.addEventListener('mouseleave', () => {
+                button.classList.remove('scale-95');
+            });
+        });
+
+        // Simulating some real-time updates to the chart
+        setInterval(() => {
+            const bars = document.querySelectorAll('.vote-bar');
+            bars.forEach(bar => {
+                const currentWidth = parseFloat(bar.style.width);
+                const jitter = (Math.random() - 0.5) * 0.5;
+                const newWidth = Math.min(Math.max(currentWidth + jitter, 1), 99);
+                bar.style.width = `${newWidth}%`;
+            });
+        }, 5000);
+    </script>
+</body></html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Mesa Protocol | Governance Feed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#6cf8bb",
+                        "tertiary-container": "#001a42",
+                        "tertiary": "#000000",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#7c839b",
+                        "surface-container-low": "#f2f4f6",
+                        "primary-fixed": "#dae2fd",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#131b2e",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#eceef0",
+                        "surface-bright": "#f7f9fb",
+                        "outline-variant": "#c6c6cd",
+                        "on-primary-fixed": "#131b2e",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-tertiary-fixed": "#001a42",
+                        "background": "#f7f9fb",
+                        "primary": "#000000",
+                        "on-background": "#191c1e",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#bec6e0",
+                        "on-surface": "#191c1e",
+                        "surface-variant": "#e0e3e5",
+                        "outline": "#76777d",
+                        "surface-tint": "#565e74",
+                        "on-secondary-fixed": "#002113",
+                        "tertiary-fixed": "#d8e2ff",
+                        "on-error": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "tertiary-fixed-dim": "#adc6ff",
+                        "surface-dim": "#d8dadc",
+                        "surface": "#f7f9fb",
+                        "on-secondary-container": "#00714d",
+                        "inverse-on-surface": "#eff1f3",
+                        "error-container": "#ffdad6",
+                        "surface-container-high": "#e6e8ea",
+                        "secondary-fixed-dim": "#4edea3",
+                        "secondary": "#006c49",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2d3133",
+                        "on-tertiary-fixed-variant": "#004395",
+                        "on-tertiary-container": "#3980f4",
+                        "on-surface-variant": "#45464d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "base": "4px",
+                        "margin-desktop": "48px",
+                        "lg": "24px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-xl": ["Public Sans"],
+                        "headline-md": ["Public Sans"],
+                        "label-sm": ["Public Sans"],
+                        "body-sm": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "headline-lg": ["Public Sans"],
+                        "label-md": ["Public Sans"],
+                        "headline-lg-mobile": ["Public Sans"],
+                        "body-lg": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Public Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .social-feed-container {
+            max-width: 600px;
+            margin: 40px auto;
+        }
+        .gloss-effect {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen">
+<!-- Top Navigation Shell -->
+<header class="bg-surface-container-lowest shadow-sm border-b border-outline-variant flex justify-between items-center w-full px-lg md:px-margin-desktop py-sm fixed top-0 z-50">
+<div class="flex items-center gap-sm">
+<span class="text-headline-md font-headline-md font-bold text-primary tracking-tight">Mesa Protocol</span>
+</div>
+<div class="hidden md:flex items-center gap-xl">
+<a class="text-primary font-bold border-b-2 border-primary py-xs text-label-md font-label-md" href="#">Explore</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Governance</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Circles</a>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">settings</span>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A clean, professional headshot of a diverse tech professional for a wallet profile avatar. The background is a soft, blurred office setting with high-key lighting, maintaining a modern and trustworthy corporate fintech aesthetic with neutral tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAsQNL0zcEAaus0ZlWOUWXMGDR1q0GY0cBtuL8sOyRWajrl5bpRTluSBFrnEzdyN0kgAnmLE_EzBVkK9CQI9n2gGwrVC-DK2KV7S8_bOLOJlNjGYWjr0C1aKieObI9b1NCsVG_PZIT1ewakRfQutiTKXK-ZrgFx6wHq-XH8VGGvOROaC_wWal1d6cVbV2chXkntw-aa4nvRitvwuuEBs2ZHu2sVsKBR3v7QI_LKniVDhZYgv3DjZ8DaxOnl6g6k8GgOj9eD4IuN-he">
+</div>
+</div>
+</header>
+<main class="pt-24 pb-20 px-margin-mobile md:px-margin-desktop">
+<!-- Social Feed Simulation Container -->
+<div class="social-feed-container bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<!-- Feed Header (User Info) -->
+<div class="p-md flex gap-md">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A minimalist brand logo for Mesa Protocol, featuring a stylized geometric M shape in vibrant emerald green on a deep navy blue background. The style is clean, corporate, and professional, suggesting trust and financial stability in a modern digital ecosystem." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjym3zb1kbQNPkxoWg-AdKnlrx7HX7SIrSMpIYUp-_3jN5OG0wgVkXwBeup34I4K3KSLbBrqc5seYbuVR_-fV-kCOxYWkNZSWt29--PKzK7rRBI3dcgV_3J1fq5v4CLb3FQoLtq-Fz_PGh8S36zNOYXgQGfAsXHDIUrIsghUuR9EhbOD-3dzu_T9t82MP2TAuDuWzUqeIW6drAgLymBkl6VCFQKuT1iJOcPqPYWZP0ZJHZn4UXOEDaliRh7LaPaZrfVJsnelxISFf5">
+</div>
+<div class="flex-1">
+<div class="flex items-center gap-xs">
+<span class="font-bold text-body-md font-body-md text-primary">Mesa Protocol</span>
+<span class="material-symbols-outlined text-[16px] text-secondary" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="text-on-surface-variant text-body-sm font-body-sm">@mesa_protocol · 2h</span>
+</div>
+<p class="mt-xs text-on-surface text-body-md font-body-md">
+                        New Governance Proposal: Help shape the future of our community pools. Every vote counts toward our shared stability. 🏛️✨
+                    </p>
+<!-- THE OPEN GRAPH / LINK PREVIEW CARD -->
+<div class="mt-md rounded-xl border border-outline-variant overflow-hidden bg-surface shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+<!-- Featured Image/Visual -->
+<div class="relative h-48 w-full bg-primary-container overflow-hidden">
+
+<div class="absolute inset-0 p-lg flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<div class="bg-secondary-container text-on-secondary-container px-md py-xs rounded-full flex items-center gap-xs shadow-sm">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Voting Open</span>
+</div>
+<div class="text-white/80 text-label-sm font-label-sm">
+                                        MP-042
+                                    </div>
+</div>
+<div>
+<h3 class="text-white text-headline-md font-headline-md">Adjust Minimum Collateral Ratio</h3>
+<p class="text-white/70 text-body-sm font-body-sm mt-xs">Mesa Protocol | Community Finance</p>
+</div>
+</div>
+</div>
+<!-- Card Body (Data) -->
+<div class="p-lg space-y-md bg-surface-container-lowest">
+<!-- Progress Stats -->
+<div class="space-y-sm">
+<div class="flex justify-between items-end">
+<span class="text-label-md font-label-md text-secondary">Yes (72%)</span>
+<span class="text-label-md font-label-md text-on-surface-variant">No (28%)</span>
+</div>
+<div class="h-3 w-full bg-surface-container-high rounded-full overflow-hidden flex">
+<div class="h-full bg-secondary transition-all duration-700" style="width: 72%;"></div>
+<div class="h-full bg-outline-variant/50" style="width: 28%;"></div>
+</div>
+</div>
+<!-- Meta Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-md pt-sm border-t border-outline-variant">
+<div class="flex flex-col">
+<span class="text-on-surface-variant text-label-sm font-label-sm">Quorum</span>
+<div class="flex items-center gap-xs">
+<span class="text-primary font-bold text-body-md font-body-md">84% reached</span>
+<span class="material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="text-on-surface-variant text-label-sm font-label-sm">Time left</span>
+<span class="text-primary font-bold text-body-md font-body-md">2d 14h</span>
+</div>
+<div class="flex flex-col">
+<span class="text-on-surface-variant text-label-sm font-label-sm">Total Voters</span>
+<span class="text-primary font-bold text-body-md font-body-md">142</span>
+</div>
+<div class="flex flex-col">
+<span class="text-on-surface-variant text-label-sm font-label-sm">Avg. Contribution</span>
+<span class="text-primary font-bold text-body-md font-body-md">320 XLM</span>
+</div>
+</div>
+</div>
+<!-- CTA Overlay on Hover (Visual only) -->
+<div class="p-sm bg-surface-container-low border-t border-outline-variant text-center text-label-md font-label-md text-on-surface-variant group-hover:text-primary transition-colors">
+                            app.mesaprotocol.eth
+                        </div>
+</div>
+<!-- Social Interaction Buttons -->
+<div class="mt-md flex justify-between max-w-sm">
+<button class="flex items-center gap-xs text-on-surface-variant hover:text-on-tertiary-container transition-colors group">
+<span class="material-symbols-outlined p-sm rounded-full group-hover:bg-surface-container-high">chat_bubble</span>
+<span class="text-label-sm font-label-sm">24</span>
+</button>
+<button class="flex items-center gap-xs text-on-surface-variant hover:text-secondary transition-colors group">
+<span class="material-symbols-outlined p-sm rounded-full group-hover:bg-secondary-container/20">repeat</span>
+<span class="text-label-sm font-label-sm">118</span>
+</button>
+<button class="flex items-center gap-xs text-on-surface-variant hover:text-error transition-colors group">
+<span class="material-symbols-outlined p-sm rounded-full group-hover:bg-error-container/20">favorite</span>
+<span class="text-label-sm font-label-sm">456</span>
+</button>
+<button class="flex items-center gap-xs text-on-surface-variant hover:text-primary transition-colors group">
+<span class="material-symbols-outlined p-sm rounded-full group-hover:bg-surface-container-high">bar_chart</span>
+<span class="text-label-sm font-label-sm">12k</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined p-sm rounded-full hover:bg-surface-container-high">share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Secondary Feed Item (Contrast) -->
+<div class="social-feed-container mt-lg opacity-60">
+<div class="p-md flex gap-md">
+<div class="w-12 h-12 rounded-full bg-surface-container-high"></div>
+<div class="flex-1 space-y-sm">
+<div class="h-4 bg-surface-container-high rounded w-1/3"></div>
+<div class="h-4 bg-surface-container-high rounded w-full"></div>
+<div class="h-4 bg-surface-container-high rounded w-3/4"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-xl px-margin-desktop flex flex-col md:flex-row justify-between items-center bg-surface-container border-t border-outline-variant">
+<div class="flex flex-col gap-xs mb-lg md:mb-0">
+<span class="text-label-md font-label-md font-bold text-primary">Mesa Protocol</span>
+<p class="text-on-surface-variant text-body-sm font-body-sm">© 2024 Mesa Protocol. Powered by Stellar.</p>
+</div>
+<div class="flex gap-lg flex-wrap justify-center">
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm" href="#">Documentation</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm" href="#">Terms of Service</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm" href="#">Community Support</a>
+</div>
+</footer>
+<!-- Side Navigation (Web) -->
+<nav class="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant flex-col p-md z-40 pt-24">
+<div class="flex flex-col gap-sm">
+<div class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-all rounded-lg cursor-pointer">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</div>
+<div class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-all rounded-lg cursor-pointer">
+<span class="material-symbols-outlined">group_work</span>
+<span class="text-label-md font-label-md">My Circles</span>
+</div>
+<div class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-all rounded-lg cursor-pointer">
+<span class="material-symbols-outlined">explore</span>
+<span class="text-label-md font-label-md">Explore</span>
+</div>
+<div class="flex items-center gap-md bg-secondary-container text-on-secondary-container rounded-lg px-md py-sm font-semibold scale-95 duration-100">
+<span class="material-symbols-outlined">gavel</span>
+<span class="text-label-md font-label-md">Governance</span>
+</div>
+<div class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-all rounded-lg cursor-pointer">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="text-label-md font-label-md">Help</span>
+</div>
+</div>
+<button class="mt-xl bg-primary text-on-primary py-md px-lg rounded-xl font-bold flex items-center justify-center gap-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="">Create New Circle</span>
+</button>
+</nav>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container-lowest shadow-lg border-t border-outline-variant flex justify-around items-center py-sm z-50">
+<div class="flex flex-col items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] font-label-sm">Home</span>
+</div>
+<div class="flex flex-col items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined">explore</span>
+<span class="text-[10px] font-label-sm">Explore</span>
+</div>
+<div class="flex flex-col items-center gap-xs text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">gavel</span>
+<span class="text-[10px] font-bold">Vote</span>
+</div>
+<div class="flex flex-col items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="text-[10px] font-label-sm">Wallet</span>
+</div>
+</nav>
+<script>
+        // Micro-interactions for social buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const icon = this.querySelector('.material-symbols-outlined');
+                if (icon) {
+                    icon.style.transform = 'scale(1.3)';
+                    setTimeout(() => {
+                        icon.style.transform = 'scale(1)';
+                    }, 200);
+                }
+            });
+        });
+    </script>
+
+
+</body></html>

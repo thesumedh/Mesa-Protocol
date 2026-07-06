@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Family Tanda - Mesa Protocol</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#d8dadc",
+                        "surface-container-high": "#e6e8ea",
+                        "primary-container": "#131b2e",
+                        "on-secondary-fixed-variant": "#005236",
+                        "outline-variant": "#c6c6cd",
+                        "on-background": "#191c1e",
+                        "tertiary-container": "#001a42",
+                        "on-surface-variant": "#45464d",
+                        "on-secondary": "#ffffff",
+                        "primary": "#000000",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-tertiary-container": "#3980f4",
+                        "tertiary-fixed-dim": "#adc6ff",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-tertiary": "#ffffff",
+                        "background": "#f7f9fb",
+                        "secondary-container": "#6cf8bb",
+                        "tertiary-fixed": "#d8e2ff",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container-low": "#f2f4f6",
+                        "primary-fixed": "#dae2fd",
+                        "on-primary-fixed": "#131b2e",
+                        "secondary-fixed": "#6ffbbe",
+                        "surface-tint": "#565e74",
+                        "tertiary": "#000000",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#001a42",
+                        "on-tertiary-fixed-variant": "#004395",
+                        "on-error": "#ffffff",
+                        "surface": "#f7f9fb",
+                        "on-secondary-container": "#00714d",
+                        "outline": "#76777d",
+                        "inverse-surface": "#2d3133",
+                        "inverse-primary": "#bec6e0",
+                        "surface-container": "#eceef0",
+                        "on-surface": "#191c1e",
+                        "primary-fixed-dim": "#bec6e0",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#002113",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-primary-container": "#7c839b",
+                        "secondary": "#006c49"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "md": "16px",
+                        "margin-mobile": "16px",
+                        "xs": "4px",
+                        "margin-desktop": "48px",
+                        "base": "4px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Public Sans"],
+                        "label-md": ["Public Sans"],
+                        "label-sm": ["Public Sans"],
+                        "headline-lg-mobile": ["Public Sans"],
+                        "body-md": ["Public Sans"],
+                        "headline-md": ["Public Sans"],
+                        "body-sm": ["Public Sans"],
+                        "headline-xl": ["Public Sans"],
+                        "body-lg": ["Public Sans"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            font-family: 'Public Sans', sans-serif;
+            background-color: #f7f9fb;
+        }
+        .rotation-wheel-container {
+            position: relative;
+            width: 340px;
+            height: 340px;
+        }
+        .wheel-member {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- Top Navigation Shell -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-gutter py-md bg-surface-container-lowest shadow-sm">
+<div class="flex items-center gap-xl">
+<span class="font-headline-lg text-headline-lg font-black text-primary">Mesa</span>
+<div class="hidden md:flex gap-lg">
+<a class="text-primary font-bold border-b-2 border-primary py-xs font-label-md text-label-md" href="#">Dashboard</a>
+<a class="text-on-surface-variant font-medium hover:bg-surface-container-low transition-colors duration-200 px-sm py-xs rounded font-label-md text-label-md" href="#">My Circles</a>
+<a class="text-on-surface-variant font-medium hover:bg-surface-container-low transition-colors duration-200 px-sm py-xs rounded font-label-md text-label-md" href="#">Explore</a>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-sm rounded-full hover:bg-surface-container-low transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<div class="flex items-center gap-sm bg-surface-container px-md py-xs rounded-full">
+<span class="material-symbols-outlined text-primary">account_balance_wallet</span>
+<span class="font-label-md text-label-md">2,450 USDC</span>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-outline-variant object-cover" data-alt="A professional high-resolution studio portrait of a modern fintech user, smiling warmly. The aesthetic is clean and professional with soft directional lighting and a shallow depth of field against a minimalist neutral gray background, fitting a high-end corporate financial application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKRloN8Ks1SRkp6iTiUmGwZKkwLRkDaumg54h3mqsHIv4mAjnN1gxWmuB7Oy_aJHi-ZcdFZ_pe_CsWiqcLZYnQuI4Zo5OH8h3kPxE1QLa2_SUiCNrkGUvdmDu4enJDmTsy_DKFVh2TX3FRi-arQPPF_KTUrqAtYLp4Ed-RdGcwwomQG2Qzuphy6kuGI8q492iNyNb_0qPb-UoVWytcB9WRsw3gWpdaxGlyJNk97CWlZl-JBPVLh51ynyiXC8TdxptZq81Ak-MDbZ8V"/>
+</div>
+</nav>
+<!-- Side Navigation Shell (Desktop) -->
+<aside class="hidden lg:flex flex-col h-screen fixed left-0 top-0 pt-24 pb-lg px-md w-64 bg-surface-container-low border-r border-outline-variant z-40">
+<div class="px-md mb-xl">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Mesa Protocol</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Community Finance</p>
+</div>
+<nav class="flex flex-col gap-xs flex-1">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg bg-secondary-container text-on-secondary-container font-semibold" href="#">
+<span class="material-symbols-outlined">group_work</span>
+<span class="font-label-md text-label-md">My Circles</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">explore</span>
+<span class="font-label-md text-label-md">Explore</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-label-md text-label-md">Governance</span>
+</a>
+</nav>
+<div class="mt-auto pt-lg border-t border-outline-variant flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:text-primary" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-md text-label-md">Protocol Docs</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:text-primary" href="#">
+<span class="material-symbols-outlined">language</span>
+<span class="font-label-md text-label-md">Stellar Explorer</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="lg:ml-64 pt-24 min-h-screen px-gutter pb-xl">
+<div class="max-w-[1200px] mx-auto">
+<!-- Breadcrumbs / Header -->
+<header class="mb-xl flex flex-col md:flex-row justify-between items-start md:items-end gap-md">
+<div>
+<nav class="flex items-center gap-xs text-on-surface-variant mb-xs">
+<span class="font-label-sm text-label-sm">My Circles</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Family Tanda</span>
+</nav>
+<h1 class="font-headline-xl text-headline-xl">Family Tanda</h1>
+<div class="flex items-center gap-md mt-sm">
+<span id="mesa-round-badge" class="bg-secondary-container text-on-secondary-container px-md py-xs rounded-full font-label-sm text-label-sm flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-secondary"></span> Round 4 of 10
+                        </span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">Created 3 months ago • 10 Members</span>
+</div>
+</div>
+<div class="flex gap-sm">
+<button class="bg-surface-container px-lg py-md rounded-lg font-label-md text-label-md flex items-center gap-md border border-outline-variant hover:bg-surface-variant transition-all">
+<span class="material-symbols-outlined">settings</span> Circle Settings
+                    </button>
+<button class="bg-primary text-on-primary px-lg py-md rounded-lg font-label-md text-label-md flex items-center gap-md shadow-sm active:scale-95 transition-all">
+<span class="material-symbols-outlined">share</span> Invite Member
+                    </button>
+</div>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-lg items-start">
+<!-- Left Column: Rotation Wheel & Pool Status -->
+<div class="lg:col-span-8 flex flex-col gap-lg">
+<!-- Main Card: Rotation Wheel -->
+<div class="bg-surface-container-lowest p-xl rounded-xl shadow-sm border border-outline-variant flex flex-col items-center relative overflow-hidden">
+<!-- Abstract Background Decoration -->
+<div class="absolute -top-24 -right-24 w-64 h-64 bg-secondary-fixed opacity-10 rounded-full blur-3xl"></div>
+<div class="absolute -bottom-24 -left-24 w-64 h-64 bg-primary opacity-5 rounded-full blur-3xl"></div>
+<h3 class="font-headline-md text-headline-md mb-xl self-start">Rotation Status</h3>
+<div class="rotation-wheel-container my-xl">
+<!-- SVG Progress Ring -->
+<svg class="absolute inset-0 w-full h-full -rotate-90">
+<circle cx="170" cy="170" fill="none" r="150" stroke="#e0e3e5" stroke-width="8"></circle>
+<circle cx="170" cy="170" fill="none" r="150" stroke="#006c49" stroke-dasharray="942" stroke-dashoffset="659" stroke-linecap="round" stroke-width="8"></circle>
+</svg>
+<!-- Center Label -->
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Next Payout</span>
+<span class="font-headline-lg text-headline-lg">15 Nov</span>
+<span class="font-body-sm text-body-sm text-secondary font-semibold">4 days left</span>
+</div>
+<!-- Member Avatars on the wheel -->
+<!-- Member 1: Current (Top) -->
+<div class="wheel-member" style="top: 0%; left: 50%;">
+<div class="relative">
+<img class="w-14 h-14 rounded-full border-4 border-secondary shadow-lg" data-alt="Close-up portrait of a woman named Sarah, friendly professional expression, clean minimalist setting with soft natural window lighting, 8k resolution, modern corporate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA36vqpiHhR90WpSVGpTqB1qw3QzvqewqU9bHupJBCldgERjosxGbldGPJbSdZD1YszITh3qCUGiuhNpumTcjkU401_wo1jjh4PSagt_tvC_NmIqr3Dwl2Ce0bH6wYLRGoMmvVrP1SAUjxdyMp6CNhw6AfTuDrDyHkykURuCNS2kKFLP2qS-eH211pyKpzG6RRKlF_ts9NjNNGNxFcnjbIeBcUyfs2RkcZswLIouYMA0vAxV7S7SMpjkCbLMwDcGGzwoDb85d-UY8WI"/>
+<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-secondary text-on-secondary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Current</span>
+</div>
+</div>
+<!-- Members 2-10 (Positioned programmatically in a real app) -->
+<div class="wheel-member" style="top: 10%; left: 80%;">
+<div class="relative group">
+<img class="w-10 h-10 rounded-full border-2 border-outline-variant grayscale opacity-60" data-alt="Portrait of a diverse young professional, minimalist tech style, soft studio lighting, focused expression, high-quality professional photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfdxhOJ1mXtE73u256d65VxoaPb-RXGq7nNJwXKuUnsRMywoNeZD8YU2mReuV8VQk6lEn5WiG5rmvBdYqpwgv4DRKnqPa9svvk9DRQaleB55-4r9CAMclNewKLVbRq5o411Ex5z8Mt0-kksqBswtumeR8T3nZmatGwBhgPqVtITts2DBxTPlddESieLYMCKvck-wBKtzMQVC1BwroLK1rMxwS6HGBn_-JS8sZ51v3hUj97CYjRGgef-URCkMuZvQAq9QFaS5jbfrMp"/>
+<div class="hidden group-hover:block absolute -bottom-8 left-1/2 -translate-x-1/2 bg-surface px-2 py-1 rounded shadow text-[10px] whitespace-nowrap">James K.</div>
+</div>
+</div>
+<!-- Past Member 1 -->
+<div class="wheel-member" style="top: 50%; left: 100%;">
+<div class="relative">
+<img class="w-10 h-10 rounded-full border-2 border-secondary-fixed" data-alt="Portrait of an older man with glasses, professional and trustworthy, warm background colors, sharp focus, high-end commercial aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE_STjU_1zSJ4hyEiVXY7O3dYkm7EiyPu6qDmHdi9JxsP7T2mS1Nby8cgAIrYz8X1YHL1XTjt5v47c42QFpbRAm8g9uzORwa2gvkQYjgaiCyLAn-jx2MRcW4dHY92QB4GlPf1gm9G8wDTlrnf15Volf4NYw-wLpk5Sx0MV7HzfFQXzN_Kv3lTpn0w-Y_7b8wJGXou4_BaW-jsZh8IcNJsS7_i6cT7GtMD-r0DefwMZ6JW9myoqh8Ns2Car34rGrddiqWVbJ93sj2jL"/>
+<span class="absolute -bottom-1 -right-1 bg-secondary text-on-secondary rounded-full p-0.5"><span class="material-symbols-outlined text-[12px] font-bold">check</span></span>
+</div>
+</div>
+<!-- Future Members etc... simplified for static UI -->
+<div class="wheel-member" style="top: 90%; left: 80%;"><div class="w-8 h-8 rounded-full bg-surface-container border border-outline-variant"></div></div>
+<div class="wheel-member" style="top: 100%; left: 50%;"><div class="w-8 h-8 rounded-full bg-surface-container border border-outline-variant"></div></div>
+<div class="wheel-member" style="top: 90%; left: 20%;"><div class="w-8 h-8 rounded-full bg-surface-container border border-outline-variant"></div></div>
+<!-- User's Position -->
+<div class="wheel-member" style="top: 50%; left: 0%;">
+<div class="relative">
+<img class="w-12 h-12 rounded-full border-2 border-primary ring-2 ring-primary-container ring-offset-2" data-alt="A professional profile photo of a user, clean and modern, high-key lighting, bright background, sophisticated corporate fintech look." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWKc0xuoNKL_llrUzgCL_bRJhflp3eWTJ8hgl0V9gD3ETK8GYWw9fM-d00l6aLmk4rhnFky0O7fXhqn0POxQhs6tial5Ak6nIg7Gowqr54qg0OTVwq8xN3s8R0EBMPV4Fg2ySBJtzRfz74pggsKWOtHF5uLoT6RlNcwVVv1FtR9v4AAkAX6iS9jrnLlZ1T8JxkZa0tRiUxbbPRwB7jzqka79SAyEILIP_reP5dDyJKOM1YDjxOopElvXAr1CbPWEWawIORh0Zf-CRF"/>
+<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">You</span>
+</div>
+</div>
+<div class="wheel-member" style="top: 10%; left: 20%;"><div class="w-8 h-8 rounded-full bg-surface-container border border-outline-variant"></div></div>
+</div>
+<!-- Pool Collection Status -->
+<div class="w-full mt-xl p-lg bg-surface-container rounded-xl">
+<div class="flex justify-between items-end mb-sm">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-xs">Collected this round</p>
+<h4 id="mesa-collected-amount" class="font-headline-md text-headline-md">$400 <span class="text-on-surface-variant font-normal text-body-md">/ $500 USDC</span></h4>
+</div>
+<div class="text-right">
+<span id="mesa-collected-pct" class="font-label-md text-label-md text-secondary">80% Collected</span>
+</div>
+</div>
+<div class="w-full h-3 bg-surface-dim rounded-full overflow-hidden">
+<div id="mesa-progress-bar" class="h-full bg-secondary transition-all duration-1000" style="width: 80%"></div>
+</div>
+<div class="flex justify-between mt-md">
+<div class="flex -space-x-2">
+<img class="w-6 h-6 rounded-full border-2 border-surface shadow-sm" data-alt="Small avatar of a contributor." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDueykm0nYF-L0xlSgFsGIF1c-zofxqPAb_5Qxteknle3TOf5ahdh_uwuaxepQIRGRt0D_7D8XfeeEOidtSERGbH_M6_cjR0s_5qd4D358_uRqrD1HHc4gIdWkSRZUK-vHgaLI1_glyS1603dcOYUrueICxE_dh5G-zXi1qQvUqS6G3Hh5G8_DamOXDDhTgydEhqQdyMzd0HnsUiutooIE8ZcTe25XiPMb5vpnuSGRXkd3TPe6KKtHl9xC1P2hXbjXB34dJV75PcEcc"/>
+<img class="w-6 h-6 rounded-full border-2 border-surface shadow-sm" data-alt="Small avatar of another contributor." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnS1M2h2RAxpOk2wB76WAYfXApBI7mxSTqkrRfeu2LGyjS4CXaRkLNB36y4z84UEJyF-GeZnmXjwwExV2r_3i4TYoPC3VOBw6S-y_iNf258wa6fOKBvE-_h4i0A05SKaknVrQGGaFRtzi7S-WAm86SCn5kH_u3tnzytijFHOMNEOxLBBXG_rxUlTunQyLzmJTJm-KdkzVgHnE9beprhyThadMpglVF7jgxnj0VK3Ld60MzSxyZ9G6PMB7eqfsNh1UcSxpAjnCmQSSl"/>
+<img class="w-6 h-6 rounded-full border-2 border-surface shadow-sm" data-alt="Small avatar of a third contributor." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDt78g8Mb6h9sihsZZQDi6ThSb28iIFPyVHd1i-QUIcrrU--keFz29ymLepPyGAoX3xBtDTiO0JvwCAmr8p4StXGS9n69esuX7uzcpS0AkohCXmS7ZpnoUF559T9D7-Uhwyz6QMgbtBSYs9DLGDzGD-z02_3vK_kJ5-DzSfJXn-C5k335ssccESiLPBI6fnaaFl80NK2VTSTp6rL1eFEj0DKCCxo6-wFIZta3SHK7SA8meCSAmJudth5vzHAcO46w1KaUNJo5qUI0Tp"/>
+<div class="w-6 h-6 rounded-full bg-surface-dim border-2 border-surface flex items-center justify-center text-[8px] font-bold">+5</div>
+</div>
+<span id="mesa-pending-count" class="font-body-sm text-body-sm text-on-surface-variant">2 members pending</span>
+</div>
+</div>
+</div>
+<!-- Savings Circle Members & Trust Ledger Card -->
+<div class="bg-surface-container-lowest p-xl rounded-xl shadow-sm border border-outline-variant mb-lg">
+    <div class="flex justify-between items-center mb-xl">
+        <h3 class="font-headline-md text-headline-md">Circle Members & Trust Ledger</h3>
+        <span class="bg-secondary/10 text-secondary text-[11px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-xs">
+            <span class="material-symbols-outlined text-[14px]">gshield</span> Reputation-Gated
+        </span>
+    </div>
+    <div id="mesa-members-list" class="space-y-sm">
+        <!-- Rendered dynamically by SDK/script -->
+    </div>
+</div>
+</div>
+<!-- Right Column: Actions & Details -->
+<div class="lg:col-span-4 flex flex-col gap-lg sticky top-24">
+<!-- Join Circle Card -->
+<div id="mesa-join-card" class="glass-panel p-xl rounded-xl shadow-xl border-t-4 border-secondary hidden">
+    <div class="flex items-center gap-md mb-lg">
+        <span class="material-symbols-outlined text-secondary text-[32px]">group_add</span>
+        <div>
+            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-tighter">New Member</p>
+            <h4 class="font-headline-md text-headline-md">Join Family Tanda</h4>
+        </div>
+    </div>
+    <div class="space-y-md mb-xl">
+        <p class="font-body-sm text-body-sm text-on-surface-variant">
+            To join this circle, lock a security deposit of <strong>100 USDC</strong>. You can optionally specify an existing member to vouch for you.
+        </p>
+        <div>
+            <label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">Sponsor Address (Optional)</label>
+            <input type="text" id="mesa-sponsor-input" placeholder="DEMO_ALICE or G..." class="w-full rounded-lg border-outline-variant bg-surface-container px-md py-sm font-body-sm text-body-sm focus:border-secondary focus:ring-secondary"/>
+            <p class="font-body-sm text-[11px] text-on-surface-variant mt-xs">
+                Sponsors are slashed by 25% if you default 2 times.
+            </p>
+        </div>
+    </div>
+    <button onclick="handleJoinCircle()" class="w-full bg-secondary text-white py-lg rounded-xl font-headline-md text-headline-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-md">
+        <span class="material-symbols-outlined font-bold">add_moderator</span>
+        Lock Deposit & Join
+    </button>
+</div>
+
+<!-- Action Card -->
+<div class="glass-panel p-xl rounded-xl shadow-xl border-t-4 border-primary">
+<div class="flex items-center gap-md mb-lg">
+<span class="material-symbols-outlined text-primary text-[32px]">account_balance_wallet</span>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-tighter">Your Action</p>
+<h4 id="mesa-round-title" class="font-headline-md text-headline-md">Round 4 Contribution</h4>
+</div>
+</div>
+<div class="space-y-md mb-xl">
+<div class="flex justify-between">
+<span class="text-on-surface-variant font-body-sm text-body-sm">Contribution Amount</span>
+<span class="font-bold">50 USDC</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant font-body-sm text-body-sm">Status</span>
+<span class="text-error font-bold flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px]">warning</span> Pending
+                                </span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant font-body-sm text-body-sm">Deadline</span>
+<span class="font-bold">15 Nov, 2024</span>
+</div>
+</div>
+                        <button id="mesa-contribute-btn"
+                            onclick="window.MesaSDK ? window.MesaSDK.contribute('chama-family-tanda') : alert('SDK not loaded')"
+                            class="w-full bg-primary text-on-primary py-lg rounded-xl font-headline-md text-headline-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-md">
+                            <span class="material-symbols-outlined">payments</span>
+                            Pay My Round <span class="font-normal opacity-70">|</span> 50 USDC
+                        </button>
+
+                        <!-- Trigger Distribution -->
+                        <button id="mesa-distribute-btn"
+                            onclick="window.MesaSDK ? window.MesaSDK.distribute('chama-family-tanda') : alert('SDK not loaded')"
+                            class="w-full bg-secondary text-white py-md rounded-xl font-label-md text-label-md hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-md">
+                            <span class="material-symbols-outlined text-[18px]">send_money</span>
+                            Trigger Round Distribution
+                        </button>
+
+                        <!-- Path payment info -->
+                        <div class="bg-tertiary-fixed/20 border border-tertiary-fixed rounded-xl p-md">
+                          <p class="font-label-sm text-label-sm text-on-surface-variant mb-sm">Cross-Border Payment</p>
+                          <p class="font-body-sm text-body-sm">You're contributing <strong>50 USDC</strong>. Have <strong>EURC or KES</strong>?
+                            <button onclick="window.MesaSDK && window.MesaSDK.checkPathPayment('EURC','USDC',50)"
+                              class="text-secondary underline font-semibold">Auto-convert via Stellar path payment →</button>
+                          </p>
+                        </div>
+<p class="text-center font-body-sm text-body-sm text-on-surface-variant mt-md">
+                            Payments are secured by the Mesa Smart Contract.
+                        </p>
+</div>
+<!-- Circle Details Card -->
+<div class="bg-surface-container-lowest p-xl rounded-xl shadow-sm border border-outline-variant">
+<h3 class="font-headline-md text-headline-md mb-lg">Circle Details</h3>
+<div class="space-y-lg">
+<div class="flex items-start gap-md">
+<span class="material-symbols-outlined text-on-surface-variant p-sm bg-surface-container rounded-lg">event_repeat</span>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Frequency</p>
+<p class="font-body-md text-body-md font-semibold">Monthly Intervals</p>
+</div>
+</div>
+<div class="flex items-start gap-md">
+<span class="material-symbols-outlined text-on-surface-variant p-sm bg-surface-container rounded-lg">savings</span>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Pool Total</p>
+<p class="font-body-md text-body-md font-semibold">500 USDC / Month</p>
+</div>
+</div>
+<div class="flex items-start gap-md">
+<span class="material-symbols-outlined text-on-surface-variant p-sm bg-surface-container rounded-lg">verified_user</span>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Grace Period</p>
+<p class="font-body-md text-body-md font-semibold text-secondary flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">verified</span> Active (48 Hours)
+                                    </p>
+</div>
+</div>
+<div class="flex items-start gap-md">
+<span class="material-symbols-outlined text-on-surface-variant p-sm bg-surface-container rounded-lg">gavel</span>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Governed by</p>
+<p class="font-body-md text-body-md font-semibold">Consensus Vote</p>
+</div>
+</div>
+</div>
+</div>
+            </div>
+
+            <!-- Emergency Panel -->
+            <div class="bg-error-container border border-error/20 rounded-xl p-lg mt-lg">
+              <h4 class="font-label-md text-label-md text-on-error-container font-semibold mb-sm flex items-center gap-sm">
+                <span class="material-symbols-outlined text-[18px]">warning</span> Emergency Actions
+              </h4>
+              <p class="font-body-sm text-body-sm text-on-error-container/70 mb-md">
+                If >50% of members flag an emergency, the contract pauses and all principals can be withdrawn.
+              </p>
+              <div class="flex gap-sm flex-wrap">
+                <button onclick="window.MesaSDK && window.MesaSDK.flagEmergency('chama-family-tanda')"
+                  class="flex-1 py-sm px-md bg-error text-on-error rounded-lg font-label-md text-label-md active:scale-95 transition-all">
+                  🚨 Flag Emergency
+                </button>
+                <button onclick="window.MesaSDK && window.MesaSDK.withdraw('chama-family-tanda')"
+                  class="flex-1 py-sm px-md bg-error-container border border-error text-on-error-container rounded-lg font-label-md text-label-md active:scale-95 transition-all">
+                  Withdraw Principal
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+        </div>
+        </main>
+<!-- Footer Shell -->
+<footer class="w-full bg-surface-container-low border-t border-outline-variant py-xl mt-xl">
+<div class="max-w-[1200px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-lg">
+<div class="flex flex-col items-center md:items-start gap-xs">
+<span class="font-headline-md text-headline-md text-primary font-black">Mesa</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-center md:text-left">© 2024 Mesa Protocol. Built on Stellar.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-xl">
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors" href="#">Documentation</a>
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors" href="#">Stellar Explorer</a>
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors" href="#">Community Forum</a>
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors" href="#">Discord</a>
+<a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors" href="#">Twitter</a>
+</div>
+</div>
+</footer>
+<!-- Script for interactive elements -->
+<script>
+    function formatAddress(addr) {
+        if (!addr) return '';
+        if (addr.startsWith('DEMO_')) return addr.replace('DEMO_', '');
+        return addr.slice(0, 6) + '…' + addr.slice(-4);
+    }
+
+    function renderChamaPage() {
+        if (!window.MesaSDK) return;
+        const sdk = window.MesaSDK;
+        const chama = sdk.api.getChama('chama-family-tanda');
+        if (!chama) return;
+
+        // 1. Update round indicator
+        const roundEl = document.getElementById('mesa-round-badge');
+        if (roundEl) {
+            roundEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-secondary"></span> Round ${chama.currentRound + 1} of ${chama.totalRounds}`;
+        }
+        
+        const roundTitleEl = document.getElementById('mesa-round-title');
+        if (roundTitleEl) {
+            roundTitleEl.textContent = `Round ${chama.currentRound + 1} Contribution`;
+        }
+
+        // 2. Collected progress bar
+        const totalMembersCount = chama.members.length;
+        const contribAmount = chama.contributionAmount;
+        const paidCount = chama.members.filter(m => chama.roundContribs[m]).length;
+        const totalExpected = contribAmount * totalMembersCount;
+        const totalCollected = (contribAmount * paidCount) + (chama.forfeits || 0);
+        const collectedPct = Math.min(100, Math.round((totalCollected / totalExpected) * 100));
+
+        const collectedAmountEl = document.getElementById('mesa-collected-amount');
+        if (collectedAmountEl) {
+            collectedAmountEl.innerHTML = `$${totalCollected} <span class="text-on-surface-variant font-normal text-body-md">/ $${totalExpected} ${chama.tokenCode}</span>`;
+        }
+        
+        const collectedPctEl = document.getElementById('mesa-collected-pct');
+        if (collectedPctEl) {
+            collectedPctEl.textContent = `${collectedPct}% Collected`;
+        }
+
+        const progressBgEl = document.getElementById('mesa-progress-bar');
+        if (progressBgEl) {
+            progressBgEl.style.width = `${collectedPct}%`;
+        }
+
+        const pendingMembersCount = totalMembersCount - paidCount;
+        const pendingCountEl = document.getElementById('mesa-pending-count');
+        if (pendingCountEl) {
+            pendingCountEl.textContent = `${pendingMembersCount} member${pendingMembersCount !== 1 ? 's' : ''} pending`;
+        }
+
+        // 3. User actions update
+        const walletAddress = sdk.state.walletAddress;
+        const isMember = walletAddress && chama.members.includes(walletAddress);
+
+        // Toggle Join Card visibility
+        const joinCard = document.getElementById('mesa-join-card');
+        if (joinCard) {
+            if (walletAddress && !isMember) {
+                joinCard.classList.remove('hidden');
+            } else {
+                joinCard.classList.add('hidden');
+            }
+        }
+
+        // Update Contribute Button
+        const contributeBtn = document.getElementById('mesa-contribute-btn');
+        if (contributeBtn) {
+            contributeBtn.innerHTML = `<span class="material-symbols-outlined">payments</span> Pay My Round | ${chama.contributionAmount} ${chama.tokenCode}`;
+            if (!isMember) {
+                contributeBtn.disabled = true;
+                contributeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                contributeBtn.title = "Join the circle first";
+            } else if (chama.roundContribs[walletAddress]) {
+                contributeBtn.disabled = true;
+                contributeBtn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Round Paid ✓`;
+                contributeBtn.classList.add('bg-secondary', 'cursor-not-allowed');
+                contributeBtn.classList.remove('bg-primary');
+            } else {
+                contributeBtn.disabled = false;
+                contributeBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-secondary');
+                contributeBtn.classList.add('bg-primary');
+            }
+        }
+
+        // Update Distribute Button
+        const distributeBtn = document.getElementById('mesa-distribute-btn');
+        if (distributeBtn) {
+            if (paidCount < totalMembersCount) {
+                distributeBtn.disabled = true;
+                distributeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                distributeBtn.title = "Waiting for all contributions";
+            } else {
+                distributeBtn.disabled = false;
+                distributeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // 4. Render Members Directory List
+        const membersListContainer = document.getElementById('mesa-members-list');
+        if (membersListContainer) {
+            membersListContainer.innerHTML = '';
+            
+            chama.members.forEach(m => {
+                const rep = chama.reputation && chama.reputation[m] !== undefined ? chama.reputation[m] : 100;
+                let badgeColor = 'bg-secondary-container text-on-secondary-container';
+                let badgeText = 'Excellent';
+                if (rep < 70) {
+                    badgeColor = 'bg-error-container text-on-error-container';
+                    badgeText = 'At Risk';
+                } else if (rep < 90) {
+                    badgeColor = 'bg-primary-fixed text-on-primary-fixed';
+                    badgeText = 'Good';
+                }
+
+                const hasPaid = chama.roundContribs[m];
+                const statusBadge = hasPaid 
+                    ? `<span class="bg-secondary-container text-on-secondary-container px-sm py-0.5 rounded-full text-[10px] font-bold">PAID</span>`
+                    : `<span class="bg-surface-dim text-on-surface-variant px-sm py-0.5 rounded-full text-[10px] font-bold">PENDING</span>`;
+
+                const sponsor = chama.vouches && chama.vouches[m];
+                const sponsorText = (sponsor && sponsor !== m) 
+                    ? `<span class="text-[11px] text-on-surface-variant">Vouched by: <span class="font-semibold text-primary">${formatAddress(sponsor)}</span></span>`
+                    : `<span class="text-[11px] text-outline">Self-Sponsored</span>`;
+
+                const isCurrentUser = m === walletAddress;
+                const userTag = isCurrentUser ? `<span class="bg-primary text-on-primary text-[9px] px-1 py-0.5 rounded ml-xs uppercase font-bold">YOU</span>` : '';
+
+                const deposit = chama.secDeposits[m] !== undefined ? chama.secDeposits[m] : chama.contributionAmount;
+
+                const card = document.createElement('div');
+                card.className = 'flex flex-col md:flex-row justify-between items-start md:items-center gap-md p-md hover:bg-surface-container-low rounded-lg transition-colors border-b border-outline-variant/30';
+                card.innerHTML = `
+                    <div class="flex items-center gap-md">
+                        <div class="relative">
+                            <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center font-bold text-primary border border-outline-variant">
+                                ${formatAddress(m).slice(0, 2)}
+                            </div>
+                            ${hasPaid ? `<span class="absolute -bottom-1 -right-1 bg-secondary text-on-secondary rounded-full p-0.5"><span class="material-symbols-outlined text-[10px] font-bold">check</span></span>` : ''}
+                        </div>
+                        <div class="flex flex-col">
+                            <div class="flex items-center">
+                                <span class="font-body-md font-semibold text-primary">${formatAddress(m)}</span>
+                                ${userTag}
+                            </div>
+                            ${sponsorText}
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-lg mt-sm md:mt-0">
+                        <div class="flex flex-col text-left md:text-right">
+                            <span class="font-label-sm text-label-sm text-on-surface-variant">Reputation</span>
+                            <div class="flex items-center gap-xs">
+                                <span class="${badgeColor} text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">${badgeText}</span>
+                                <span class="font-body-sm font-semibold">${rep}%</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col text-left md:text-right">
+                            <span class="font-label-sm text-label-sm text-on-surface-variant">Security Deposit</span>
+                            <span class="font-body-sm font-semibold">${deposit} ${chama.tokenCode}</span>
+                        </div>
+                        <div class="flex items-center">
+                            ${statusBadge}
+                        </div>
+                    </div>
+                `;
+                membersListContainer.appendChild(card);
+            });
+        }
+    }
+
+    async function handleJoinCircle() {
+        const sponsorInput = document.getElementById('mesa-sponsor-input');
+        const sponsor = sponsorInput ? sponsorInput.value.trim() : '';
+        if (window.MesaSDK) {
+            const res = await window.MesaSDK.join('chama-family-tanda', sponsor);
+            if (res) {
+                renderChamaPage();
+            }
+        }
+    }
+
+    // Override contribute wrapper to call renderChamaPage on success
+    if (window.MesaSDK) {
+        window.MesaSDK.contribute = async function(id) {
+            window.MesaSDK.api.contribute(id).then(res => {
+                if (res) {
+                    window.MesaSDK.showToast('✓ Contributed! Tx: ' + (res.txHash || '').slice(0, 12) + '…', 'success');
+                    renderChamaPage();
+                }
+            }).catch(err => {
+                window.MesaSDK.showToast(err.message, 'error');
+            });
+        };
+        window.MesaSDK.distribute = async function(id) {
+            window.MesaSDK.api.distributeRound(id).then(r => {
+                window.MesaSDK.showToast(`🎉 Round ${r.round + 1} paid! ${r.pot} USDC → ${r.winner.slice(0, 10)}…`, 'success');
+                renderChamaPage();
+            }).catch(err => {
+                window.MesaSDK.showToast(err.message, 'error');
+            });
+        };
+        window.MesaSDK.flagEmergency = async function(id) {
+            window.MesaSDK.api.flagEmergency(id).then(c => {
+                window.MesaSDK.showToast(c.emergencyMode ? '🚨 Emergency activated' : 'Emergency flag submitted', c.emergencyMode ? 'warning' : 'info');
+                renderChamaPage();
+            }).catch(err => {
+                window.MesaSDK.showToast(err.message, 'error');
+            });
+        };
+        window.MesaSDK.withdraw = async function(id) {
+            window.MesaSDK.api.withdrawPrincipal(id).then(amt => {
+                window.MesaSDK.showToast(`Withdrawn ${amt} USDC`, 'success');
+                renderChamaPage();
+            }).catch(err => {
+                window.MesaSDK.showToast(err.message, 'error');
+            });
+        };
+    }
+
+    // SVG progress ring animation
+    const circle = document.querySelector('circle:nth-child(2)');
+    if(circle) {
+        circle.style.transition = 'stroke-dashoffset 2s ease-in-out';
+        setTimeout(() => { circle.style.strokeDashoffset = '188'; }, 300);
+    }
+
+    renderChamaPage();
+    
+    // Render again when wallet updates
+    const originalUpdateUI = window._updateWalletUI;
+    window._updateWalletUI = function() {
+        if (typeof originalUpdateUI === 'function') originalUpdateUI();
+        renderChamaPage();
+    };
+</script>
+</body></html>
