@@ -6,29 +6,22 @@ import { cache } from '@emotion/css'
 import { CacheProvider } from '@emotion/react'
 import { DefaultSeo } from 'next-seo'
 import type { AppProps } from 'next/app'
-import { Inconsolata } from 'next/font/google'
 import Head from 'next/head'
 
-import MySorobanReactProvider from "../components/web3/MySorobanReactProvider"
-
-// Google Font(s) via `next/font`
-const inconsolata = Inconsolata({ subsets: ['latin'] })
+import MySorobanReactProvider from '../components/web3/MySorobanReactProvider'
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <>
-      {/* TODO SEO */}
       <DefaultSeo
-        // dangerouslySetAllPagesToNoFollow={!env.isProduction}
-        // dangerouslySetAllPagesToNoIndex={!env.isProduction}
-        defaultTitle="Soroban React Dapp Boilerplate" // TODO
-        titleTemplate="" // TODO
-        description="Soroaban-based Smart Contract & DApp Development Boilerplate" // TODO
+        defaultTitle="Mesa Protocol"
+        titleTemplate="%s | Mesa Protocol"
+        description="Web3 rotating savings circles and Chamas powered by Soroban smart contracts on Stellar."
         openGraph={{
           type: 'website',
           locale: 'en',
           // url: env.url,
-          site_name: 'soroban-react-dapp', // TODO
+          site_name: 'Mesa Protocol',
           images: [
             // {
             //   url: `${env.url}/images/cover.jpg`, // TODO
@@ -38,7 +31,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           ],
         }}
         twitter={{
-          handle: '', // TODO
+          handle: '@MesaProtocol',
         }}
       />
 
@@ -48,7 +41,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         {/* Set Font Variables */}
         <style>{`
           :root {
-            --font-inconsolata: ${inconsolata.style.fontFamily}, 'Inconsolata';
+            --font-inconsolata: 'Inconsolata', 'Public Sans', system-ui, sans-serif;
           }
         `}</style>
       </Head>
