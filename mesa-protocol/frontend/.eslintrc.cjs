@@ -17,8 +17,14 @@ const config = {
     "@typescript-eslint/consistent-type-definitions": "off",
     "@typescript-eslint/no-unsafe-assignment": "off",
     "@typescript-eslint/no-unsafe-return": "off",
-    "@typescript-eslint/prefer-nullish-coalescing": "on",
+    "@typescript-eslint/prefer-nullish-coalescing": "warn",
     "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unsafe-argument": "warn",
+    "@typescript-eslint/no-unsafe-member-access": "warn",
+    "@typescript-eslint/no-unsafe-call": "warn",
+    "@typescript-eslint/no-floating-promises": "warn",
+    "@typescript-eslint/prefer-optional-chain": "warn",
+    "prefer-const": "warn",
     "@typescript-eslint/consistent-type-imports": [
       "warn",
       {

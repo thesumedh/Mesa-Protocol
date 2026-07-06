@@ -1,5 +1,8 @@
 {
-  "cleanUrls": true,
+  "buildCommand": "cd mesa-protocol/frontend && yarn build",
+  "devCommand": "cd mesa-protocol/frontend && yarn dev",
+  "installCommand": "cd mesa-protocol/frontend && yarn install --frozen-lockfile",
+  "framework": "nextjs",
   "headers": [
     {
       "source": "/(.*)",
