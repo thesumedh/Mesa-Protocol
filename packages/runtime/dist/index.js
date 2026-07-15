@@ -1,0 +1,1248 @@
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+
+// src/index.ts
+var dotenv = __toESM(require("dotenv"));
+
+// src/store/index.ts
+var import_pg = require("pg");
+
+// src/store/mockDb.ts
+var InMemoryPool = class {
+  flows = /* @__PURE__ */ new Map();
+  executions = /* @__PURE__ */ new Map();
+  steps = /* @__PURE__ */ new Map();
+  events = [];
+  async query(text, params = []) {
+    const cleanText = text.replace(/\s+/g, " ").trim();
+    if (cleanText.startsWith("INSERT INTO flows")) {
+      const [id, name, definitionJson] = params;
+      const flow = { id, name, definition: JSON.parse(definitionJson), created_at: /* @__PURE__ */ new Date() };
+      this.flows.set(id, flow);
+      return { rows: [flow] };
+    }
+    if (cleanText.startsWith("SELECT * FROM flows WHERE id = $1")) {
+      const flow = this.flows.get(params[0]);
+      return { rows: flow ? [flow] : [] };
+    }
+    if (cleanText.startsWith("INSERT INTO executions")) {
+      const [id, flowId, contextJson] = params;
+      const execution = {
+        id,
+        flow_id: flowId,
+        status: "PENDING",
+        context: JSON.parse(contextJson),
+        current_step: 0,
+        started_at: null,
+        completed_at: null,
+        created_at: /* @__PURE__ */ new Date()
+      };
+      this.executions.set(id, execution);
+      return { rows: [execution] };
+    }
+    if (cleanText.startsWith("SELECT * FROM executions WHERE id = $1")) {
+      const execution = this.executions.get(params[0]);
+      return { rows: execution ? [execution] : [] };
+    }
+    if (cleanText.startsWith("UPDATE executions SET")) {
+      const id = params[params.length - 1];
+      const execution = this.executions.get(id);
+      if (execution) {
+        if (cleanText.includes("status =")) {
+          execution.status = params[0];
+        }
+        if (cleanText.includes("context =")) {
+          const idx = cleanText.indexOf("context =") > -1 ? cleanText.includes("status =") ? 1 : 0 : -1;
+          if (idx !== -1) execution.context = JSON.parse(params[idx]);
+        }
+        if (cleanText.includes("current_step =")) {
+          const idx = params.indexOf(id) - 1;
+          execution.current_step = params[idx];
+        }
+        if (cleanText.includes("started_at =")) {
+          execution.started_at = /* @__PURE__ */ new Date();
+        }
+        if (cleanText.includes("completed_at =")) {
+          execution.completed_at = /* @__PURE__ */ new Date();
+        }
+      }
+      return { rows: execution ? [execution] : [] };
+    }
+    if (cleanText.startsWith("SELECT * FROM executions WHERE status IN")) {
+      const rows = Array.from(this.executions.values()).filter((e) => e.status === "PENDING" || e.status === "RUNNING").sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
+      return { rows };
+    }
+    if (cleanText.startsWith("INSERT INTO steps")) {
+      const [id, executionId, stepIndex, name, provider, status, inputJson, outputJson, error, attempts, nextRetry] = params;
+      const step = {
+        id,
+        execution_id: executionId,
+        step_index: stepIndex,
+        name,
+        provider,
+        status,
+        input: inputJson ? JSON.parse(inputJson) : null,
+        output: outputJson ? JSON.parse(outputJson) : null,
+        error,
+        attempts,
+        next_retry: nextRetry,
+        created_at: /* @__PURE__ */ new Date(),
+        updated_at: /* @__PURE__ */ new Date()
+      };
+      this.steps.set(`${executionId}:${stepIndex}`, step);
+      return { rows: [step] };
+    }
+    if (cleanText.startsWith("SELECT * FROM steps WHERE execution_id = $1 AND step_index = $2")) {
+      const step = this.steps.get(`${params[0]}:${params[1]}`);
+      return { rows: step ? [step] : [] };
+    }
+    if (cleanText.startsWith("UPDATE steps SET")) {
+      const id = params[params.length - 1];
+      const step = Array.from(this.steps.values()).find((s) => s.id === id);
+      if (step) {
+        step.updated_at = /* @__PURE__ */ new Date();
+        if (cleanText.includes("status =")) {
+          step.status = params[0];
+        }
+        if (cleanText.includes("output =")) {
+          const idx = cleanText.includes("status =") ? 1 : 0;
+          step.output = params[idx] ? JSON.parse(params[idx]) : null;
+        }
+        if (cleanText.includes("error =")) {
+          step.error = params[params.indexOf(id) - 1];
+        }
+        if (cleanText.includes("attempts =")) {
+          step.attempts = params[params.indexOf(id) - 1];
+        }
+      }
+      return { rows: step ? [step] : [] };
+    }
+    if (cleanText.startsWith("INSERT INTO events")) {
+      const [executionId, type, payloadJson] = params;
+      const event = {
+        id: this.events.length + 1,
+        execution_id: executionId,
+        type,
+        payload: payloadJson ? JSON.parse(payloadJson) : null,
+        timestamp: /* @__PURE__ */ new Date()
+      };
+      this.events.push(event);
+      return { rows: [event] };
+    }
+    if (cleanText.startsWith("SELECT * FROM events WHERE execution_id = $1")) {
+      const rows = this.events.filter((ev) => ev.execution_id === params[0]).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      return { rows };
+    }
+    if (cleanText.includes("FROM steps s JOIN executions e")) {
+      const key = params[0];
+      const rows = Array.from(this.steps.values()).filter((s) => s.status === "SUSPENDED" && s.output?.suspensionKey === key).map((s) => {
+        const exec = this.executions.get(s.execution_id);
+        return {
+          ...s,
+          exec_context: exec ? exec.context : {},
+          flow_id: exec ? exec.flow_id : "",
+          execution_id_ref: s.execution_id
+        };
+      });
+      return { rows };
+    }
+    if (cleanText.startsWith("SELECT id, flow_id, status, context, created_at, updated_at FROM executions")) {
+      const rows = Array.from(this.executions.values()).sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+      return { rows };
+    }
+    if (cleanText.startsWith("SELECT step_index, status, output, error, attempts, created_at, updated_at FROM steps WHERE execution_id = $1")) {
+      const rows = Array.from(this.steps.values()).filter((s) => s.execution_id === params[0]).sort((a, b) => a.step_index - b.step_index);
+      return { rows };
+    }
+    if (cleanText.startsWith("SELECT id, name, definition, created_at, updated_at FROM flows")) {
+      const rows = Array.from(this.flows.values()).sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+      return { rows };
+    }
+    if (cleanText.includes("FROM steps WHERE execution_id = $1")) {
+      const rows = Array.from(this.steps.values()).filter((s) => s.execution_id === params[0]).sort((a, b) => a.step_index - b.step_index);
+      return { rows };
+    }
+    return { rows: [] };
+  }
+  // No-op methods to satisfy Pool interface
+  async connect() {
+    return {
+      query: this.query.bind(this),
+      release: () => {
+      }
+    };
+  }
+  async end() {
+  }
+};
+
+// src/store/index.ts
+var fs = __toESM(require("fs"));
+var path = __toESM(require("path"));
+var pool = null;
+function getPool() {
+  if (!pool) {
+    if (process.env.DATABASE_URL === "mock" || process.env.NODE_ENV === "test") {
+      console.log("[MesaRuntime] Initializing InMemoryPool for testing/mocking.");
+      pool = new InMemoryPool();
+    } else {
+      pool = new import_pg.Pool({
+        connectionString: process.env.DATABASE_URL || "postgresql://mesa:mesa@localhost:5432/mesa"
+      });
+    }
+  }
+  return pool;
+}
+async function initSchema() {
+  if (process.env.DATABASE_URL === "mock" || process.env.NODE_ENV === "test") {
+    console.log("[MesaRuntime] InMemoryPool schema initialization skipped.");
+    return;
+  }
+  const sql = fs.readFileSync(path.join(__dirname, "schema.sql"), "utf8");
+  await getPool().query(sql);
+  console.log("[MesaRuntime] Postgres schema initialized.");
+}
+async function createFlow(id, name, definition) {
+  const res = await getPool().query(
+    `INSERT INTO flows (id, name, definition) VALUES ($1, $2, $3) RETURNING *`,
+    [id, name, JSON.stringify(definition)]
+  );
+  return res.rows[0];
+}
+async function getFlow(id) {
+  const res = await getPool().query(`SELECT * FROM flows WHERE id = $1`, [id]);
+  return res.rows[0] ?? null;
+}
+async function createExecution(id, flowId, context = {}) {
+  const res = await getPool().query(
+    `INSERT INTO executions (id, flow_id, context) VALUES ($1, $2, $3) RETURNING *`,
+    [id, flowId, JSON.stringify(context)]
+  );
+  return res.rows[0];
+}
+async function getExecution(id) {
+  const res = await getPool().query(`SELECT * FROM executions WHERE id = $1`, [id]);
+  return res.rows[0] ?? null;
+}
+async function updateExecution(id, fields) {
+  const sets = [];
+  const values = [];
+  let i = 1;
+  if (fields.status !== void 0) {
+    sets.push(`status = $${i++}`);
+    values.push(fields.status);
+  }
+  if (fields.context !== void 0) {
+    sets.push(`context = $${i++}`);
+    values.push(JSON.stringify(fields.context));
+  }
+  if (fields.current_step !== void 0) {
+    sets.push(`current_step = $${i++}`);
+    values.push(fields.current_step);
+  }
+  if (fields.started_at !== void 0) {
+    sets.push(`started_at = $${i++}`);
+    values.push(fields.started_at);
+  }
+  if (fields.completed_at !== void 0) {
+    sets.push(`completed_at = $${i++}`);
+    values.push(fields.completed_at);
+  }
+  if (sets.length === 0) return;
+  values.push(id);
+  await getPool().query(`UPDATE executions SET ${sets.join(", ")} WHERE id = $${i}`, values);
+}
+async function getPendingExecutions() {
+  const res = await getPool().query(
+    `SELECT * FROM executions WHERE status IN ('PENDING', 'RUNNING') ORDER BY created_at ASC LIMIT 50`
+  );
+  return res.rows;
+}
+async function createStep(data) {
+  const res = await getPool().query(
+    `INSERT INTO steps (id, execution_id, step_index, name, provider, status, input, output, error, attempts, next_retry)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+    [
+      data.id,
+      data.execution_id,
+      data.step_index,
+      data.name,
+      data.provider,
+      data.status,
+      data.input ? JSON.stringify(data.input) : null,
+      data.output ? JSON.stringify(data.output) : null,
+      data.error,
+      data.attempts,
+      data.next_retry
+    ]
+  );
+  return res.rows[0];
+}
+async function getStepForExecution(executionId, stepIndex) {
+  const res = await getPool().query(
+    `SELECT * FROM steps WHERE execution_id = $1 AND step_index = $2`,
+    [executionId, stepIndex]
+  );
+  return res.rows[0] ?? null;
+}
+async function updateStep(id, fields) {
+  const sets = [`updated_at = NOW()`];
+  const values = [];
+  let i = 1;
+  if (fields.status !== void 0) {
+    sets.push(`status = $${i++}`);
+    values.push(fields.status);
+  }
+  if (fields.output !== void 0) {
+    sets.push(`output = $${i++}`);
+    values.push(fields.output ? JSON.stringify(fields.output) : null);
+  }
+  if (fields.error !== void 0) {
+    sets.push(`error = $${i++}`);
+    values.push(fields.error);
+  }
+  if (fields.attempts !== void 0) {
+    sets.push(`attempts = $${i++}`);
+    values.push(fields.attempts);
+  }
+  if (fields.next_retry !== void 0) {
+    sets.push(`next_retry = $${i++}`);
+    values.push(fields.next_retry);
+  }
+  values.push(id);
+  await getPool().query(`UPDATE steps SET ${sets.join(", ")} WHERE id = $${i}`, values);
+}
+async function appendEvent(executionId, type, payload) {
+  await getPool().query(
+    `INSERT INTO events (execution_id, type, payload) VALUES ($1, $2, $3)`,
+    [executionId, type, payload ? JSON.stringify(payload) : null]
+  );
+}
+async function getEvents(executionId) {
+  const res = await getPool().query(
+    `SELECT * FROM events WHERE execution_id = $1 ORDER BY timestamp ASC`,
+    [executionId]
+  );
+  return res.rows;
+}
+
+// src/engine/executor.ts
+var import_crypto = require("crypto");
+
+// src/provider.ts
+var registry = /* @__PURE__ */ new Map();
+function registerProvider(provider) {
+  registry.set(provider.name, provider);
+  console.log(`[MesaRuntime] Registered provider: ${provider.name}`);
+}
+function getProvider(name) {
+  const provider = registry.get(name);
+  if (!provider) throw new Error(`[MesaRuntime] No provider registered for: "${name}"`);
+  return provider;
+}
+function listProviders() {
+  return Array.from(registry.keys());
+}
+
+// src/engine/executor.ts
+var MAX_ATTEMPTS = 5;
+var BASE_RETRY_DELAY_MS = 1e3;
+function retryDelayMs(attempt) {
+  return BASE_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+}
+async function executeStep(execution, stepDef, stepIndex) {
+  let stepRecord = await getStepForExecution(execution.id, stepIndex);
+  if (!stepRecord) {
+    stepRecord = await createStep({
+      id: (0, import_crypto.randomUUID)(),
+      execution_id: execution.id,
+      step_index: stepIndex,
+      name: stepDef.name,
+      provider: stepDef.provider,
+      status: "PENDING",
+      input: stepDef.params,
+      output: null,
+      error: null,
+      attempts: 0,
+      next_retry: null
+    });
+  }
+  if (stepRecord.status === "COMPLETED") return;
+  if (stepRecord.status === "SUSPENDED") return;
+  if (stepRecord.next_retry && stepRecord.next_retry > /* @__PURE__ */ new Date()) return;
+  if (stepRecord.status === "FAILED" && stepRecord.attempts >= MAX_ATTEMPTS) return;
+  await updateStep(stepRecord.id, { status: "RUNNING", attempts: stepRecord.attempts + 1 });
+  await appendEvent(execution.id, "step.started", {
+    stepIndex,
+    name: stepDef.name,
+    provider: stepDef.provider,
+    attempt: stepRecord.attempts + 1
+  });
+  const context = {
+    executionId: execution.id,
+    flowId: execution.flow_id,
+    stepIndex,
+    stepId: stepRecord.id,
+    shared: execution.context
+  };
+  try {
+    const provider = getProvider(stepDef.provider);
+    const result = await provider.execute(stepDef, context);
+    if (result.outcome === "completed") {
+      if (result.output) {
+        const merged = { ...execution.context, ...result.output };
+        await updateExecution(execution.id, { context: merged });
+      }
+      await updateStep(stepRecord.id, { status: "COMPLETED", output: result.output ?? {} });
+      await appendEvent(execution.id, "step.completed", { stepIndex, name: stepDef.name, output: result.output });
+      console.log(`[MesaRuntime] \u2714 Step ${stepIndex} (${stepDef.name}) completed.`);
+    } else if (result.outcome === "suspended") {
+      await updateStep(stepRecord.id, { status: "SUSPENDED", output: { suspensionKey: result.suspensionKey } });
+      await appendEvent(execution.id, "step.suspended", { stepIndex, name: stepDef.name, suspensionKey: result.suspensionKey });
+      console.log(`[MesaRuntime] \u23F8  Step ${stepIndex} (${stepDef.name}) suspended \u2014 waiting for: ${result.suspensionKey}`);
+    } else {
+      throw new Error(result.error ?? "Step returned failure without message");
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const newAttempts = (stepRecord.attempts ?? 0) + 1;
+    await appendEvent(execution.id, "step.failed", { stepIndex, name: stepDef.name, error: msg, attempt: newAttempts });
+    if (newAttempts >= MAX_ATTEMPTS) {
+      await updateStep(stepRecord.id, { status: "FAILED", error: msg });
+      await updateExecution(execution.id, { status: "PERMANENTLY_FAILED", completed_at: /* @__PURE__ */ new Date() });
+      await appendEvent(execution.id, "flow.failed", { reason: `Step ${stepDef.name} permanently failed after ${newAttempts} attempts.` });
+      console.error(`[MesaRuntime] \u2717 Step ${stepIndex} (${stepDef.name}) permanently failed: ${msg}`);
+    } else {
+      const nextRetry = new Date(Date.now() + retryDelayMs(newAttempts));
+      await updateStep(stepRecord.id, { status: "RETRYING", error: msg, next_retry: nextRetry });
+      console.warn(`[MesaRuntime] \u21BB Step ${stepIndex} (${stepDef.name}) will retry at ${nextRetry.toISOString()}`);
+    }
+  }
+}
+
+// src/engine/scheduler.ts
+var POLL_INTERVAL_MS = 2e3;
+var Scheduler = class {
+  running = false;
+  timer = null;
+  start() {
+    if (this.running) return;
+    this.running = true;
+    console.log("[MesaRuntime] Scheduler started.");
+    this.tick();
+  }
+  stop() {
+    this.running = false;
+    if (this.timer) clearTimeout(this.timer);
+    console.log("[MesaRuntime] Scheduler stopped.");
+  }
+  tick() {
+    this.poll().catch((err) => console.error("[MesaRuntime] Scheduler poll error:", err)).finally(() => {
+      if (this.running) {
+        this.timer = setTimeout(() => this.tick(), POLL_INTERVAL_MS);
+      }
+    });
+  }
+  async poll() {
+    const executions = await getPendingExecutions();
+    for (const execution of executions) {
+      await this.advance(execution);
+    }
+  }
+  async advance(execution) {
+    if (execution.status === "PERMANENTLY_FAILED") return;
+    const flow = await getFlow(execution.flow_id);
+    if (!flow) {
+      console.error(`[MesaRuntime] Flow not found: ${execution.flow_id}`);
+      return;
+    }
+    const definition = flow.definition;
+    const steps = definition.steps ?? [];
+    if (execution.status === "PENDING") {
+      await updateExecution(execution.id, { status: "RUNNING", started_at: /* @__PURE__ */ new Date() });
+      await appendEvent(execution.id, "flow.started", { flowId: execution.flow_id });
+    }
+    let current = execution.current_step;
+    while (current < steps.length) {
+      const stepDef = steps[current];
+      await executeStep(execution, stepDef, current);
+      const stepRecord = await getStepForExecution(execution.id, current);
+      if (!stepRecord) break;
+      if (stepRecord.status === "COMPLETED") {
+        current++;
+        const refreshed = await getExecution(execution.id);
+        if (!refreshed || refreshed.status === "PERMANENTLY_FAILED") return;
+        execution = refreshed;
+        await updateExecution(execution.id, { current_step: current });
+      } else if (stepRecord.status === "SUSPENDED") {
+        await updateExecution(execution.id, { status: "SUSPENDED" });
+        break;
+      } else if (stepRecord.status === "RETRYING") {
+        break;
+      } else if (stepRecord.status === "FAILED") {
+        return;
+      } else {
+        break;
+      }
+    }
+    if (current >= steps.length) {
+      await updateExecution(execution.id, { status: "COMPLETED", completed_at: /* @__PURE__ */ new Date() });
+      await appendEvent(execution.id, "flow.completed", { steps: steps.length });
+      console.log(`[MesaRuntime] \u{1F389} Execution ${execution.id} completed.`);
+    }
+  }
+};
+
+// src/server.ts
+var import_express = __toESM(require("express"));
+var import_crypto2 = require("crypto");
+var path2 = __toESM(require("path"));
+var fs2 = __toESM(require("fs"));
+function createServer() {
+  const app = (0, import_express.default)();
+  app.use(import_express.default.json());
+  app.get("/health", (_req, res) => {
+    res.json({ status: "ok", service: "mesa-runtime", timestamp: (/* @__PURE__ */ new Date()).toISOString() });
+  });
+  app.post("/executions", async (req, res) => {
+    try {
+      const { flowId, context } = req.body;
+      if (!flowId) return res.status(400).json({ error: "flowId is required" });
+      const flow = await getFlow(flowId);
+      if (!flow) return res.status(404).json({ error: `Flow not found: ${flowId}` });
+      const execution = await createExecution((0, import_crypto2.randomUUID)(), flowId, context ?? {});
+      await appendEvent(execution.id, "execution.created", { flowId });
+      console.log(`[MesaRuntime] New execution created: ${execution.id} for flow: ${flowId}`);
+      res.status(201).json({ executionId: execution.id, status: execution.status });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
+  app.post("/flows", async (req, res) => {
+    try {
+      const { id, name, definition } = req.body;
+      if (!name || !definition) return res.status(400).json({ error: "name and definition are required" });
+      const flowId = id ?? (0, import_crypto2.randomUUID)();
+      const flow = await createFlow(flowId, name, definition);
+      console.log(`[MesaRuntime] Flow registered: ${flow.id} (${flow.name})`);
+      res.status(201).json({ flowId: flow.id, name: flow.name });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
+  app.get("/executions/:id", async (req, res) => {
+    try {
+      const execution = await getExecution(req.params.id);
+      if (!execution) return res.status(404).json({ error: "Execution not found" });
+      const events = await getEvents(req.params.id);
+      res.json({ execution, events });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
+  app.post("/webhooks/resume", async (req, res) => {
+    try {
+      const { suspensionKey, payload } = req.body;
+      if (!suspensionKey) return res.status(400).json({ error: "suspensionKey is required" });
+      const pool2 = getPool();
+      const stepRes = await pool2.query(
+        `SELECT s.*, e.context as exec_context, e.flow_id, e.id as execution_id_ref
+         FROM steps s
+         JOIN executions e ON s.execution_id = e.id
+         WHERE s.status = 'SUSPENDED'
+           AND s.output->>'suspensionKey' = $1
+         LIMIT 1`,
+        [suspensionKey]
+      );
+      if (stepRes.rows.length === 0) {
+        return res.status(404).json({ error: `No suspended step found for key: ${suspensionKey}` });
+      }
+      const step = stepRes.rows[0];
+      const execution = await getExecution(step.execution_id);
+      if (!execution) return res.status(404).json({ error: "Execution not found" });
+      const event = { suspensionKey, payload: payload ?? {} };
+      const context = {
+        executionId: execution.id,
+        flowId: execution.flow_id,
+        stepIndex: step.step_index,
+        stepId: step.id,
+        shared: execution.context
+      };
+      const provider = getProvider(step.provider);
+      if (!provider.resume) {
+        return res.status(400).json({ error: `Provider ${step.provider} does not support resumption` });
+      }
+      const result = await provider.resume(event, context);
+      if (result.outcome === "completed") {
+        if (result.output) {
+          const merged = { ...execution.context, ...result.output };
+          await updateExecution(execution.id, { context: merged });
+        }
+        await updateStep(step.id, { status: "COMPLETED", output: result.output ?? {} });
+        await appendEvent(execution.id, "step.resumed", { stepIndex: step.step_index, suspensionKey });
+        await appendEvent(execution.id, "step.completed", { stepIndex: step.step_index });
+        await updateExecution(execution.id, { status: "PENDING" });
+        console.log(`[MesaRuntime] \u25B6 Step ${step.step_index} resumed via webhook.`);
+      } else {
+        await updateStep(step.id, { status: "FAILED", error: result.error });
+        await appendEvent(execution.id, "step.failed", { stepIndex: step.step_index, error: result.error });
+      }
+      res.json({ resumed: true, outcome: result.outcome });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
+  app.get("/executions", async (_req, res) => {
+    try {
+      const pool2 = getPool();
+      const result = await pool2.query(
+        `SELECT id, flow_id, status, context, created_at, updated_at
+         FROM executions
+         ORDER BY created_at DESC`
+      );
+      const list = await Promise.all(result.rows.map(async (exec) => {
+        const stepsRes = await pool2.query(
+          `SELECT step_index, status, output, error, attempts, created_at, updated_at
+           FROM steps
+           WHERE execution_id = $1
+           ORDER BY step_index ASC`,
+          [exec.id]
+        );
+        return {
+          ...exec,
+          steps: stepsRes.rows
+        };
+      }));
+      res.json(list);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
+  app.get("/flows", async (_req, res) => {
+    try {
+      const pool2 = getPool();
+      const result = await pool2.query(
+        `SELECT id, name, definition, created_at, updated_at
+         FROM flows
+         ORDER BY created_at DESC`
+      );
+      res.json(result.rows);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
+  app.get("/providers", async (_req, res) => {
+    try {
+      const names = listProviders();
+      const list = await Promise.all(names.map(async (name) => {
+        const p = getProvider(name);
+        let health = { status: "healthy" };
+        if (p.health) {
+          try {
+            health = await p.health();
+          } catch (e) {
+            health = { status: "unhealthy", details: e.message };
+          }
+        }
+        return { name, health };
+      }));
+      res.json(list);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
+  app.get("/dashboard", (_req, res) => {
+    const possiblePaths = [
+      path2.join(__dirname, "dashboard.html"),
+      path2.join(__dirname, "server", "dashboard.html"),
+      path2.join(__dirname, "..", "src", "server", "dashboard.html"),
+      path2.join(__dirname, "..", "..", "src", "server", "dashboard.html")
+    ];
+    for (const p of possiblePaths) {
+      if (fs2.existsSync(p)) {
+        return res.sendFile(p);
+      }
+    }
+    res.status(404).send("Dashboard file not found");
+  });
+  return app;
+}
+
+// ../providers/webhook/index.ts
+var https = __toESM(require("https"));
+var http = __toESM(require("http"));
+var WebhookProvider = class {
+  name = "webhook";
+  async execute(step, context) {
+    const { url, events, waitForCallback } = step.params;
+    if (waitForCallback) {
+      const suspensionKey = `webhook:${context.executionId}:${context.stepIndex}`;
+      return { outcome: "suspended", suspensionKey };
+    }
+    if (!url) throw new Error("WebhookProvider: url is required");
+    const payload = {
+      executionId: context.executionId,
+      flowId: context.flowId,
+      stepIndex: context.stepIndex,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      context: context.shared
+    };
+    await sendPost(url, payload);
+    return { outcome: "completed", output: { webhookSent: true, url } };
+  }
+  async resume(event, _context) {
+    return { outcome: "completed", output: { callbackPayload: event.payload } };
+  }
+};
+function sendPost(url, payload) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(payload);
+    const parsed = new URL(url);
+    const lib = parsed.protocol === "https:" ? https : http;
+    const req = lib.request({
+      hostname: parsed.hostname,
+      port: parsed.port,
+      path: parsed.pathname + parsed.search,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(body),
+        "X-Mesa-Event": "step.webhook"
+      }
+    }, (res) => {
+      let data = "";
+      res.on("data", (chunk) => data += chunk);
+      res.on("end", () => {
+        if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+          resolve({ status: res.statusCode, body: data });
+        } else {
+          reject(new Error(`Webhook returned status ${res.statusCode}: ${data}`));
+        }
+      });
+    });
+    req.on("error", reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+// ../providers/delay/index.ts
+var DelayProvider = class {
+  name = "delay";
+  async execute(step, _context) {
+    const { seconds } = step.params;
+    if (!seconds || seconds <= 0) {
+      return { outcome: "completed", output: { waited: 0 } };
+    }
+    await new Promise((resolve) => setTimeout(resolve, seconds * 1e3));
+    return { outcome: "completed", output: { waited: seconds } };
+  }
+};
+
+// ../providers/anchor/index.ts
+var import_stellar_sdk = require("@stellar/stellar-sdk");
+var https2 = __toESM(require("https"));
+var http2 = __toESM(require("http"));
+var AnchorProvider = class {
+  name = "anchor";
+  // ─── Main Dispatcher ───────────────────────────────────────────────────────
+  async execute(step, context) {
+    const action = step.params.action || "sep24-deposit";
+    const isMock = process.env.ANCHOR_MOCK === "true" || step.params.mock === true || !step.params.anchorUrl;
+    if (isMock) {
+      return this.executeMock(action, step, context);
+    }
+    switch (action) {
+      case "sep24-deposit":
+        return this.sep24Deposit(step, context);
+      case "sep24-withdraw":
+        return this.sep24Withdraw(step, context);
+      default:
+        throw new Error(`AnchorProvider: Real mode does not support action "${action}" yet.`);
+    }
+  }
+  // ─── Mock Mode Handlers ────────────────────────────────────────────────────
+  async executeMock(action, step, context) {
+    console.log(`[AnchorProvider] Running in MOCK mode for action: ${action}`);
+    const mockTxId = `mock-tx-${context.executionId}`;
+    const anchorUrl = step.params.anchorUrl || "https://mock-anchor.stellar.org";
+    const suspensionKey = `anchor:sep24:${anchorUrl}:${mockTxId}`;
+    if (action === "sep24-deposit") {
+      const mockInteractiveUrl = `https://mock-anchor.stellar.org/sep24/interactive?transaction_id=${mockTxId}&asset_code=${step.params.asset || "USDC"}`;
+      return {
+        outcome: "suspended",
+        suspensionKey,
+        output: {
+          anchorTransactionId: mockTxId,
+          interactiveUrl: mockInteractiveUrl,
+          message: "[MOCK] Open interactiveUrl in browser to complete mock deposit"
+        }
+      };
+    }
+    if (action === "sep24-withdraw") {
+      const mockInteractiveUrl = `https://mock-anchor.stellar.org/sep24/interactive/withdraw?transaction_id=${mockTxId}`;
+      return {
+        outcome: "suspended",
+        suspensionKey,
+        output: {
+          anchorTransactionId: mockTxId,
+          interactiveUrl: mockInteractiveUrl,
+          anchorWithdrawAddress: "GBHTYH2NLVWRAPSC3IRRFPG6CFHP5VLODBQUYVSKJ3BZ3QN6HEXZ5DXU",
+          memo: "123456",
+          memoType: "id"
+        }
+      };
+    }
+    throw new Error(`AnchorProvider: Unknown mock action "${action}"`);
+  }
+  // ─── Real SEP-24 interactive deposit ───────────────────────────────────────
+  async sep24Deposit(step, context) {
+    const { anchorUrl, asset, amount, userAddress, userJwt, userSecret } = step.params;
+    if (!anchorUrl || !asset || !userAddress) {
+      throw new Error("AnchorProvider (sep24Deposit): anchorUrl, asset, and userAddress are required.");
+    }
+    console.log(`[AnchorProvider] Initiating real SEP-24 deposit to anchor: ${anchorUrl}`);
+    const toml = await this.fetchToml(anchorUrl);
+    const jwt = userJwt ?? await this.sep10Auth(toml.WEB_AUTH_ENDPOINT, userAddress, toml.SIGNING_KEY, userSecret);
+    const depositRes = await this.httpPost(
+      `${toml.TRANSFER_SERVER_SEP0024}/transactions/deposit/interactive`,
+      { asset_code: asset, account: userAddress, amount: amount?.toString() },
+      { Authorization: `Bearer ${jwt}` }
+    );
+    console.log("[AnchorProvider] Deposit response:", depositRes);
+    if (!depositRes.url || !depositRes.id) {
+      throw new Error(`AnchorProvider: deposit did not return interactive url or transaction id. Response: ${JSON.stringify(depositRes)}`);
+    }
+    const suspensionKey = `anchor:sep24:${anchorUrl}:${depositRes.id}`;
+    return {
+      outcome: "suspended",
+      suspensionKey,
+      output: {
+        anchorTransactionId: depositRes.id,
+        interactiveUrl: depositRes.url,
+        message: "Open interactiveUrl in browser to complete deposit"
+      }
+    };
+  }
+  // ─── Real SEP-24 interactive withdrawal ────────────────────────────────────
+  async sep24Withdraw(step, context) {
+    const { anchorUrl, asset, amount, userAddress, userJwt, destinationAccount, userSecret } = step.params;
+    if (!anchorUrl || !asset || !userAddress) {
+      throw new Error("AnchorProvider (sep24Withdraw): anchorUrl, asset, and userAddress are required.");
+    }
+    console.log(`[AnchorProvider] Initiating real SEP-24 withdraw to anchor: ${anchorUrl}`);
+    const toml = await this.fetchToml(anchorUrl);
+    const jwt = userJwt ?? await this.sep10Auth(toml.WEB_AUTH_ENDPOINT, userAddress, toml.SIGNING_KEY, userSecret);
+    const withdrawRes = await this.httpPost(
+      `${toml.TRANSFER_SERVER_SEP0024}/transactions/withdraw/interactive`,
+      {
+        asset_code: asset,
+        account: userAddress,
+        amount: amount?.toString(),
+        ...destinationAccount ? { dest: destinationAccount } : {}
+      },
+      { Authorization: `Bearer ${jwt}` }
+    );
+    if (!withdrawRes.url || !withdrawRes.id) {
+      throw new Error("AnchorProvider: withdraw did not return interactive url or transaction id");
+    }
+    const suspensionKey = `anchor:sep24:${anchorUrl}:${withdrawRes.id}`;
+    return {
+      outcome: "suspended",
+      suspensionKey,
+      output: {
+        anchorTransactionId: withdrawRes.id,
+        interactiveUrl: withdrawRes.url,
+        anchorWithdrawAddress: withdrawRes.how,
+        memo: withdrawRes.memo,
+        memoType: withdrawRes.memo_type
+      }
+    };
+  }
+  // ─── Resume Handler ────────────────────────────────────────────────────────
+  async resume(event, context) {
+    console.log(`[AnchorProvider] Resuming flow with key: ${event.suspensionKey}`);
+    const { status, amount_out, amount, message } = event.payload;
+    const finalStatus = status || "completed";
+    if (finalStatus === "completed") {
+      return {
+        outcome: "completed",
+        output: {
+          status: "completed",
+          receivedAmount: parseFloat(amount_out || amount || "100")
+        }
+      };
+    }
+    if (["error", "failed", "expired"].includes(finalStatus)) {
+      return {
+        outcome: "failed",
+        error: `Anchor transaction failed: ${message || "Unknown reason"}`
+      };
+    }
+    return {
+      outcome: "suspended",
+      suspensionKey: event.suspensionKey,
+      output: { status: finalStatus }
+    };
+  }
+  // ─── Health check ──────────────────────────────────────────────────────────
+  async health() {
+    return { status: "healthy", details: { mode: process.env.ANCHOR_MOCK === "true" ? "mock" : "live" } };
+  }
+  // ─── SEP-10 Web Authentication Stub ────────────────────────────────────────
+  async sep10Auth(webAuthEndpoint, userAddress, serverSigningKey, userSecret) {
+    console.log(`[AnchorProvider] Requesting SEP-10 challenge for ${userAddress} at ${webAuthEndpoint}`);
+    const challengeRes = await this.httpGet(webAuthEndpoint, { account: userAddress });
+    if (!challengeRes.transaction) {
+      throw new Error("SEP-10: no challenge transaction returned from auth endpoint.");
+    }
+    if (!userSecret) {
+      console.warn("[AnchorProvider] No secret key provided for SEP-10 challenge signing. Falling back to mock token.");
+      return "mock-sep10-jwt-token";
+    }
+    try {
+      console.log("[AnchorProvider] Decoding and signing SEP-10 challenge transaction...");
+      const userKeypair = import_stellar_sdk.Keypair.fromSecret(userSecret);
+      const tx = import_stellar_sdk.TransactionBuilder.fromXDR(challengeRes.transaction, import_stellar_sdk.Networks.TESTNET);
+      tx.sign(userKeypair);
+      const signedXdr = tx.toEnvelope().toXDR("base64");
+      console.log("[AnchorProvider] Submitting signed transaction back to auth endpoint...");
+      const authRes = await this.httpPost(webAuthEndpoint, { transaction: signedXdr });
+      if (!authRes.token) {
+        throw new Error(`Auth endpoint response missing token: ${JSON.stringify(authRes)}`);
+      }
+      return authRes.token;
+    } catch (err) {
+      throw new Error(`SEP-10 authentication failed: ${err.message}`);
+    }
+  }
+  // ─── HTTP Utilities ────────────────────────────────────────────────────────
+  fetchToml(anchorUrl) {
+    const cleanUrl = anchorUrl.endsWith("/") ? anchorUrl.slice(0, -1) : anchorUrl;
+    const tomlUrl = `${cleanUrl}/.well-known/stellar.toml`;
+    return new Promise((resolve, reject) => {
+      const lib = tomlUrl.startsWith("https") ? https2 : http2;
+      lib.get(tomlUrl, (res) => {
+        let body = "";
+        res.on("data", (chunk) => body += chunk);
+        res.on("end", () => {
+          if (res.statusCode !== 200) {
+            resolve({
+              WEB_AUTH_ENDPOINT: `${cleanUrl}/auth`,
+              TRANSFER_SERVER_SEP0024: `${cleanUrl}/sep24`,
+              SIGNING_KEY: "G..."
+            });
+            return;
+          }
+          const toml = {};
+          const lines = body.split("\n");
+          for (const line of lines) {
+            const parts = line.split("=");
+            if (parts.length === 2) {
+              const k = parts[0].trim();
+              const v = parts[1].trim().replace(/"/g, "");
+              toml[k] = v;
+            }
+          }
+          resolve({
+            WEB_AUTH_ENDPOINT: toml.WEB_AUTH_ENDPOINT || `${cleanUrl}/auth`,
+            TRANSFER_SERVER_SEP0024: toml.TRANSFER_SERVER_SEP0024 || `${cleanUrl}/sep24`,
+            SIGNING_KEY: toml.SIGNING_KEY || ""
+          });
+        });
+      }).on("error", (err) => {
+        resolve({
+          WEB_AUTH_ENDPOINT: `${cleanUrl}/auth`,
+          TRANSFER_SERVER_SEP0024: `${cleanUrl}/sep24`,
+          SIGNING_KEY: "G..."
+        });
+      });
+    });
+  }
+  httpGet(url, params, headers = {}) {
+    return new Promise((resolve, reject) => {
+      const parsed = new URL(url);
+      Object.keys(params).forEach((key) => parsed.searchParams.append(key, params[key]));
+      const lib = parsed.protocol === "https:" ? https2 : http2;
+      lib.get(parsed.toString(), { headers }, (res) => {
+        let body = "";
+        res.on("data", (chunk) => body += chunk);
+        res.on("end", () => {
+          try {
+            resolve(JSON.parse(body));
+          } catch {
+            resolve(body);
+          }
+        });
+      }).on("error", reject);
+    });
+  }
+  httpPost(url, data, headers = {}) {
+    return new Promise((resolve, reject) => {
+      const parsed = new URL(url);
+      const postData = JSON.stringify(data);
+      const lib = parsed.protocol === "https:" ? https2 : http2;
+      const req = lib.request({
+        hostname: parsed.hostname,
+        port: parsed.port,
+        path: parsed.pathname + parsed.search,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(postData),
+          ...headers
+        }
+      }, (res) => {
+        let body = "";
+        res.on("data", (chunk) => body += chunk);
+        res.on("end", () => {
+          try {
+            resolve(JSON.parse(body));
+          } catch {
+            resolve(body);
+          }
+        });
+      });
+      req.on("error", reject);
+      req.write(postData);
+      req.end();
+    });
+  }
+};
+
+// ../providers/stellar/index.ts
+var import_stellar_sdk2 = require("@stellar/stellar-sdk");
+var StellarProvider = class {
+  name = "stellar";
+  async execute(step, context) {
+    const action = step.params.action || "payment";
+    const isMock = step.params.mock === true || process.env.STELLAR_MOCK === "true" || !step.params.senderSecret;
+    if (isMock) {
+      return this.executeMock(action, step, context);
+    }
+    try {
+      switch (action) {
+        case "payment":
+          return await this.executePayment(step, context);
+        case "path-payment":
+          return await this.executePathPayment(step, context);
+        default:
+          throw new Error(`StellarProvider: Unknown action "${action}"`);
+      }
+    } catch (err) {
+      console.error(`[StellarProvider] Error executing action ${action}:`, err.message);
+      return {
+        outcome: "failed",
+        error: `Stellar transaction failed: ${err.message}`
+      };
+    }
+  }
+  // ─── Mock Mode Handlers ────────────────────────────────────────────────────
+  executeMock(action, step, context) {
+    console.log(`[StellarProvider] Running in MOCK mode for action: ${action}`);
+    if (action === "payment") {
+      const amount = step.params.amount || 10;
+      const to = step.params.to;
+      return {
+        outcome: "completed",
+        output: {
+          txHash: `mock-tx-${Math.random().toString(36).substring(7)}`,
+          amountSent: amount,
+          to
+        }
+      };
+    }
+    if (action === "path-payment") {
+      const sendAmount = step.params.sendAmount || 10;
+      const destMin = step.params.destMin || 9.5;
+      return {
+        outcome: "completed",
+        output: {
+          txHash: `mock-path-tx-${Math.random().toString(36).substring(7)}`,
+          swappedAmount: sendAmount,
+          destAmountReceived: destMin,
+          pathUsed: ["XLM", "USDC"]
+        }
+      };
+    }
+    throw new Error(`StellarProvider: Unknown mock action "${action}"`);
+  }
+  // ─── Real Payment Execution ────────────────────────────────────────────────
+  async executePayment(step, context) {
+    const { horizonUrl, senderSecret, to, amount, asset } = step.params;
+    const serverUrl = horizonUrl || "https://horizon-testnet.stellar.org";
+    const server = new import_stellar_sdk2.Horizon.Server(serverUrl);
+    const senderKeypair = import_stellar_sdk2.Keypair.fromSecret(senderSecret);
+    console.log(`[StellarProvider] Preparing payment of ${amount} ${asset || "XLM"} to ${to}`);
+    const account = await server.loadAccount(senderKeypair.publicKey());
+    const stellarAsset = this.parseAssetString(asset);
+    const transaction = new import_stellar_sdk2.TransactionBuilder(account, {
+      fee: "1000",
+      // 0.0001 XLM (high base fee for testnet reliability)
+      networkPassphrase: import_stellar_sdk2.Networks.TESTNET
+    }).addOperation(
+      import_stellar_sdk2.Operation.payment({
+        destination: to,
+        asset: stellarAsset,
+        amount: amount.toString()
+      })
+    ).setTimeout(60).build();
+    transaction.sign(senderKeypair);
+    console.log("[StellarProvider] Submitting payment transaction to Horizon...");
+    const result = await server.submitTransaction(transaction);
+    console.log(`[StellarProvider] Payment successful. Hash: ${result.hash}`);
+    return {
+      outcome: "completed",
+      output: {
+        txHash: result.hash,
+        ledger: result.ledger,
+        amountSent: amount,
+        to
+      }
+    };
+  }
+  // ─── Real Path Payment Execution ───────────────────────────────────────────
+  async executePathPayment(step, context) {
+    const {
+      horizonUrl,
+      senderSecret,
+      sendAsset,
+      sendAmount,
+      destAsset,
+      destMin,
+      to
+    } = step.params;
+    const serverUrl = horizonUrl || "https://horizon-testnet.stellar.org";
+    const server = new import_stellar_sdk2.Horizon.Server(serverUrl);
+    const senderKeypair = import_stellar_sdk2.Keypair.fromSecret(senderSecret);
+    console.log(`[StellarProvider] Preparing path payment: send ${sendAmount} ${sendAsset} to convert to min ${destMin} ${destAsset} for recipient ${to}`);
+    const account = await server.loadAccount(senderKeypair.publicKey());
+    const stellarSendAsset = this.parseAssetString(sendAsset);
+    const stellarDestAsset = this.parseAssetString(destAsset);
+    const transaction = new import_stellar_sdk2.TransactionBuilder(account, {
+      fee: "1000",
+      networkPassphrase: import_stellar_sdk2.Networks.TESTNET
+    }).addOperation(
+      import_stellar_sdk2.Operation.pathPaymentStrictSend({
+        sendAsset: stellarSendAsset,
+        sendAmount: sendAmount.toString(),
+        destination: to,
+        destAsset: stellarDestAsset,
+        destMin: destMin.toString(),
+        path: []
+        // Empty path lets Horizon find the best swap route
+      })
+    ).setTimeout(60).build();
+    transaction.sign(senderKeypair);
+    console.log("[StellarProvider] Submitting path payment transaction to Horizon...");
+    const result = await server.submitTransaction(transaction);
+    console.log(`[StellarProvider] Path payment successful. Hash: ${result.hash}`);
+    return {
+      outcome: "completed",
+      output: {
+        txHash: result.hash,
+        ledger: result.ledger,
+        swappedAmount: sendAmount,
+        destAmountReceived: destMin
+      }
+    };
+  }
+  // ─── Observability & Health Check ──────────────────────────────────────────
+  async health() {
+    try {
+      const server = new import_stellar_sdk2.Horizon.Server("https://horizon-testnet.stellar.org");
+      const feeStats = await server.feeStats();
+      return {
+        status: "healthy",
+        details: {
+          horizon: "https://horizon-testnet.stellar.org",
+          latestLedger: feeStats.last_ledger_base_fee
+        }
+      };
+    } catch (e) {
+      return {
+        status: "unhealthy",
+        details: { error: e.message }
+      };
+    }
+  }
+  // ─── Helper: Parse Asset Code:Issuer ───────────────────────────────────────
+  parseAssetString(assetStr) {
+    if (!assetStr || assetStr.toUpperCase() === "XLM") {
+      return import_stellar_sdk2.Asset.native();
+    }
+    const parts = assetStr.split(":");
+    if (parts.length !== 2) {
+      throw new Error(`Invalid asset format "${assetStr}". Must be "CODE:ISSUER" or "XLM"`);
+    }
+    return new import_stellar_sdk2.Asset(parts[0], parts[1]);
+  }
+};
+
+// src/index.ts
+dotenv.config();
+var PORT = parseInt(process.env.PORT ?? "3001", 10);
+async function main() {
+  console.log("");
+  console.log("  \u2588\u2588\u2588\u2557   \u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2557 ");
+  console.log("  \u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2551\u2588\u2588\u2554\u2550\u2550\u2550\u2550\u255D\u2588\u2588\u2554\u2550\u2550\u2550\u2550\u255D\u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557");
+  console.log("  \u2588\u2588\u2554\u2588\u2588\u2588\u2588\u2554\u2588\u2588\u2551\u2588\u2588\u2588\u2588\u2588\u2557  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2551");
+  console.log("  \u2588\u2588\u2551\u255A\u2588\u2588\u2554\u255D\u2588\u2588\u2551\u2588\u2588\u2554\u2550\u2550\u255D  \u255A\u2550\u2550\u2550\u2550\u2588\u2588\u2551\u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2551");
+  console.log("  \u2588\u2588\u2551 \u255A\u2550\u255D \u2588\u2588\u2551\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2551\u2588\u2588\u2551  \u2588\u2588\u2551");
+  console.log("  \u255A\u2550\u255D     \u255A\u2550\u255D\u255A\u2550\u2550\u2550\u2550\u2550\u2550\u255D\u255A\u2550\u2550\u2550\u2550\u2550\u2550\u255D\u255A\u2550\u255D  \u255A\u2550\u255D");
+  console.log("");
+  console.log("  Financial Workflow Runtime for Stellar");
+  console.log("");
+  await initSchema();
+  registerProvider(new WebhookProvider());
+  registerProvider(new DelayProvider());
+  registerProvider(new AnchorProvider());
+  registerProvider(new StellarProvider());
+  const scheduler = new Scheduler();
+  scheduler.start();
+  const app = createServer();
+  app.listen(PORT, () => {
+    console.log(`[MesaRuntime] Runtime listening on http://localhost:${PORT}`);
+    console.log(`[MesaRuntime] Health: http://localhost:${PORT}/health`);
+  });
+  process.on("SIGTERM", () => {
+    scheduler.stop();
+    process.exit(0);
+  });
+  process.on("SIGINT", () => {
+    scheduler.stop();
+    process.exit(0);
+  });
+}
+main().catch((err) => {
+  console.error("[MesaRuntime] Fatal startup error:", err);
+  process.exit(1);
+});

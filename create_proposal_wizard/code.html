@@ -185,7 +185,7 @@
 <div class="grid grid-cols-1 gap-md">
 <!-- Rule Change -->
 <label class="group relative flex items-start gap-md p-lg border-2 border-outline-variant rounded-xl cursor-pointer hover:border-primary hover:bg-surface-container-low transition-all">
-<input class="mt-1.5 w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="proposal_type" type="radio"/>
+<input class="mt-1.5 w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="proposal_type" type="radio" value="Rule Change"/>
 <div class="flex-1">
 <div class="flex items-center gap-xs mb-xs">
 <span class="material-symbols-outlined text-primary">settings_suggest</span>
@@ -199,7 +199,7 @@
 </label>
 <!-- Member Change -->
 <label class="group relative flex items-start gap-md p-lg border-2 border-outline-variant rounded-xl cursor-pointer hover:border-primary hover:bg-surface-container-low transition-all">
-<input class="mt-1.5 w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="proposal_type" type="radio"/>
+<input class="mt-1.5 w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="proposal_type" type="radio" value="Member Change"/>
 <div class="flex-1">
 <div class="flex items-center gap-xs mb-xs">
 <span class="material-symbols-outlined text-primary">person_add</span>
@@ -213,7 +213,7 @@
 </label>
 <!-- Emergency Action -->
 <label class="group relative flex items-start gap-md p-lg border-2 border-error-container rounded-xl cursor-pointer hover:border-error hover:bg-error-container/20 transition-all">
-<input class="mt-1.5 w-5 h-5 text-error border-error-container focus:ring-error" name="proposal_type" type="radio"/>
+<input class="mt-1.5 w-5 h-5 text-error border-error-container focus:ring-error" name="proposal_type" type="radio" value="Emergency Action"/>
 <div class="flex-1">
 <div class="flex items-center gap-xs mb-xs">
 <span class="material-symbols-outlined text-error">gpp_maybe</span>
@@ -232,8 +232,12 @@
 <h2 class="text-headline-md font-headline-md text-primary mb-md">Define Changes</h2>
 <div class="space-y-md">
 <div>
+<label class="block text-label-md font-label-md text-on-surface mb-xs">Proposal Title</label>
+<input type="text" id="proposal-title-input" class="w-full p-md bg-surface-container-low border border-outline-variant rounded-lg focus:border-primary focus:ring-1 focus:ring-primary text-body-md font-body-md mb-md" placeholder="e.g., Adjust Minimum Collateral Ratio to 125%"/>
+</div>
+<div>
 <label class="block text-label-md font-label-md text-on-surface mb-xs">Rationale for Proposal</label>
-<textarea class="w-full p-md bg-surface-container-low border border-outline-variant rounded-lg focus:border-primary focus:ring-1 focus:ring-primary text-body-md font-body-md" placeholder="Provide a detailed explanation for why this change is necessary..." rows="4"></textarea>
+<textarea id="proposal-rationale-textarea" class="w-full p-md bg-surface-container-low border border-outline-variant rounded-lg focus:border-primary focus:ring-1 focus:ring-primary text-body-md font-body-md" placeholder="Provide a detailed explanation for why this change is necessary..." rows="4"></textarea>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
 <div>
@@ -323,7 +327,7 @@
 <footer class="w-full py-xl px-margin-desktop bg-surface-container border-t border-outline-variant flex flex-col md:flex-row justify-between items-center mt-auto">
 <div class="flex flex-col items-center md:items-start gap-xs mb-lg md:mb-0">
 <span class="text-label-md font-label-md font-bold text-primary">Mesa Protocol</span>
-<p class="text-body-sm font-body-sm text-on-surface-variant">© 2024 Mesa Protocol. Powered by Stellar.</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">© 2026 Mesa Protocol. Powered by Stellar.</p>
 </div>
 <div class="flex gap-lg">
 <a class="text-on-surface-variant text-label-sm font-label-sm hover:text-primary transition-colors" href="#">Documentation</a>
@@ -338,9 +342,56 @@
         const step2 = document.getElementById('step-2');
         const btnNext = document.getElementById('btn-next');
         const btnBack = document.getElementById('btn-back');
-        const stepperCircles = document.querySelectorAll('.stepper-circle'); // Note: added labels manually above, can dynamic style
 
         let currentStep = 1;
+
+        // Initialize defaults
+        if (!localStorage.tempProposalCategory) localStorage.tempProposalCategory = 'Rule Change';
+        if (!localStorage.tempProposalTitle) localStorage.tempProposalTitle = '';
+        if (!localStorage.tempProposalRationale) localStorage.tempProposalRationale = '';
+        if (!localStorage.tempProposalParam) localStorage.tempProposalParam = 'Collateral Ratio (%)';
+        if (!localStorage.tempProposalPriority) localStorage.tempProposalPriority = 'Standard';
+        if (!localStorage.tempProposalNewVal) localStorage.tempProposalNewVal = '125%';
+
+        // Load values from localStorage if they exist
+        const radio = document.querySelector(`input[name="proposal_type"][value="${localStorage.tempProposalCategory}"]`);
+        if (radio) {
+            radio.checked = true;
+        }
+        document.getElementById('proposal-title-input').value = localStorage.tempProposalTitle;
+        document.getElementById('proposal-rationale-textarea').value = localStorage.tempProposalRationale;
+
+        // Auto-save changes to localStorage
+        document.querySelectorAll('input[name="proposal_type"]').forEach(r => {
+            r.addEventListener('change', () => {
+                if (r.checked) {
+                    localStorage.tempProposalCategory = r.value;
+                }
+            });
+        });
+        document.getElementById('proposal-title-input').addEventListener('input', (e) => {
+            localStorage.tempProposalTitle = e.target.value;
+        });
+        document.getElementById('proposal-rationale-textarea').addEventListener('input', (e) => {
+            localStorage.tempProposalRationale = e.target.value;
+        });
+
+        const paramSelect = document.querySelectorAll('select')[0];
+        const prioritySelect = document.querySelectorAll('select')[1];
+        const valInput = document.querySelector('.bg-surface-container input');
+
+        if (paramSelect) {
+            paramSelect.value = localStorage.tempProposalParam;
+            paramSelect.addEventListener('change', () => localStorage.tempProposalParam = paramSelect.value);
+        }
+        if (prioritySelect) {
+            prioritySelect.value = localStorage.tempProposalPriority;
+            prioritySelect.addEventListener('change', () => localStorage.tempProposalPriority = prioritySelect.value);
+        }
+        if (valInput) {
+            valInput.value = localStorage.tempProposalNewVal;
+            valInput.addEventListener('input', () => localStorage.tempProposalNewVal = valInput.value);
+        }
 
         btnNext.addEventListener('click', () => {
             if (currentStep === 1) {
@@ -352,11 +403,15 @@
                 
                 // Update Stepper visual (simplified)
                 const circles = document.querySelectorAll('.bg-primary, .bg-surface-container-high');
-                circles[1].classList.remove('bg-surface-container-high', 'text-on-surface-variant');
-                circles[1].classList.add('bg-primary', 'text-on-primary');
+                if (circles[1]) {
+                    circles[1].classList.remove('bg-surface-container-high', 'text-on-surface-variant');
+                    circles[1].classList.add('bg-primary', 'text-on-primary');
+                }
             } else if (currentStep === 2) {
                 // Final submission or next step
-                alert('Proceeding to Step 3: Review');
+                localStorage.tempProposalTitle = document.getElementById('proposal-title-input').value;
+                localStorage.tempProposalRationale = document.getElementById('proposal-rationale-textarea').value;
+                window.location.hash = '#review-proposal';
             }
         });
 
@@ -369,19 +424,25 @@
                 currentStep = 1;
 
                 const circles = document.querySelectorAll('.bg-primary');
-                circles[1].classList.remove('bg-primary', 'text-on-primary');
-                circles[1].classList.add('bg-surface-container-high', 'text-on-surface-variant');
+                if (circles[1]) {
+                    circles[1].classList.remove('bg-primary', 'text-on-primary');
+                    circles[1].classList.add('bg-surface-container-high', 'text-on-surface-variant');
+                }
             }
         });
 
         // Toggle radio buttons styles
         const radios = document.querySelectorAll('input[type="radio"]');
-        radios.forEach(radio => {
-            radio.addEventListener('change', () => {
-                document.querySelectorAll('label').forEach(l => l.classList.remove('bg-surface-container-low', 'border-primary', 'border-error'));
-                if (radio.checked) {
-                    const parent = radio.closest('label');
-                    if (radio.name === 'proposal_type' && radio.classList.contains('text-error')) {
+        radios.forEach(r => {
+            r.addEventListener('change', () => {
+                document.querySelectorAll('label').forEach(l => {
+                    if (l.querySelector('input[name="proposal_type"]')) {
+                        l.classList.remove('bg-surface-container-low', 'border-primary', 'border-error');
+                    }
+                });
+                if (r.checked) {
+                    const parent = r.closest('label');
+                    if (r.name === 'proposal_type' && r.classList.contains('text-error')) {
                         parent.classList.add('border-error');
                     } else {
                         parent.classList.add('border-primary', 'bg-surface-container-low');
@@ -389,5 +450,11 @@
                 }
             });
         });
+
+        // Initial styling trigger
+        setTimeout(() => {
+            const activeRadio = document.querySelector('input[name="proposal_type"]:checked');
+            if (activeRadio) activeRadio.dispatchEvent(new Event('change'));
+        }, 100);
     </script>
 </body></html>

@@ -290,7 +290,8 @@
         // Handles dynamic fetching and parsing of target components
         async function handleRoute() {
             const hash = window.location.hash || '#dashboard';
-            const pagePath = routes[hash];
+            const baseHash = hash.split('?')[0];
+            const pagePath = routes[baseHash];
             
             if (!pagePath) {
                 appContent.innerHTML = `<div class="p-xl text-center"><h2 class="text-xl font-bold">Route not found</h2><p class="text-on-surface-variant mt-sm">Click <a href="#dashboard" class="text-secondary font-bold">here</a> to go home.</p></div>`;
@@ -302,7 +303,7 @@
             topLoadingBar.style.width = '30%';
 
             // Update navigation highlights
-            updateNavActiveState(hash);
+            updateNavActiveState(baseHash);
 
             try {
                 const response = await fetch(pagePath);
@@ -414,6 +415,11 @@
                 // Scroll to top
                 window.scrollTo({ top: 0, behavior: 'instant' });
 
+                // Call SDK to populate the page once load is done
+                setTimeout(() => {
+                    if (window.MesaSDK) window.MesaSDK.populateDashboard();
+                }, 100);
+
             } catch (error) {
                 console.error(error);
                 appContent.innerHTML = `<div class="p-xl text-center text-error"><h2 class="text-xl font-bold">Failed to load content</h2><p class="mt-sm">${error.message}</p></div>`;
@@ -473,6 +479,7 @@
         document.addEventListener('click', (e) => {
             const target = e.target.closest('a, button');
             if (!target) return;
+            if (target.hasAttribute('onclick')) return; // Let custom onclick handlers run
             
             const text = target.textContent.trim().toLowerCase();
             
@@ -484,7 +491,7 @@
             // Route mapping rules
             if (text.includes('create new circle') || text.includes('create circle')) {
                 window.location.hash = '#create-circle';
-            } else if (text.includes('family tanda') || text.includes('tech chama')) {
+            } else if (text.includes('family tanda') || text.includes('tech chama') || text.includes('my circles') || text.includes('circles')) {
                 window.location.hash = '#circle';
             } else if (text.includes('view all') && window.location.hash === '#dashboard') {
                 window.location.hash = '#circle';
@@ -572,12 +579,7 @@
             handleRoute();
         });
 
-        // After each route loads, run SDK population helpers if SDK is ready
-        window.addEventListener('hashchange', () => {
-            setTimeout(() => {
-                if (window.MesaSDK) window.MesaSDK.populateDashboard();
-            }, 300);
-        });
+
     </script>
 
     <!-- Mesa Protocol SDK v3 — cache-busted to force reload -->

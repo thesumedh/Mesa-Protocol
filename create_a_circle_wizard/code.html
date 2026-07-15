@@ -250,10 +250,20 @@
 <span class="material-symbols-outlined absolute right-4 top-3 text-on-surface-variant pointer-events-none">event_repeat</span>
 </div>
 </div>
+<div class="flex flex-col gap-xs md:col-span-2">
+<label class="font-label-md text-label-md" for="payout-mode">Payout Model</label>
+<div class="relative">
+<select class="w-full h-12 px-md rounded-lg border border-outline-variant bg-surface-container-lowest appearance-none font-body-md text-body-md" id="payout-mode">
+<option selected="" value="0">Fixed Rotation (Traditional ROSCA / Chama)</option>
+<option value="1">Auction Payout (Indian Chit Fund bidding & yield model)</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-3 text-on-surface-variant pointer-events-none">gavel</span>
+</div>
+</div>
 </div>
 <div class="bg-surface-container-low p-md rounded-lg border-l-4 border-secondary-fixed">
 <h4 class="font-label-md text-label-md text-primary mb-1">Impact Preview</h4>
-<p class="font-body-sm text-body-sm text-on-surface-variant">With 5 members contributing $100 monthly, the payout each round will be <span class="font-bold text-primary">$500</span>.</p>
+<p id="impact-preview-text" class="font-body-sm text-body-sm text-on-surface-variant">With 5 members contributing $100 monthly, the payout each round will be <span class="font-bold text-primary">$500</span>.</p>
 </div>
 </div>
 <!-- Step 3: Members -->
@@ -342,6 +352,10 @@
 <span class="font-label-md text-label-md text-secondary" id="summary-contribution">$0.00</span>
 </div>
 <div class="flex justify-between items-center py-2 border-b border-outline-variant">
+<span class="font-body-md text-body-md text-on-surface-variant">Payout Model</span>
+<span class="font-label-md text-label-md" id="summary-payout-mode">Fixed Rotation</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-outline-variant">
 <span class="font-body-md text-body-md text-on-surface-variant">Members</span>
 <span class="font-label-md text-label-md" id="summary-members">2 / 12</span>
 </div>
@@ -373,7 +387,7 @@
 <div class="max-w-[1200px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-lg">
 <div class="flex flex-col gap-2">
 <span class="font-headline-md text-headline-md text-primary font-bold">Mesa</span>
-<p class="font-body-sm text-body-sm text-on-surface-variant">© 2024 Mesa Protocol. Built on Stellar.</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">© 2026 Mesa Protocol. Built on Stellar.</p>
 </div>
 <div class="flex flex-wrap gap-md justify-center">
 <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Documentation</a>
@@ -406,10 +420,12 @@
         const amountInput = document.getElementById('amount');
         const currencySelect = document.getElementById('currency');
         const frequencySelect = document.getElementById('frequency');
+        const payoutModeSelect = document.getElementById('payout-mode');
         const summaryContribution = document.getElementById('summary-contribution');
         const summaryTotal = document.getElementById('summary-total');
         const summaryAsset = document.getElementById('summary-asset');
         const summaryFrequency = document.getElementById('summary-frequency');
+        const summaryPayoutMode = document.getElementById('summary-payout-mode');
 
         function updateSummary() {
             const amount = parseFloat(amountInput.value) || 0;
@@ -418,9 +434,22 @@
             summaryContribution.innerText = `$${amount.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             // Simulating 5 members for calc
             summaryTotal.innerText = `$${(amount * 5).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            
+            const previewText = document.getElementById('impact-preview-text');
+            if (payoutModeSelect.value === '1') {
+                summaryPayoutMode.innerText = 'Auction Payout';
+                if (previewText) {
+                    previewText.innerHTML = `With 5 members contributing $${amount.toLocaleString()} monthly, the starting bidding pot is <span class="font-bold text-primary">$${(amount * 5).toLocaleString()}</span>. Members bid discounts to claim the pot early; discount is distributed to all other members as yield.`;
+                }
+            } else {
+                summaryPayoutMode.innerText = 'Fixed Rotation';
+                if (previewText) {
+                    previewText.innerHTML = `With 5 members contributing $${amount.toLocaleString()} monthly, the payout each round will be <span class="font-bold text-primary">$${(amount * 5).toLocaleString()}</span>.`;
+                }
+            }
         }
 
-        [amountInput, currencySelect, frequencySelect].forEach(el => el.addEventListener('input', updateSummary));
+        [amountInput, currencySelect, frequencySelect, payoutModeSelect].forEach(el => el.addEventListener('input', updateSummary));
 
         function navigate(direction) {
             // Hide current
@@ -484,6 +513,7 @@
             const amtVal       = amountInput ? Number(amountInput.value) : 100;
             const curVal       = currencySelect ? currencySelect.value : 'USDC';
             const freqVal      = frequencySelect ? frequencySelect.value : '604800';
+            const payoutModeVal = payoutModeSelect ? Number(payoutModeSelect.value) : 0;
 
             const membersInput = document.querySelector('input[placeholder*="G..."]') ||
                                  document.querySelector('textarea');
@@ -497,6 +527,7 @@
                         contributionAmount: amtVal,
                         roundDuration:      Number(freqVal),
                         membersRaw,
+                        payoutMode:         payoutModeVal
                     });
                 } catch (e) {
                     console.error(e);

@@ -3,6 +3,8 @@ resolver = "2"
 
 members = [
     "contracts/mesa-core",
+    "contracts/mesa-factory",
+    "contracts/mesa-vault",
 ]
 
 [workspace.package]

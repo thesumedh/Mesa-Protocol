@@ -235,13 +235,13 @@
 <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-md mb-xl">
 <div class="bg-surface rounded-lg p-md border border-outline-variant text-left hover-lift">
 <p class="font-label-sm text-label-sm text-on-surface-variant mb-xs">Proposal Title</p>
-<p class="font-headline-md text-headline-md text-primary">Adjust Minimum Collateral Ratio</p>
+<p id="proposal-success-title" class="font-headline-md text-headline-md text-primary">Adjust Minimum Collateral Ratio</p>
 </div>
 <div class="grid grid-cols-1 gap-md">
 <div class="bg-surface rounded-lg p-md border border-outline-variant text-left hover-lift flex justify-between items-center">
 <div>
 <p class="font-label-sm text-label-sm text-on-surface-variant mb-xs">Category</p>
-<p class="font-body-md text-body-md font-bold text-primary">Rule Change</p>
+<p id="proposal-success-category" class="font-body-md text-body-md font-bold text-primary">Rule Change</p>
 </div>
 <span class="material-symbols-outlined text-on-tertiary-container">settings</span>
 </div>
@@ -292,7 +292,7 @@
 <div class="max-w-[1200px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-lg">
 <div>
 <p class="font-headline-md text-headline-md text-primary mb-xs">Mesa</p>
-<p class="font-body-sm text-body-sm text-on-surface-variant">© 2024 Mesa Protocol. Built on Stellar.</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">© 2026 Mesa Protocol. Built on Stellar.</p>
 </div>
 <div class="flex gap-lg flex-wrap justify-center">
 <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Documentation</a>
@@ -303,27 +303,66 @@
 </div>
 </div>
 </footer>
-<script>
-        // Micro-interaction: Share with members (Simple simulation)
-        document.querySelector('button:last-of-type').addEventListener('click', function() {
-            const btn = this;
-            const originalContent = btn.innerHTML;
-            btn.innerHTML = '<span class="material-symbols-outlined">check</span> Link Copied!';
-            btn.classList.add('bg-secondary-container', 'text-on-secondary-container');
-            
-            setTimeout(() => {
-                btn.innerHTML = originalContent;
-                btn.classList.remove('bg-secondary-container', 'text-on-secondary-container');
-            }, 2000);
-        });
+    <script>
+        // Load the submitted proposal details
+        const proposals = JSON.parse(localStorage.getItem('mesa_submitted_proposals') || '[]');
+        const latest = proposals[proposals.length - 1] || {
+            category: 'Rule Change',
+            title: 'Adjust Minimum Collateral Ratio'
+        };
 
-        // Interactive "View in Feed" hover effect
-        const primaryBtn = document.querySelector('button:first-of-type');
-        primaryBtn.addEventListener('mouseenter', () => {
-            primaryBtn.style.transform = 'scale(1.02)';
-        });
-        primaryBtn.addEventListener('mouseleave', () => {
-            primaryBtn.style.transform = 'scale(1)';
-        });
+        document.getElementById('proposal-success-title').textContent = latest.title;
+        document.getElementById('proposal-success-category').textContent = latest.category;
+
+        // Custom icon mapping based on category
+        const catIcon = document.querySelector('.w-full.grid.grid-cols-1.md\\:grid-cols-2.gap-md.mb-xl span.material-symbols-outlined.text-on-tertiary-container');
+        if (catIcon) {
+            if (latest.category === 'Member Change') {
+                catIcon.textContent = 'person_add';
+            } else if (latest.category === 'Emergency Action') {
+                catIcon.textContent = 'gpp_maybe';
+                catIcon.className = 'material-symbols-outlined text-error';
+            } else {
+                catIcon.textContent = 'settings';
+            }
+        }
+
+        // Generate a random Soroban transaction hash for visual flair
+        const hashChars = '0123456789abcdef';
+        let txHash = '0x';
+        for (let i = 0; i < 32; i++) {
+            txHash += hashChars[Math.floor(Math.random() * 16)];
+        }
+        document.querySelector('.font-mono.text-on-surface').textContent = txHash.slice(0, 10) + '...' + txHash.slice(-8);
+
+        // Share button interaction
+        const shareBtn = document.querySelector('button:last-of-type');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', function() {
+                const btn = this;
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-outlined">check</span> Link Copied!';
+                btn.classList.add('bg-secondary-container', 'text-on-secondary-container');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('bg-secondary-container', 'text-on-secondary-container');
+                }, 2000);
+            });
+        }
+
+        // "View Proposal in Feed" click handler
+        const viewFeedBtn = document.querySelector('button:first-of-type');
+        if (viewFeedBtn) {
+            viewFeedBtn.addEventListener('mouseenter', () => {
+                viewFeedBtn.style.transform = 'scale(1.02)';
+            });
+            viewFeedBtn.addEventListener('mouseleave', () => {
+                viewFeedBtn.style.transform = 'scale(1)';
+            });
+            viewFeedBtn.addEventListener('click', () => {
+                window.location.hash = '#governance';
+            });
+        }
     </script>
 </body></html>

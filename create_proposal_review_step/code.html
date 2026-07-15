@@ -176,33 +176,33 @@
 </div>
 <div>
 <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Proposal Category</span>
-<h3 class="font-headline-md text-headline-md text-primary">Rule Change</h3>
+<h3 id="proposal-category-review" class="font-headline-md text-headline-md text-primary">Rule Change</h3>
 </div>
 </div>
 <!-- Details Summary -->
 <div class="space-y-lg">
 <div class="bg-surface-container-low rounded-lg p-lg">
 <span class="font-label-sm text-label-sm text-on-surface-variant">TITLE</span>
-<p class="font-body-lg text-body-lg font-bold text-primary mt-xs">Adjust Minimum Collateral Ratio</p>
+<p id="proposal-title-review" class="font-body-lg text-body-lg font-bold text-primary mt-xs">Adjust Minimum Collateral Ratio</p>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
 <div class="space-y-xs">
 <span class="font-label-sm text-label-sm text-on-surface-variant">RATIONALE</span>
-<p class="font-body-sm text-body-sm text-on-surface leading-relaxed">
-                                    Current market conditions and protocol liquidity metrics suggest that a lower collateralization threshold is sustainable for the Mesa Protocol. This change aims to increase capital efficiency for all circle participants without compromising security.
-                                </p>
+<p id="proposal-rationale-review" class="font-body-sm text-body-sm text-on-surface leading-relaxed">
+    Current market conditions and protocol liquidity metrics suggest that a lower collateralization threshold is sustainable for the Mesa Protocol. This change aims to increase capital efficiency for all circle participants without compromising security.
+</p>
 </div>
 <div class="space-y-sm">
-<span class="font-label-sm text-label-sm text-on-surface-variant">PARAMETER CHANGES</span>
+<span id="proposal-param-label" class="font-label-sm text-label-sm text-on-surface-variant">PARAMETER CHANGES</span>
 <div class="bg-surface-container-highest/30 border border-outline-variant rounded-lg p-md flex items-center justify-between">
 <div class="text-center px-md">
 <span class="font-label-sm text-label-sm text-on-surface-variant block">From</span>
-<span class="font-headline-md text-headline-md text-on-surface-variant line-through">150%</span>
+<span id="proposal-old-value-review" class="font-headline-md text-headline-md text-on-surface-variant line-through">150%</span>
 </div>
 <span class="material-symbols-outlined text-secondary">trending_flat</span>
 <div class="text-center px-md">
 <span class="font-label-sm text-label-sm text-secondary block">To</span>
-<span class="font-headline-md text-headline-md text-secondary">125%</span>
+<span id="proposal-new-value-review" class="font-headline-md text-headline-md text-secondary">125%</span>
 </div>
 </div>
 </div>
@@ -281,7 +281,7 @@
 <div class="max-w-[1200px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-lg">
 <div class="space-y-sm text-center md:text-left">
 <span class="font-headline-md text-headline-md text-primary font-bold">Mesa</span>
-<p class="font-body-sm text-body-sm text-on-surface-variant">© 2024 Mesa Protocol. Built on Stellar.</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">© 2026 Mesa Protocol. Built on Stellar.</p>
 </div>
 <div class="flex flex-wrap justify-center gap-lg">
 <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Documentation</a>
@@ -291,8 +291,42 @@
 </div>
 </div>
 </footer>
-<script>
-        // Micro-interaction for submit button
+    <script>
+        // Populate review details from localStorage
+        const category = localStorage.tempProposalCategory || 'Rule Change';
+        const title = localStorage.tempProposalTitle || 'Adjust Minimum Collateral Ratio';
+        const rationale = localStorage.tempProposalRationale || 'Current market conditions and protocol liquidity metrics suggest that a lower collateralization threshold is sustainable for the Mesa Protocol.';
+        const param = localStorage.tempProposalParam || 'Collateral Ratio (%)';
+        const newVal = localStorage.tempProposalNewVal || '125%';
+
+        document.getElementById('proposal-category-review').textContent = category;
+        document.getElementById('proposal-title-review').textContent = title;
+        document.getElementById('proposal-rationale-review').textContent = rationale;
+        document.getElementById('proposal-param-label').textContent = param.toUpperCase();
+        document.getElementById('proposal-new-value-review').textContent = newVal;
+
+        // Custom icon mapping based on category
+        const iconEl = document.querySelector('.w-12.h-12.rounded-lg.bg-surface-container-high span');
+        if (iconEl) {
+            if (category === 'Member Change') {
+                iconEl.textContent = 'person_add';
+            } else if (category === 'Emergency Action') {
+                iconEl.textContent = 'gpp_maybe';
+                iconEl.className = 'material-symbols-outlined text-[28px] text-error';
+            } else {
+                iconEl.textContent = 'settings_suggest';
+            }
+        }
+
+        // Back button handler
+        const backBtn = document.querySelector('button.text-on-surface-variant');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                window.location.hash = '#create-proposal';
+            });
+        }
+
+        // Submit handler
         const submitBtn = document.querySelector('button.bg-primary');
         if (submitBtn) {
             submitBtn.addEventListener('mouseenter', () => {
@@ -300,6 +334,32 @@
             });
             submitBtn.addEventListener('mouseleave', () => {
                 submitBtn.querySelector('.material-symbols-outlined').classList.remove('translate-x-1');
+            });
+            submitBtn.addEventListener('click', () => {
+                // Save the submitted proposal to local history list
+                const proposals = JSON.parse(localStorage.getItem('mesa_submitted_proposals') || '[]');
+                const newId = 'MP-0' + (44 + proposals.length);
+                proposals.push({
+                    id: newId,
+                    category: category,
+                    title: title,
+                    rationale: rationale,
+                    param: param,
+                    newVal: newVal,
+                    votesYes: 0,
+                    votesNo: 0,
+                    quorumReached: false,
+                    status: 'Voting Open',
+                    timestamp: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+                });
+                localStorage.setItem('mesa_submitted_proposals', JSON.stringify(proposals));
+                
+                // Clear temporary inputs
+                localStorage.removeItem('tempProposalTitle');
+                localStorage.removeItem('tempProposalRationale');
+                
+                // Navigate to success screen
+                window.location.hash = '#success-proposal';
             });
         }
     </script>

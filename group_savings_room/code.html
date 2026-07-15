@@ -134,63 +134,6 @@
     </style>
 </head>
 <body class="text-on-surface">
-<!-- Top Navigation Shell -->
-<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-gutter py-md bg-surface-container-lowest shadow-sm">
-<div class="flex items-center gap-xl">
-<span class="font-headline-lg text-headline-lg font-black text-primary">Mesa</span>
-<div class="hidden md:flex gap-lg">
-<a class="text-primary font-bold border-b-2 border-primary py-xs font-label-md text-label-md" href="#">Dashboard</a>
-<a class="text-on-surface-variant font-medium hover:bg-surface-container-low transition-colors duration-200 px-sm py-xs rounded font-label-md text-label-md" href="#">My Circles</a>
-<a class="text-on-surface-variant font-medium hover:bg-surface-container-low transition-colors duration-200 px-sm py-xs rounded font-label-md text-label-md" href="#">Explore</a>
-</div>
-</div>
-<div class="flex items-center gap-md">
-<button class="p-sm rounded-full hover:bg-surface-container-low transition-colors active:scale-95">
-<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
-</button>
-<div class="flex items-center gap-sm bg-surface-container px-md py-xs rounded-full">
-<span class="material-symbols-outlined text-primary">account_balance_wallet</span>
-<span class="font-label-md text-label-md">2,450 USDC</span>
-</div>
-<img class="w-10 h-10 rounded-full border-2 border-outline-variant object-cover" data-alt="A professional high-resolution studio portrait of a modern fintech user, smiling warmly. The aesthetic is clean and professional with soft directional lighting and a shallow depth of field against a minimalist neutral gray background, fitting a high-end corporate financial application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKRloN8Ks1SRkp6iTiUmGwZKkwLRkDaumg54h3mqsHIv4mAjnN1gxWmuB7Oy_aJHi-ZcdFZ_pe_CsWiqcLZYnQuI4Zo5OH8h3kPxE1QLa2_SUiCNrkGUvdmDu4enJDmTsy_DKFVh2TX3FRi-arQPPF_KTUrqAtYLp4Ed-RdGcwwomQG2Qzuphy6kuGI8q492iNyNb_0qPb-UoVWytcB9WRsw3gWpdaxGlyJNk97CWlZl-JBPVLh51ynyiXC8TdxptZq81Ak-MDbZ8V"/>
-</div>
-</nav>
-<!-- Side Navigation Shell (Desktop) -->
-<aside class="hidden lg:flex flex-col h-screen fixed left-0 top-0 pt-24 pb-lg px-md w-64 bg-surface-container-low border-r border-outline-variant z-40">
-<div class="px-md mb-xl">
-<h2 class="font-headline-md text-headline-md font-bold text-primary">Mesa Protocol</h2>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Community Finance</p>
-</div>
-<nav class="flex flex-col gap-xs flex-1">
-<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="#">
-<span class="material-symbols-outlined">dashboard</span>
-<span class="font-label-md text-label-md">Dashboard</span>
-</a>
-<a class="flex items-center gap-md px-md py-sm rounded-lg bg-secondary-container text-on-secondary-container font-semibold" href="#">
-<span class="material-symbols-outlined">group_work</span>
-<span class="font-label-md text-label-md">My Circles</span>
-</a>
-<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="#">
-<span class="material-symbols-outlined">explore</span>
-<span class="font-label-md text-label-md">Explore</span>
-</a>
-<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container transition-all" href="#">
-<span class="material-symbols-outlined">account_balance</span>
-<span class="font-label-md text-label-md">Governance</span>
-</a>
-</nav>
-<div class="mt-auto pt-lg border-t border-outline-variant flex flex-col gap-xs">
-<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:text-primary" href="#">
-<span class="material-symbols-outlined">description</span>
-<span class="font-label-md text-label-md">Protocol Docs</span>
-</a>
-<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:text-primary" href="#">
-<span class="material-symbols-outlined">language</span>
-<span class="font-label-md text-label-md">Stellar Explorer</span>
-</a>
-</div>
-</aside>
-<!-- Main Content Canvas -->
 <main class="lg:ml-64 pt-24 min-h-screen px-gutter pb-xl">
 <div class="max-w-[1200px] mx-auto">
 <!-- Breadcrumbs / Header -->
@@ -383,17 +326,86 @@
                         </button>
 
                         <!-- Path payment info -->
-                        <div class="bg-tertiary-fixed/20 border border-tertiary-fixed rounded-xl p-md">
-                          <p class="font-label-sm text-label-sm text-on-surface-variant mb-sm">Cross-Border Payment</p>
-                          <p class="font-body-sm text-body-sm">You're contributing <strong>50 USDC</strong>. Have <strong>EURC or KES</strong>?
-                            <button onclick="window.MesaSDK && window.MesaSDK.checkPathPayment('EURC','USDC',50)"
-                              class="text-secondary underline font-semibold">Auto-convert via Stellar path payment →</button>
-                          </p>
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-md space-y-md">
+                          <div class="flex justify-between items-center">
+                            <p class="font-label-sm text-label-sm text-slate-500 uppercase font-bold tracking-wider">Contribution Currency</p>
+                            <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full font-sans">Path Payment</span>
+                          </div>
+                          
+                          <!-- Currency Tabs -->
+                          <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-lg font-sans">
+                            <button id="tab-usdc" onclick="selectPaymentCurrency('USDC')" class="py-1.5 text-xs font-bold rounded-md bg-white text-slate-900 shadow-sm border border-slate-200/50 focus:outline-none transition-all flex items-center justify-center gap-1">
+                              <span class="w-2 h-2 rounded-full bg-blue-500"></span> USDC
+                            </button>
+                            <button id="tab-eurc" onclick="selectPaymentCurrency('EURC')" class="py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-900 focus:outline-none transition-all flex items-center justify-center gap-1">
+                              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> EURC
+                            </button>
+                            <button id="tab-xlm" onclick="selectPaymentCurrency('XLM')" class="py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-900 focus:outline-none transition-all flex items-center justify-center gap-1">
+                              <span class="w-2 h-2 rounded-full bg-amber-500"></span> XLM
+                            </button>
+                          </div>
+
+                          <!-- Conversion Info Card -->
+                          <div id="conversion-info-card" class="hidden bg-white border border-slate-100 rounded-lg p-sm space-y-2 text-left">
+                            <div class="flex justify-between items-center text-xs">
+                              <span class="text-slate-400 font-semibold uppercase">Exchange Rate</span>
+                              <span id="conversion-rate-text" class="font-bold text-slate-800">Calculating...</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                              <span class="text-slate-400 font-semibold uppercase">Path Hops</span>
+                              <div id="conversion-path-hops" class="flex items-center gap-1 font-bold text-slate-700"></div>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                              <span class="text-slate-400 font-semibold uppercase">Max Source Amount</span>
+                              <span id="conversion-max-send" class="font-bold text-slate-900">Calculating...</span>
+                            </div>
+                            <div class="text-[10px] text-slate-400 leading-normal border-t border-slate-50 pt-1">
+                              * Includes 1% slippage buffer. Excess assets will remain in your wallet.
+                            </div>
+                          </div>
                         </div>
 <p class="text-center font-body-sm text-body-sm text-on-surface-variant mt-md">
                             Payments are secured by the Mesa Smart Contract.
                         </p>
 </div>
+
+<!-- Auction Bidding Card (Only visible if payout_mode is 1) -->
+<div id="mesa-auction-card" class="glass-panel p-xl rounded-xl shadow-xl border-t-4 border-secondary-fixed hidden">
+    <div class="flex items-center gap-md mb-lg">
+        <span class="material-symbols-outlined text-secondary-fixed-dim text-[32px]">gavel</span>
+        <div>
+            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-tighter">Auction Bidding</p>
+            <h4 class="font-headline-md text-headline-md font-bold text-slate-900">Submit Discount Bid</h4>
+        </div>
+    </div>
+    <div class="space-y-md mb-xl">
+        <p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            Submit the discount you are willing to take to receive the pot early. The highest bidder wins. The bid discount is distributed back to all other members as a yield dividend.
+        </p>
+        
+        <!-- Bid Input -->
+        <div id="mesa-bid-form-container">
+            <label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs font-semibold">Your Bid Discount (USDC)</label>
+            <div class="relative mb-sm">
+                <input type="number" id="mesa-bid-amount-input" placeholder="e.g. 50" class="w-full rounded-lg border-outline-variant bg-surface-container px-md py-sm pl-10 font-body-sm text-body-sm focus:border-secondary focus:ring-secondary"/>
+                <span class="absolute left-4 top-2 text-on-surface-variant font-bold">$</span>
+            </div>
+            <button onclick="handlePlaceBid()" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-lg font-label-md text-label-md transition-all flex items-center justify-center gap-2 font-bold">
+                <span class="material-symbols-outlined text-[18px]">gavel</span> Place Bid
+            </button>
+        </div>
+
+        <!-- Current Bids List -->
+        <div class="pt-md border-t border-outline-variant">
+            <h5 class="font-label-sm text-label-sm text-primary uppercase tracking-wider mb-2 font-bold">Active Bids This Round</h5>
+            <div id="mesa-active-bids-list" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                <!-- Populated dynamically -->
+                <p class="text-xs text-on-surface-variant italic">No bids placed yet.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Circle Details Card -->
 <div class="bg-surface-container-lowest p-xl rounded-xl shadow-sm border border-outline-variant">
 <h3 class="font-headline-md text-headline-md mb-lg">Circle Details</h3>
@@ -424,8 +436,8 @@
 <div class="flex items-start gap-md">
 <span class="material-symbols-outlined text-on-surface-variant p-sm bg-surface-container rounded-lg">gavel</span>
 <div>
-<p class="font-label-sm text-label-sm text-on-surface-variant">Governed by</p>
-<p class="font-body-md text-body-md font-semibold">Consensus Vote</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Payout Model</p>
+<p id="mesa-payout-mode-text" class="font-body-md text-body-md font-semibold">Fixed Rotation</p>
 </div>
 </div>
 </div>
@@ -441,11 +453,11 @@
                 If >50% of members flag an emergency, the contract pauses and all principals can be withdrawn.
               </p>
               <div class="flex gap-sm flex-wrap">
-                <button onclick="window.MesaSDK && window.MesaSDK.flagEmergency('chama-family-tanda')"
+                <button id="mesa-flag-emergency-btn"
                   class="flex-1 py-sm px-md bg-error text-on-error rounded-lg font-label-md text-label-md active:scale-95 transition-all">
                   🚨 Flag Emergency
                 </button>
-                <button onclick="window.MesaSDK && window.MesaSDK.withdraw('chama-family-tanda')"
+                <button id="mesa-withdraw-principal-btn"
                   class="flex-1 py-sm px-md bg-error-container border border-error text-on-error-container rounded-lg font-label-md text-label-md active:scale-95 transition-all">
                   Withdraw Principal
                 </button>
@@ -461,7 +473,7 @@
 <div class="max-w-[1200px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-lg">
 <div class="flex flex-col items-center md:items-start gap-xs">
 <span class="font-headline-md text-headline-md text-primary font-black">Mesa</span>
-<p class="font-body-sm text-body-sm text-on-surface-variant text-center md:text-left">© 2024 Mesa Protocol. Built on Stellar.</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-center md:text-left">© 2026 Mesa Protocol. Built on Stellar.</p>
 </div>
 <div class="flex flex-wrap justify-center gap-xl">
 <a class="text-on-surface-variant font-label-sm text-label-sm hover:text-primary transition-colors" href="#">Documentation</a>
@@ -480,34 +492,195 @@
         return addr.slice(0, 6) + '…' + addr.slice(-4);
     }
 
-    function renderChamaPage() {
+    // Get contract address from URL hash
+    function getCircleContractAddress() {
+        const hash = window.location.hash || '';
+        const params = new URLSearchParams(hash.split('?')[1] || '');
+        // Default fallback
+        return params.get('contract') || 'CCKYJCI3JJIIJAL3PV4G3E3TOTPCZMBIN5QHLKSZB3LAQJ6LA4KQXNEU';
+    }
+
+    let currentPaymentCurrency = 'USDC';
+    let pathResult = null;
+    let isPathFinding = false;
+
+    async function selectPaymentCurrency(currencyCode) {
+        if (currentPaymentCurrency === currencyCode && (pathResult || currencyCode === 'USDC')) return;
+        currentPaymentCurrency = currencyCode;
+        pathResult = null;
+
+        updateCurrencyTabsUI();
+
+        if (currencyCode === 'USDC') {
+            document.getElementById('conversion-info-card').classList.add('hidden');
+            renderChamaPage();
+            return;
+        }
+
+        isPathFinding = true;
+        document.getElementById('conversion-info-card').classList.remove('hidden');
+        document.getElementById('conversion-rate-text').textContent = 'Calculating...';
+        document.getElementById('conversion-path-hops').innerHTML = '<span class="animate-pulse">Loading hops...</span>';
+        document.getElementById('conversion-max-send').textContent = 'Calculating...';
+        
+        const contributeBtn = document.getElementById('mesa-contribute-btn');
+        if (contributeBtn) {
+            contributeBtn.disabled = true;
+            contributeBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-[16px]">sync</span> Finding conversion path...`;
+            contributeBtn.className = "w-full bg-slate-400 text-white py-4 rounded-xl font-sans text-md font-bold cursor-not-allowed flex items-center justify-center gap-2";
+        }
+
+        const sdk = window.MesaSDK;
+        const contractAddress = getCircleContractAddress();
+        const stateRes = await sdk.circle.getState(contractAddress);
+        if (!stateRes.success || !stateRes.data) {
+            isPathFinding = false;
+            return;
+        }
+        const chama = stateRes.data;
+        const rawContrib = parseFloat(chama.contribution_amount) || 0;
+        const contributionAmount = rawContrib >= 100000 ? rawContrib / 10000000 : rawContrib;
+
+        let fromIssuer = null;
+        if (currencyCode === 'EURC') {
+            fromIssuer = 'GB3Q6QDZYTHWT7E5PVS3W7FUT5GVAFC5KSZFFLPU25GO7VTC3NM2ZTVO';
+        }
+        const toIssuer = 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5';
+
+        const res = await sdk.checkPathPayment(
+            currencyCode,
+            fromIssuer,
+            'USDC',
+            toIssuer,
+            contributionAmount.toString()
+        );
+
+        isPathFinding = false;
+
+        if (res && res.success) {
+            pathResult = res;
+            
+            const rateText = `1 ${currencyCode} ≈ ${(1 / res.rate).toFixed(4)} USDC`;
+            document.getElementById('conversion-rate-text').textContent = rateText;
+
+            const hopsContainer = document.getElementById('conversion-path-hops');
+            hopsContainer.innerHTML = '';
+            res.hops.forEach((h, idx) => {
+                if (idx > 0) {
+                    const arrow = document.createElement('span');
+                    arrow.className = 'text-slate-400 font-normal';
+                    arrow.textContent = '→';
+                    hopsContainer.appendChild(arrow);
+                }
+                const hop = document.createElement('span');
+                hop.className = h === 'USDC' ? 'text-blue-600' : h === 'EURC' ? 'text-emerald-600' : 'text-slate-800';
+                hop.textContent = h;
+                hopsContainer.appendChild(hop);
+            });
+
+            const sendMaxVal = (parseFloat(res.source_amount) * 1.01).toFixed(7);
+            document.getElementById('conversion-max-send').textContent = `${sendMaxVal} ${currencyCode}`;
+        } else {
+            document.getElementById('conversion-rate-text').textContent = 'Error finding path';
+            document.getElementById('conversion-path-hops').textContent = 'None';
+            document.getElementById('conversion-max-send').textContent = 'N/A';
+        }
+
+        renderChamaPage();
+    }
+
+    function updateCurrencyTabsUI() {
+        const tabs = ['USDC', 'EURC', 'XLM'];
+        tabs.forEach(tab => {
+            const btn = document.getElementById(`tab-${tab.toLowerCase()}`);
+            if (!btn) return;
+            if (currentPaymentCurrency === tab) {
+                btn.className = "py-1.5 text-xs font-bold rounded-md bg-white text-slate-900 shadow-sm border border-slate-200/50 focus:outline-none transition-all flex items-center justify-center gap-1";
+            } else {
+                btn.className = "py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-900 focus:outline-none transition-all flex items-center justify-center gap-1";
+            }
+        });
+    }
+
+    async function renderChamaPage() {
         if (!window.MesaSDK) return;
         const sdk = window.MesaSDK;
-        const chama = sdk.api.getChama('chama-family-tanda');
-        if (!chama) return;
+        const contractAddress = getCircleContractAddress();
+        
+        // Update URL/breadcrumb text dynamically
+        const breadcrumbEl = document.querySelector('nav.text-on-surface-variant span.text-primary');
+        const titleEl = document.querySelector('main h1');
+        
+        // Fetch state on-chain
+        const stateRes = await sdk.circle.getState(contractAddress);
+        if (!stateRes.success || !stateRes.data) {
+            console.error("Failed to load circle state:", stateRes.error);
+            return;
+        }
+        const chama = stateRes.data;
 
-        // 1. Update round indicator
+        if (breadcrumbEl) breadcrumbEl.textContent = chama.name;
+        if (titleEl) titleEl.textContent = chama.name;
+
+        // Fetch round contributions, sponsors, and deposits concurrently
+        const roundContribs = {};
+        const vouches = {};
+        const secDeposits = {};
+        const reputation = {};
+        
+        await Promise.all(chama.members.map(async (m) => {
+            const contribRes = await sdk.circle.hasContributed(contractAddress, chama.current_round, m);
+            roundContribs[m] = contribRes.success ? contribRes.data : false;
+            
+            const spRes = await sdk.circle.getSponsor(contractAddress, m);
+            vouches[m] = spRes.success ? spRes.data : m;
+            
+            const depRes = await sdk.circle.getMemberDeposit(contractAddress, m);
+            secDeposits[m] = depRes.success ? depRes.data : '0';
+            
+            const repRes = await sdk.circle.getReputation(contractAddress, m);
+            reputation[m] = repRes.success ? repRes.data : 100;
+        }));
+
+        const tokenCode = 'USDC';
+
+        // Scale down contribution amount for display (7 decimals)
+        const rawContrib = parseFloat(chama.contribution_amount) || 0;
+        const contributionAmount = rawContrib >= 100000 ? rawContrib / 10000000 : rawContrib;
+
+        // Update round indicator badge
         const roundEl = document.getElementById('mesa-round-badge');
         if (roundEl) {
-            roundEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-secondary"></span> Round ${chama.currentRound + 1} of ${chama.totalRounds}`;
+            if (chama.status === 0) {
+                roundEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-500"></span> Signup Phase`;
+            } else if (chama.status === 1) {
+                roundEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-secondary"></span> Round ${chama.current_round + 1} of ${chama.members.length}`;
+            } else if (chama.status === 2) {
+                roundEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> Emergency Paused`;
+            } else if (chama.status === 3) {
+                roundEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-500"></span> Circle Completed`;
+            }
         }
         
         const roundTitleEl = document.getElementById('mesa-round-title');
         if (roundTitleEl) {
-            roundTitleEl.textContent = `Round ${chama.currentRound + 1} Contribution`;
+            if (chama.status === 0) {
+                roundTitleEl.textContent = `Circle Signup`;
+            } else {
+                roundTitleEl.textContent = `Round ${chama.current_round + 1} Contribution`;
+            }
         }
 
-        // 2. Collected progress bar
+        // Collected progress bar
         const totalMembersCount = chama.members.length;
-        const contribAmount = chama.contributionAmount;
-        const paidCount = chama.members.filter(m => chama.roundContribs[m]).length;
-        const totalExpected = contribAmount * totalMembersCount;
-        const totalCollected = (contribAmount * paidCount) + (chama.forfeits || 0);
-        const collectedPct = Math.min(100, Math.round((totalCollected / totalExpected) * 100));
+        const paidCount = chama.members.filter(m => roundContribs[m]).length;
+        const totalExpected = contributionAmount * totalMembersCount;
+        const totalCollected = contributionAmount * paidCount;
+        const collectedPct = totalExpected > 0 ? Math.min(100, Math.round((totalCollected / totalExpected) * 100)) : 0;
 
         const collectedAmountEl = document.getElementById('mesa-collected-amount');
         if (collectedAmountEl) {
-            collectedAmountEl.innerHTML = `$${totalCollected} <span class="text-on-surface-variant font-normal text-body-md">/ $${totalExpected} ${chama.tokenCode}</span>`;
+            collectedAmountEl.innerHTML = `$${totalCollected.toFixed(2)} <span class="text-on-surface-variant font-normal text-body-md">/ $${totalExpected.toFixed(2)} ${tokenCode}</span>`;
         }
         
         const collectedPctEl = document.getElementById('mesa-collected-pct');
@@ -526,114 +699,303 @@
             pendingCountEl.textContent = `${pendingMembersCount} member${pendingMembersCount !== 1 ? 's' : ''} pending`;
         }
 
-        // 3. User actions update
+        // Render rotation wheel members
+        const wheelContainer = document.querySelector('.rotation-wheel-container');
+        if (wheelContainer) {
+            wheelContainer.querySelectorAll('.wheel-member').forEach(el => el.remove());
+            
+            const circleProgressRing = wheelContainer.querySelector('circle:nth-child(2)');
+            if (circleProgressRing) {
+                const circumference = 942;
+                const offset = circumference - (collectedPct / 100) * circumference;
+                circleProgressRing.style.strokeDashoffset = String(offset);
+            }
+
+            const centerLabelDate = wheelContainer.querySelector('.absolute.inset-0.flex.flex-col.items-center.justify-center.text-center span:nth-child(2)');
+            const centerLabelDays = wheelContainer.querySelector('.absolute.inset-0.flex.flex-col.items-center.justify-center.text-center span:nth-child(3)');
+            
+            if (chama.status === 0) {
+                if (centerLabelDate) centerLabelDate.textContent = 'SIGNUP';
+                if (centerLabelDays) centerLabelDays.textContent = `${totalMembersCount} joined`;
+            } else if (chama.status === 2) {
+                if (centerLabelDate) centerLabelDate.textContent = 'PAUSED';
+                if (centerLabelDays) centerLabelDays.textContent = 'Emergency active';
+            } else if (chama.status === 3) {
+                if (centerLabelDate) centerLabelDate.textContent = 'DONE';
+                if (centerLabelDays) centerLabelDays.textContent = 'All rounds complete';
+            } else {
+                const nowSec = Math.floor(Date.now() / 1000);
+                const diff = Number(chama.deadline) - nowSec;
+                if (diff <= 0) {
+                    if (centerLabelDate) centerLabelDate.textContent = 'EXPIRED';
+                    if (centerLabelDays) centerLabelDays.textContent = 'Waiting distribution';
+                } else {
+                    const days = Math.floor(diff / 86400);
+                    const hours = Math.floor((diff % 86400) / 3600);
+                    const minutes = Math.floor((diff % 3600) / 60);
+                    
+                    if (centerLabelDate) {
+                        const dateObj = new Date(Number(chama.deadline) * 1000);
+                        centerLabelDate.textContent = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                    }
+                    if (centerLabelDays) {
+                        if (days > 0) {
+                            centerLabelDays.textContent = `${days}d ${hours}h left`;
+                        } else {
+                            centerLabelDays.textContent = `${hours}h ${minutes}m left`;
+                        }
+                    }
+                }
+            }
+
+            chama.rotation_order.forEach((m, idx) => {
+                const angle = (2 * Math.PI * idx) / chama.rotation_order.length - Math.PI / 2;
+                const radius = 150;
+                const x = 50 + (radius / 170) * 50 * Math.cos(angle);
+                const y = 50 + (radius / 170) * 50 * Math.sin(angle);
+
+                const div = document.createElement('div');
+                div.className = 'wheel-member absolute transform -translate-x-1/2 -translate-y-1/2';
+                div.style.top = `${y}%`;
+                div.style.left = `${x}%`;
+
+                const isCurrentUser = m === sdk.state.walletAddress;
+                const isPaid = roundContribs[m];
+                const isCurrentBeneficiary = chama.status === 1 && (idx === chama.current_round);
+
+                let badge = '';
+                if (isCurrentBeneficiary) {
+                    badge = `<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-secondary text-on-secondary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Current</span>`;
+                } else if (isCurrentUser) {
+                    badge = `<span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase font-sans">You</span>`;
+                }
+
+                let check = '';
+                if (isPaid) {
+                    check = `<span class="absolute -bottom-1 -right-1 bg-secondary text-on-secondary rounded-full p-0.5"><span class="material-symbols-outlined text-[12px] font-bold">check</span></span>`;
+                }
+
+                const initials = formatAddress(m).slice(0, 2);
+                div.innerHTML = `
+                    <div class="relative group">
+                        <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-primary dark:text-emerald-400 border-2 ${isCurrentBeneficiary ? 'border-secondary' : 'border-slate-300 dark:border-slate-700'} shadow-md font-sans">
+                            ${initials}
+                        </div>
+                        ${badge}
+                        ${check}
+                        <div class="hidden group-hover:block absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-2 py-1 rounded shadow text-[10px] whitespace-nowrap z-50 font-sans">${formatAddress(m)}</div>
+                    </div>
+                `;
+                wheelContainer.appendChild(div);
+            });
+        }
+
         const walletAddress = sdk.state.walletAddress;
         const isMember = walletAddress && chama.members.includes(walletAddress);
 
-        // Toggle Join Card visibility
         const joinCard = document.getElementById('mesa-join-card');
         if (joinCard) {
-            if (walletAddress && !isMember) {
+            if (walletAddress && !isMember && chama.status === 0) {
                 joinCard.classList.remove('hidden');
+                const strongDeposit = joinCard.querySelector('strong');
+                if (strongDeposit) strongDeposit.textContent = `${contributionAmount} USDC`;
             } else {
                 joinCard.classList.add('hidden');
             }
         }
 
-        // Update Contribute Button
+        const contributionTextEl = document.querySelector('.glass-panel.border-t-4.border-primary div.space-y-md div:nth-child(1) span:nth-child(2)');
+        if (contributionTextEl) {
+            contributionTextEl.textContent = `${contributionAmount} USDC`;
+        }
+
+        const actionStatusTextEl = document.querySelector('.glass-panel.border-t-4.border-primary div.space-y-md div:nth-child(2) span:nth-child(2)');
+        if (actionStatusTextEl) {
+            if (!isMember) {
+                actionStatusTextEl.className = 'text-slate-500 font-bold';
+                actionStatusTextEl.textContent = 'Not Member';
+            } else if (roundContribs[walletAddress]) {
+                actionStatusTextEl.className = 'text-emerald-500 font-bold flex items-center gap-1';
+                actionStatusTextEl.innerHTML = `<span class="material-symbols-outlined text-[16px]">check_circle</span> Paid`;
+            } else {
+                actionStatusTextEl.className = 'text-red-500 font-bold flex items-center gap-1';
+                actionStatusTextEl.innerHTML = `<span class="material-symbols-outlined text-[16px]">warning</span> Pending`;
+            }
+        }
+
+        const actionDeadlineTextEl = document.querySelector('.glass-panel.border-t-4.border-primary div.space-y-md div:nth-child(3) span:nth-child(2)');
+        if (actionDeadlineTextEl) {
+            if (chama.status === 0) {
+                actionDeadlineTextEl.textContent = 'Signup phase';
+            } else {
+                const dateObj = new Date(Number(chama.deadline) * 1000);
+                actionDeadlineTextEl.textContent = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+            }
+        }
+
         const contributeBtn = document.getElementById('mesa-contribute-btn');
         if (contributeBtn) {
-            contributeBtn.innerHTML = `<span class="material-symbols-outlined">payments</span> Pay My Round | ${chama.contributionAmount} ${chama.tokenCode}`;
-            if (!isMember) {
+            contributeBtn.innerHTML = `<span class="material-symbols-outlined">payments</span> Pay My Round | ${contributionAmount} ${tokenCode}`;
+            
+            const isCreator = walletAddress && chama.creator === walletAddress;
+            if (chama.status === 0) {
+                if (isCreator) {
+                    contributeBtn.disabled = chama.members.length < 2;
+                    contributeBtn.innerHTML = `<span class="material-symbols-outlined">rocket_launch</span> Activate Savings Circle`;
+                    contributeBtn.className = "w-full bg-emerald-500 text-white py-4 rounded-xl font-sans text-md font-bold hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2";
+                    if (chama.members.length < 2) {
+                        contributeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                        contributeBtn.title = "At least 2 members are required to activate";
+                    } else {
+                        contributeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        contributeBtn.title = "Lock order and start round 1";
+                    }
+                    contributeBtn.onclick = () => window.MesaSDK.activateCircle(contractAddress);
+                } else {
+                    contributeBtn.disabled = true;
+                    contributeBtn.innerHTML = `<span class="material-symbols-outlined">hourglass_empty</span> Waiting for activation`;
+                    contributeBtn.className = "w-full bg-slate-200 text-slate-500 py-4 rounded-xl font-sans text-md font-bold cursor-not-allowed flex items-center justify-center gap-2";
+                    contributeBtn.onclick = null;
+                }
+            } else if (chama.status === 2 || chama.status === 3) {
                 contributeBtn.disabled = true;
-                contributeBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                contributeBtn.title = "Join the circle first";
-            } else if (chama.roundContribs[walletAddress]) {
-                contributeBtn.disabled = true;
-                contributeBtn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Round Paid ✓`;
-                contributeBtn.classList.add('bg-secondary', 'cursor-not-allowed');
-                contributeBtn.classList.remove('bg-primary');
+                contributeBtn.innerHTML = `<span class="material-symbols-outlined">lock</span> Circle Closed`;
+                contributeBtn.className = "w-full bg-slate-200 text-slate-500 py-4 rounded-xl font-sans text-md font-bold cursor-not-allowed flex items-center justify-center gap-2";
+                contributeBtn.onclick = null;
             } else {
-                contributeBtn.disabled = false;
-                contributeBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-secondary');
-                contributeBtn.classList.add('bg-primary');
+                if (currentPaymentCurrency === 'USDC') {
+                    contributeBtn.className = "w-full bg-slate-900 text-white py-4 rounded-xl font-sans text-md font-bold hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2";
+                    contributeBtn.onclick = () => window.MesaSDK.contribute(contractAddress);
+                    contributeBtn.innerHTML = `<span class="material-symbols-outlined">payments</span> Pay My Round | ${contributionAmount} USDC`;
+                } else {
+                    if (isPathFinding) {
+                        contributeBtn.disabled = true;
+                        contributeBtn.innerHTML = `<span class="material-symbols-outlined animate-spin text-[16px]">sync</span> Finding conversion path...`;
+                        contributeBtn.className = "w-full bg-slate-400 text-white py-4 rounded-xl font-sans text-md font-bold cursor-not-allowed flex items-center justify-center gap-2";
+                    } else if (pathResult) {
+                        const sendAmountStr = parseFloat(pathResult.source_amount).toFixed(2);
+                        contributeBtn.className = "w-full bg-slate-900 text-white py-4 rounded-xl font-sans text-md font-bold hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2";
+                        contributeBtn.innerHTML = `<span class="material-symbols-outlined">payments</span> Pay My Round | ${sendAmountStr} ${currentPaymentCurrency}`;
+                        
+                        let fromIssuer = null;
+                        if (currentPaymentCurrency === 'EURC') {
+                            fromIssuer = 'GB3Q6QDZYTHWT7E5PVS3W7FUT5GVAFC5KSZFFLPU25GO7VTC3NM2ZTVO';
+                        }
+                        const sendMax = (parseFloat(pathResult.source_amount) * 1.01).toFixed(7);
+                        contributeBtn.onclick = () => window.MesaSDK.contributeWithPathPayment(
+                            contractAddress,
+                            currentPaymentCurrency,
+                            fromIssuer,
+                            sendMax,
+                            'USDC',
+                            'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
+                            contributionAmount.toString(),
+                            pathResult.path
+                        );
+                    } else {
+                        contributeBtn.disabled = true;
+                        contributeBtn.innerHTML = `<span class="material-symbols-outlined">error</span> Path Payment Failed`;
+                        contributeBtn.className = "w-full bg-rose-600 text-white py-4 rounded-xl font-sans text-md font-bold cursor-not-allowed flex items-center justify-center gap-2";
+                    }
+                }
+                
+                if (!isMember) {
+                    contributeBtn.disabled = true;
+                    contributeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    contributeBtn.title = "Join the circle first";
+                } else if (roundContribs[walletAddress]) {
+                    contributeBtn.disabled = true;
+                    contributeBtn.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Round Paid ✓`;
+                    contributeBtn.classList.add('bg-emerald-500', 'cursor-not-allowed');
+                    contributeBtn.classList.remove('bg-slate-900', 'bg-slate-400', 'bg-rose-600');
+                } else if (!isPathFinding && (currentPaymentCurrency === 'USDC' || pathResult)) {
+                    contributeBtn.disabled = false;
+                    contributeBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-emerald-500');
+                    contributeBtn.classList.add('bg-slate-900');
+                }
             }
         }
 
-        // Update Distribute Button
         const distributeBtn = document.getElementById('mesa-distribute-btn');
         if (distributeBtn) {
-            if (paidCount < totalMembersCount) {
-                distributeBtn.disabled = true;
-                distributeBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                distributeBtn.title = "Waiting for all contributions";
+            distributeBtn.onclick = () => window.MesaSDK.distribute(contractAddress);
+            if (chama.status !== 1) {
+                distributeBtn.classList.add('hidden');
             } else {
-                distributeBtn.disabled = false;
-                distributeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                distributeBtn.classList.remove('hidden');
+                if (paidCount < totalMembersCount) {
+                    distributeBtn.disabled = true;
+                    distributeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    distributeBtn.title = "Waiting for all contributions";
+                } else {
+                    distributeBtn.disabled = false;
+                    distributeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    distributeBtn.title = "Distribute the collected pot to the round beneficiary";
+                }
             }
         }
 
-        // 4. Render Members Directory List
         const membersListContainer = document.getElementById('mesa-members-list');
         if (membersListContainer) {
             membersListContainer.innerHTML = '';
             
             chama.members.forEach(m => {
-                const rep = chama.reputation && chama.reputation[m] !== undefined ? chama.reputation[m] : 100;
-                let badgeColor = 'bg-secondary-container text-on-secondary-container';
+                const rep = reputation[m] !== undefined ? reputation[m] : 100;
+                let badgeColor = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
                 let badgeText = 'Excellent';
                 if (rep < 70) {
-                    badgeColor = 'bg-error-container text-on-error-container';
+                    badgeColor = 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300';
                     badgeText = 'At Risk';
                 } else if (rep < 90) {
-                    badgeColor = 'bg-primary-fixed text-on-primary-fixed';
+                    badgeColor = 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300';
                     badgeText = 'Good';
                 }
 
-                const hasPaid = chama.roundContribs[m];
+                const hasPaid = roundContribs[m];
                 const statusBadge = hasPaid 
-                    ? `<span class="bg-secondary-container text-on-secondary-container px-sm py-0.5 rounded-full text-[10px] font-bold">PAID</span>`
-                    : `<span class="bg-surface-dim text-on-surface-variant px-sm py-0.5 rounded-full text-[10px] font-bold">PENDING</span>`;
+                    ? `<span class="bg-emerald-100 text-emerald-800 px-3 py-0.5 rounded-full text-[10px] font-bold">PAID</span>`
+                    : `<span class="bg-slate-100 text-slate-800 px-3 py-0.5 rounded-full text-[10px] font-bold">PENDING</span>`;
 
-                const sponsor = chama.vouches && chama.vouches[m];
+                const sponsor = vouches[m];
                 const sponsorText = (sponsor && sponsor !== m) 
-                    ? `<span class="text-[11px] text-on-surface-variant">Vouched by: <span class="font-semibold text-primary">${formatAddress(sponsor)}</span></span>`
-                    : `<span class="text-[11px] text-outline">Self-Sponsored</span>`;
+                    ? `<span class="text-[11px] text-slate-500">Vouched by: <span class="font-semibold text-slate-900">${formatAddress(sponsor)}</span></span>`
+                    : `<span class="text-[11px] text-slate-400">Self-Sponsored</span>`;
 
                 const isCurrentUser = m === walletAddress;
-                const userTag = isCurrentUser ? `<span class="bg-primary text-on-primary text-[9px] px-1 py-0.5 rounded ml-xs uppercase font-bold">YOU</span>` : '';
+                const userTag = isCurrentUser ? `<span class="bg-slate-900 text-white text-[9px] px-1 py-0.5 rounded ml-1 uppercase font-bold">YOU</span>` : '';
 
-                const deposit = chama.secDeposits[m] !== undefined ? chama.secDeposits[m] : chama.contributionAmount;
+                const rawDep = parseFloat(secDeposits[m]) || 0;
+                const deposit = rawDep >= 100000 ? rawDep / 10000000 : rawDep;
 
                 const card = document.createElement('div');
-                card.className = 'flex flex-col md:flex-row justify-between items-start md:items-center gap-md p-md hover:bg-surface-container-low rounded-lg transition-colors border-b border-outline-variant/30';
+                card.className = 'flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-4 hover:bg-slate-50 rounded-lg transition-colors border-b border-slate-100';
                 card.innerHTML = `
-                    <div class="flex items-center gap-md">
+                    <div class="flex items-center gap-3">
                         <div class="relative">
-                            <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center font-bold text-primary border border-outline-variant">
+                            <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-700 border border-slate-300 font-sans">
                                 ${formatAddress(m).slice(0, 2)}
                             </div>
-                            ${hasPaid ? `<span class="absolute -bottom-1 -right-1 bg-secondary text-on-secondary rounded-full p-0.5"><span class="material-symbols-outlined text-[10px] font-bold">check</span></span>` : ''}
+                            ${hasPaid ? `<span class="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-0.5"><span class="material-symbols-outlined text-[10px] font-bold">check</span></span>` : ''}
                         </div>
                         <div class="flex flex-col">
                             <div class="flex items-center">
-                                <span class="font-body-md font-semibold text-primary">${formatAddress(m)}</span>
+                                <span class="font-sans font-semibold text-slate-900">${formatAddress(m)}</span>
                                 ${userTag}
                             </div>
                             ${sponsorText}
                         </div>
                     </div>
-                    <div class="flex flex-wrap items-center gap-lg mt-sm md:mt-0">
+                    <div class="flex flex-wrap items-center gap-6 mt-2 md:mt-0 font-sans">
                         <div class="flex flex-col text-left md:text-right">
-                            <span class="font-label-sm text-label-sm text-on-surface-variant">Reputation</span>
-                            <div class="flex items-center gap-xs">
+                            <span class="text-[10px] text-slate-400 uppercase font-semibold">Reputation</span>
+                            <div class="flex items-center gap-1">
                                 <span class="${badgeColor} text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">${badgeText}</span>
-                                <span class="font-body-sm font-semibold">${rep}%</span>
+                                <span class="font-semibold text-slate-800">${rep}%</span>
                             </div>
                         </div>
                         <div class="flex flex-col text-left md:text-right">
-                            <span class="font-label-sm text-label-sm text-on-surface-variant">Security Deposit</span>
-                            <span class="font-body-sm font-semibold">${deposit} ${chama.tokenCode}</span>
+                            <span class="text-[10px] text-slate-400 uppercase font-semibold">Security Deposit</span>
+                            <span class="font-semibold text-slate-800">${deposit.toFixed(2)} ${tokenCode}</span>
                         </div>
                         <div class="flex items-center">
                             ${statusBadge}
@@ -643,71 +1005,134 @@
                 membersListContainer.appendChild(card);
             });
         }
+
+        // Update Payout Mode Text
+        const payoutModeTextEl = document.getElementById('mesa-payout-mode-text');
+        if (payoutModeTextEl) {
+            payoutModeTextEl.textContent = chama.payout_mode === 1 ? 'Auction Bidding' : 'Fixed Rotation';
+        }
+
+        // Render Auction Bidding Card
+        const auctionCard = document.getElementById('mesa-auction-card');
+        if (auctionCard) {
+            if (chama.payout_mode === 1) {
+                auctionCard.classList.remove('hidden');
+                
+                // Fetch bids from contract
+                const bidsRes = await sdk.circle.getAuctionBids(contractAddress);
+                const bidsMap = bidsRes.success ? bidsRes.data : {};
+                
+                // Check if user has already won in previous rounds
+                const hasWon = chama.rotation_order.slice(0, chama.current_round).includes(walletAddress);
+                const isChamaActive = chama.status === 1;
+                const bidFormContainer = document.getElementById('mesa-bid-form-container');
+                
+                if (bidFormContainer) {
+                    if (!isMember) {
+                        bidFormContainer.innerHTML = `<p class="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200/50">Only active members can place bids.</p>`;
+                    } else if (!isChamaActive) {
+                        bidFormContainer.innerHTML = `<p class="text-xs text-slate-500 bg-slate-50 p-2 rounded border border-slate-200/50">Bidding is only active during rotation phase.</p>`;
+                    } else if (hasWon) {
+                        bidFormContainer.innerHTML = `<p class="text-xs text-emerald-600 bg-emerald-50 p-2 rounded border border-emerald-200/50">You have already received your payout for this circle.</p>`;
+                    } else {
+                        // User can place or update bid
+                        bidFormContainer.innerHTML = `
+                            <label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs font-semibold">Your Bid Discount (USDC)</label>
+                            <div class="relative mb-sm">
+                                <input type="number" id="mesa-bid-amount-input" placeholder="e.g. 50" class="w-full rounded-lg border-outline-variant bg-surface-container px-md py-sm pl-10 font-body-sm text-body-sm focus:border-secondary focus:ring-secondary"/>
+                                <span class="absolute left-4 top-2 text-on-surface-variant font-bold">$</span>
+                            </div>
+                            <button onclick="handlePlaceBid()" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-lg font-label-md text-label-md transition-all flex items-center justify-center gap-2 font-bold">
+                                <span class="material-symbols-outlined text-[18px]">gavel</span> Place Bid
+                            </button>
+                        `;
+                    }
+                }
+
+                // Render bids list
+                const bidsListContainer = document.getElementById('mesa-active-bids-list');
+                if (bidsListContainer) {
+                    bidsListContainer.innerHTML = '';
+                    const bidEntries = Object.entries(bidsMap);
+                    if (bidEntries.length === 0) {
+                        bidsListContainer.innerHTML = `<p class="text-xs text-on-surface-variant italic">No bids placed yet.</p>`;
+                    } else {
+                        // Sort by bid amount descending
+                        bidEntries.sort((a, b) => parseFloat(b[1]) - parseFloat(a[1]));
+                        
+                        bidEntries.forEach(([bidder, rawBid]) => {
+                            const bidAmount = parseFloat(rawBid) >= 100000 ? parseFloat(rawBid) / 10000000 : parseFloat(rawBid);
+                            const projectedPayout = totalExpected - bidAmount;
+                            const dividendPerMember = bidAmount / (totalMembersCount - 1);
+                            
+                            const row = document.createElement('div');
+                            row.className = 'flex justify-between items-center p-2 bg-slate-50 border border-slate-100 rounded-lg text-xs';
+                            row.innerHTML = `
+                                <div class="flex flex-col">
+                                    <span class="font-semibold text-slate-800">${formatAddress(bidder)}</span>
+                                    <span class="text-[10px] text-slate-400">Payout: $${projectedPayout.toFixed(2)} | Div: +$${dividendPerMember.toFixed(2)}</span>
+                                </div>
+                                <span class="font-bold text-secondary-fixed-dim bg-secondary/10 px-2 py-0.5 rounded-full">$${bidAmount.toFixed(2)}</span>
+                            `;
+                            bidsListContainer.appendChild(row);
+                        });
+                    }
+                }
+            } else {
+                auctionCard.classList.add('hidden');
+            }
+        }
+
+        updateCurrencyTabsUI();
+    }
+
+    async function handlePlaceBid() {
+        const bidInput = document.getElementById('mesa-bid-amount-input');
+        if (!bidInput) return;
+        const amount = parseFloat(bidInput.value) || 0;
+        const contractAddress = getCircleContractAddress();
+        if (window.MesaSDK) {
+            await window.MesaSDK.placeBid(contractAddress, amount);
+        }
     }
 
     async function handleJoinCircle() {
         const sponsorInput = document.getElementById('mesa-sponsor-input');
         const sponsor = sponsorInput ? sponsorInput.value.trim() : '';
+        const contractAddress = getCircleContractAddress();
         if (window.MesaSDK) {
-            const res = await window.MesaSDK.join('chama-family-tanda', sponsor);
-            if (res) {
-                renderChamaPage();
-            }
+            await window.MesaSDK.join(contractAddress, sponsor);
         }
     }
 
-    // Override contribute wrapper to call renderChamaPage on success
-    if (window.MesaSDK) {
-        window.MesaSDK.contribute = async function(id) {
-            window.MesaSDK.api.contribute(id).then(res => {
-                if (res) {
-                    window.MesaSDK.showToast('✓ Contributed! Tx: ' + (res.txHash || '').slice(0, 12) + '…', 'success');
-                    renderChamaPage();
-                }
-            }).catch(err => {
-                window.MesaSDK.showToast(err.message, 'error');
-            });
-        };
-        window.MesaSDK.distribute = async function(id) {
-            window.MesaSDK.api.distributeRound(id).then(r => {
-                window.MesaSDK.showToast(`🎉 Round ${r.round + 1} paid! ${r.pot} USDC → ${r.winner.slice(0, 10)}…`, 'success');
-                renderChamaPage();
-            }).catch(err => {
-                window.MesaSDK.showToast(err.message, 'error');
-            });
-        };
-        window.MesaSDK.flagEmergency = async function(id) {
-            window.MesaSDK.api.flagEmergency(id).then(c => {
-                window.MesaSDK.showToast(c.emergencyMode ? '🚨 Emergency activated' : 'Emergency flag submitted', c.emergencyMode ? 'warning' : 'info');
-                renderChamaPage();
-            }).catch(err => {
-                window.MesaSDK.showToast(err.message, 'error');
-            });
-        };
-        window.MesaSDK.withdraw = async function(id) {
-            window.MesaSDK.api.withdrawPrincipal(id).then(amt => {
-                window.MesaSDK.showToast(`Withdrawn ${amt} USDC`, 'success');
-                renderChamaPage();
-            }).catch(err => {
-                window.MesaSDK.showToast(err.message, 'error');
-            });
+    // Setup other action delegates
+    const emergencyBtn = document.getElementById('mesa-flag-emergency-btn');
+    if (emergencyBtn) {
+        emergencyBtn.onclick = () => {
+            const contractAddress = getCircleContractAddress();
+            window.MesaSDK && window.MesaSDK.flagEmergency(contractAddress);
         };
     }
 
-    // SVG progress ring animation
-    const circle = document.querySelector('circle:nth-child(2)');
-    if(circle) {
-        circle.style.transition = 'stroke-dashoffset 2s ease-in-out';
-        setTimeout(() => { circle.style.strokeDashoffset = '188'; }, 300);
+    const withdrawBtn = document.getElementById('mesa-withdraw-principal-btn');
+    if (withdrawBtn) {
+        withdrawBtn.onclick = () => {
+            const contractAddress = getCircleContractAddress();
+            window.MesaSDK && window.MesaSDK.withdraw(contractAddress);
+        };
+    }
+
+    // SVG progress ring animation init
+    const progressRing = document.querySelector('circle:nth-child(2)');
+    if (progressRing) {
+        progressRing.style.transition = 'stroke-dashoffset 2s ease-in-out';
     }
 
     renderChamaPage();
-    
-    // Render again when wallet updates
-    const originalUpdateUI = window._updateWalletUI;
-    window._updateWalletUI = function() {
-        if (typeof originalUpdateUI === 'function') originalUpdateUI();
-        renderChamaPage();
-    };
+
+    // Expose scope-bound event listeners globally so they work inside HTML inline attributes
+    window.selectPaymentCurrency = selectPaymentCurrency;
+    window.handleJoinCircle = handleJoinCircle;
+    window.handlePlaceBid = handlePlaceBid;
 </script>
 </body></html>

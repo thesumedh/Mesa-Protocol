@@ -1,0 +1,24 @@
+{
+  "name": "mesa",
+  "version": "0.2.0",
+  "private": true,
+  "workspaces": [
+    "packages/sdk",
+    "packages/runtime",
+    "packages/providers/*",
+    "packages/mesa-cli"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:sdk": "npm run build --workspace=packages/sdk",
+    "build:runtime": "npm run build --workspace=packages/runtime",
+    "runtime:dev": "npm run dev --workspace=packages/runtime",
+    "test:e2e": "npx tsx packages/mesa-sdk/src/integration_test.ts"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "typescript": "^5.3.3"
+  }
+}
+

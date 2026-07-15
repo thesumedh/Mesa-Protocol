@@ -1,0 +1,37 @@
+{
+  "name": "@mesa/sdk",
+  "version": "0.2.0",
+  "description": "Mesa financial workflow SDK for Stellar",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "ts-node src/flow.test.ts"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^12.0.0",
+    "mesa": "file:../.."
+  },
+  "devDependencies": {
+    "@stellar/freighter-api": "^3.0.0",
+    "@types/node": "^20.11.5",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "@stellar/freighter-api": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@stellar/freighter-api": {
+      "optional": true
+    }
+  }
+}

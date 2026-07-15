@@ -673,6 +673,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "mesa-factory"
+version = "0.0.0"
+dependencies = [
+ "mesa-core",
+ "soroban-sdk",
+]
+
+[[package]]
+name = "mesa-vault"
+version = "0.0.0"
+dependencies = [
+ "derive_arbitrary",
+ "soroban-sdk",
+]
+
+[[package]]
 name = "miniz_oxide"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,0 +1,17 @@
+[package]
+name = "mesa-vault"
+version = "0.0.0"
+edition = "2021"
+rust-version.workspace = true
+publish = false
+autobins = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev_dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+derive_arbitrary = "=1.3.2"

@@ -1,0 +1,32 @@
+{
+  "name": "@mesa/sdk",
+  "version": "1.0.0",
+  "description": "Stellar Soroban SDK wrapper for Mesa Protocol savings circles (ROSCAs)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "tsx test-integration.ts",
+    "test:e2e": "tsx src/integration_test.ts"
+  },
+  "dependencies": {
+    "@stellar/freighter-api": "^2.0.0",
+    "@stellar/stellar-sdk": "^16.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "tsup": "^8.0.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
+}

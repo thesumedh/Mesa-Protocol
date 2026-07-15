@@ -262,9 +262,9 @@
                     </button>
 </div>
 <!-- Proposals List -->
-<div class="space-y-md">
+<div class="space-y-md" id="governance-proposals-list">
 <!-- Proposal Card 1 -->
-<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary/30 transition-all cursor-pointer group">
+<div onclick="window.location.hash = '#proposal-detail?id=MP-042'" class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary/30 transition-all cursor-pointer group">
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-md">
 <div class="flex items-center gap-md">
 <span class="bg-surface-container-high text-on-surface-variant px-sm py-xs rounded text-label-sm font-bold">MP-042</span>
@@ -301,7 +301,7 @@
 </div>
 </div>
 <!-- Proposal Card 2 -->
-<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary/30 transition-all cursor-pointer group">
+<div onclick="window.location.hash = '#proposal-detail?id=MP-043'" class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary/30 transition-all cursor-pointer group">
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-md">
 <div class="flex items-center gap-md">
 <span class="bg-surface-container-high text-on-surface-variant px-sm py-xs rounded text-label-sm font-bold">MP-043</span>
@@ -369,7 +369,7 @@
 <footer class="w-full py-xl px-margin-desktop flex flex-col md:flex-row justify-between items-center mt-auto border-t border-outline-variant bg-surface-container">
 <div class="mb-lg md:mb-0">
 <span class="text-label-md font-bold text-primary">Mesa Protocol</span>
-<p class="text-body-sm text-on-surface-variant mt-xs">© 2024 Mesa Protocol. Powered by Stellar.</p>
+<p class="text-body-sm text-on-surface-variant mt-xs">© 2026 Mesa Protocol. Powered by Stellar.</p>
 </div>
 <div class="flex flex-wrap justify-center gap-lg">
 <a class="text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Documentation</a>
@@ -379,8 +379,61 @@
 </div>
 </footer>
 </main>
-<!-- Interactive Layer for Hover Effects -->
 <script>
+        // Load and prepend user-submitted proposals
+        const proposalsList = document.getElementById('governance-proposals-list');
+        const submitted = JSON.parse(localStorage.getItem('mesa_submitted_proposals') || '[]');
+        
+        submitted.forEach(prop => {
+            const card = document.createElement('div');
+            card.className = "bg-surface-container-lowest p-lg rounded-xl border border-outline-variant hover:border-primary/30 transition-all cursor-pointer group";
+            card.onclick = () => {
+                window.location.hash = `#proposal-detail?id=${prop.id}`;
+            };
+            
+            const badgeBg = prop.category === 'Emergency Action' ? 'bg-error-container/20 text-on-error-container' : 'bg-secondary-container/20 text-on-secondary-container';
+            const bulletBg = prop.category === 'Emergency Action' ? 'bg-error' : 'bg-secondary';
+            
+            card.innerHTML = `
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-md">
+                    <div class="flex items-center gap-md">
+                        <span class="bg-surface-container-high text-on-surface-variant px-sm py-xs rounded text-label-sm font-bold">${prop.id}</span>
+                        <span class="${badgeBg} px-sm py-xs rounded-full text-label-sm font-semibold flex items-center gap-xs">
+                            <span class="w-1.5 h-1.5 ${bulletBg} rounded-full"></span>
+                            ${prop.category}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-sm">
+                        <span class="text-secondary font-bold text-label-md bg-secondary-container px-md py-xs rounded-full">Voting Open</span>
+                        <span class="text-on-surface-variant text-label-sm flex items-center gap-xs">
+                            <span class="material-symbols-outlined text-[18px]">schedule</span>
+                            47h 59m left
+                        </span>
+                    </div>
+                </div>
+                <h4 class="text-headline-md font-bold mb-lg group-hover:text-primary transition-colors">${prop.title}</h4>
+                <div class="space-y-md">
+                    <div class="flex justify-between text-label-md font-medium">
+                        <span class="text-on-surface">100% Yes (4.2K USDC)</span>
+                        <span class="text-on-surface-variant">0% No (0 USDC)</span>
+                    </div>
+                    <div class="w-full h-3 bg-surface-container rounded-full flex overflow-hidden">
+                        <div class="h-full bg-secondary progress-bar-shine" style="width: 100%;"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-label-sm text-on-surface-variant">
+                        <span>Quorum reached: 4,280 / 4,000 USDC</span>
+                        <span class="flex items-center gap-xs text-primary font-bold">
+                            View Details
+                            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                        </span>
+                    </div>
+                </div>
+            `;
+            if (proposalsList) {
+                proposalsList.insertBefore(card, proposalsList.firstChild);
+            }
+        });
+
         document.querySelectorAll('.bento-card').forEach(card => {
             card.addEventListener('mousemove', (e) => {
                 const rect = card.getBoundingClientRect();

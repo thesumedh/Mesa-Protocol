@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mesa — Developer Console</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Vue.js 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    /* Premium glassmorphic scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b1329;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.4);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .glow-accent {
+      box-shadow: 0 0 25px rgba(59, 130, 246, 0.15);
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased overflow-hidden">
+  <div id="app" class="flex flex-col h-full" v-cloak>
+    
+    <!-- Top Header -->
+    <header class="h-16 flex items-center justify-between px-6 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md z-10 shrink-0">
+      <div class="flex items-center space-x-3">
+        <!-- Logo Icon -->
+        <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center glow-accent">
+          <i data-lucide="layers" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <span class="text-lg font-bold tracking-tight text-white flex items-center">
+            MESA <span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full ml-2 border border-blue-500/20">RUNTIME</span>
+          </span>
+          <span class="text-xs text-slate-400 block -mt-1">Stellar Embedded Finance Console</span>
+        </div>
+      </div>
+      
+      <!-- Auto Refresh Controls -->
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center text-xs space-x-2 text-slate-400">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span>Auto-refreshing (2s)</span>
+        </div>
+        <button @click="refreshAll" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition duration-150 flex items-center space-x-1 text-xs">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5" :class="{ 'animate-spin': isRefreshing }"></i>
+          <span>Reload</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="flex flex-1 overflow-hidden">
+      
+      <!-- Navigation Sidebar -->
+      <aside class="w-64 border-r border-slate-800 bg-slate-900/50 flex flex-col shrink-0">
+        <nav class="flex-1 p-4 space-y-1.5">
+          <button @click="currentTab = 'executions'" 
+                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition duration-150"
+                  :class="currentTab === 'executions' ? 'bg-blue-600 text-white shadow-md glow-accent' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+            <i data-lucide="activity" class="w-4 h-4"></i>
+            <span>Executions</span>
+          </button>
+          <button @click="currentTab = 'flows'" 
+                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition duration-150"
+                  :class="currentTab === 'flows' ? 'bg-blue-600 text-white shadow-md glow-accent' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+            <i data-lucide="git-merge" class="w-4 h-4"></i>
+            <span>Flow Definitions</span>
+          </button>
+          <button @click="currentTab = 'providers'" 
+                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition duration-150"
+                  :class="currentTab === 'providers' ? 'bg-blue-600 text-white shadow-md glow-accent' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
+            <i data-lucide="plug" class="w-4 h-4"></i>
+            <span>Registered Providers</span>
+          </button>
+        </nav>
+        
+        <!-- Engine Stats Banner in Sidebar Footer -->
+        <div class="p-4 border-t border-slate-800 bg-slate-950/60">
+          <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-2">Workspace stats</div>
+          <div class="grid grid-cols-2 gap-2 text-center">
+            <div class="bg-slate-900/60 p-2 rounded border border-slate-800">
+              <span class="text-xs text-slate-400 block">Flows</span>
+              <span class="text-sm font-bold text-white">{{ flows.length }}</span>
+            </div>
+            <div class="bg-slate-900/60 p-2 rounded border border-slate-800">
+              <span class="text-xs text-slate-400 block">Executions</span>
+              <span class="text-sm font-bold text-white">{{ executions.length }}</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Content Container -->
+      <main class="flex-1 flex overflow-hidden bg-slate-950">
+
+        <!-- 1. EXECUTIONS TAB -->
+        <div v-if="currentTab === 'executions'" class="flex-1 flex overflow-hidden">
+          
+          <!-- Executions List (Left Panel) -->
+          <div class="w-[450px] border-r border-slate-800 flex flex-col shrink-0 overflow-hidden bg-slate-900/20">
+            <!-- Search & Filter Controls -->
+            <div class="p-4 border-b border-slate-800 space-y-3 bg-slate-950/30">
+              <div class="relative">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
+                <input v-model="searchQuery" type="text" placeholder="Search Execution ID or Flow..." 
+                       class="w-full bg-slate-900/60 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+              </div>
+              
+              <!-- Status Badges Filters -->
+              <div class="flex flex-wrap gap-1.5">
+                <button v-for="status in ['ALL', 'PENDING', 'RUNNING', 'SUSPENDED', 'COMPLETED', 'FAILED']"
+                        :key="status"
+                        @click="statusFilter = status"
+                        class="px-2.5 py-1 rounded text-[10px] font-semibold tracking-wider transition uppercase"
+                        :class="statusFilter === status ? 'bg-slate-800 text-white border border-slate-700' : 'bg-slate-900/40 text-slate-400 hover:text-slate-200 border border-transparent'">
+                  {{ status }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Executions Scrollable List -->
+            <div class="flex-1 overflow-y-auto divide-y divide-slate-800/60">
+              <div v-if="filteredExecutions.length === 0" class="p-8 text-center text-slate-500">
+                <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                <p class="text-xs">No executions match criteria</p>
+              </div>
+              <div v-for="exec in filteredExecutions" 
+                   :key="exec.id" 
+                   @click="selectExecution(exec.id)"
+                   class="p-4 cursor-pointer transition duration-150 flex flex-col space-y-2 hover:bg-slate-800/40"
+                   :class="selectedExecId === exec.id ? 'bg-slate-800/70 border-l-2 border-blue-500' : ''">
+                
+                <div class="flex items-start justify-between">
+                  <div class="font-medium text-slate-200 text-sm truncate pr-2 max-w-[280px]">
+                    {{ getFlowName(exec.flow_id) }}
+                  </div>
+                  <!-- Status Badge -->
+                  <span :class="getStatusClass(exec.status)" class="px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                    {{ exec.status }}
+                  </span>
+                </div>
+                
+                <div class="text-[11px] font-mono text-slate-500 flex justify-between">
+                  <span>{{ exec.id.substring(0, 18) }}...</span>
+                  <span>{{ formatTime(exec.created_at) }}</span>
+                </div>
+
+                <div v-if="exec.context?.note" class="text-xs text-slate-400 italic line-clamp-1">
+                  "{{ exec.context.note }}"
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Execution Inspector Details (Right Panel) -->
+          <div class="flex-1 flex flex-col overflow-hidden bg-slate-950">
+            <div v-if="!selectedExec" class="flex-1 flex flex-col items-center justify-center text-slate-500 p-8">
+              <i data-lucide="terminal" class="w-12 h-12 text-slate-700 mb-3 animate-pulse"></i>
+              <h3 class="text-sm font-semibold text-slate-400">No Execution Selected</h3>
+              <p class="text-xs text-slate-500 mt-1">Select an execution from the left list to inspect logs and steps.</p>
+            </div>
+            
+            <div v-else class="flex-1 flex flex-col overflow-hidden">
+              
+              <!-- Inspector Header -->
+              <div class="p-6 border-b border-slate-800 bg-slate-900/30 flex items-start justify-between shrink-0">
+                <div class="space-y-1">
+                  <div class="flex items-center space-x-2">
+                    <h2 class="text-lg font-bold text-white">{{ getFlowName(selectedExec.flow_id) }}</h2>
+                    <span :class="getStatusClass(selectedExec.status)" class="px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider">
+                      {{ selectedExec.status }}
+                    </span>
+                  </div>
+                  <div class="text-xs font-mono text-slate-400 flex items-center space-x-1">
+                    <span>ID: {{ selectedExec.id }}</span>
+                    <button @click="copyText(selectedExec.id)" class="text-slate-500 hover:text-slate-300 p-0.5 rounded">
+                      <i data-lucide="copy" class="w-3 h-3"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Quick Webhook Resolver Header Indicator -->
+                <div v-if="selectedExec.status === 'SUSPENDED'" class="flex items-center space-x-2">
+                  <span class="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-md font-semibold">
+                    Requires Webhook Callback
+                  </span>
+                </div>
+              </div>
+
+              <!-- Inspector Body -->
+              <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                
+                <!-- SUSPENDED RESOLVER ACTION CARD -->
+                <div v-if="selectedExec.status === 'SUSPENDED'" class="p-5 rounded-xl border border-amber-500/30 bg-amber-500/5 glow-accent space-y-4">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-amber-300 flex items-center">
+                      <i data-lucide="help-circle" class="w-4.5 h-4.5 mr-2 text-amber-400"></i>
+                      Webhook Callback Console (Resume Step)
+                    </h3>
+                    <span class="text-xs text-slate-400 font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                      POST /webhooks/resume
+                    </span>
+                  </div>
+                  
+                  <p class="text-xs text-slate-300 leading-relaxed">
+                    This execution is parked at step <strong>{{ getSuspendedStepName() }}</strong>. 
+                    You can trigger the webhook listener below to simulate an incoming callback from the provider.
+                  </p>
+
+                  <div class="grid grid-cols-2 gap-4">
+                    <!-- Suspension Key -->
+                    <div class="space-y-1">
+                      <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Suspension Key</label>
+                      <input type="text" :value="getSuspendedKey()" readonly 
+                             class="w-full bg-slate-900 border border-slate-800 rounded px-3 py-1.5 text-xs text-slate-300 font-mono focus:outline-none">
+                    </div>
+                    <!-- Payload Builder -->
+                    <div class="space-y-1">
+                      <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Callback Response Payload (JSON)</label>
+                      <textarea v-model="webhookPayloadText" rows="3" 
+                                class="w-full bg-slate-900 border border-slate-800 rounded px-3 py-1.5 text-xs text-slate-300 font-mono focus:outline-none focus:border-blue-500"></textarea>
+                    </div>
+                  </div>
+
+                  <div class="flex justify-end pt-2">
+                    <button @click="triggerResumeWebhook" :disabled="isResuming"
+                            class="px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:bg-amber-700 text-black font-bold text-xs rounded-lg transition duration-150 flex items-center space-x-1.5">
+                      <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+                      <span>{{ isResuming ? 'Submitting Callback...' : 'Trigger Resume Webhook' }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- STEPS TIMELINE -->
+                <div class="space-y-3">
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center">
+                    <i data-lucide="list-todo" class="w-4 h-4 mr-1.5"></i>
+                    Workflow Steps ({{ getStepList().length }})
+                  </h3>
+                  
+                  <div class="space-y-2.5">
+                    <div v-for="(step, idx) in getStepList()" :key="idx" class="rounded-lg border bg-slate-900/40" 
+                         :class="step.status === 'SUSPENDED' ? 'border-amber-500/40 bg-amber-500/[0.01]' : 'border-slate-800'">
+                      
+                      <!-- Step Header -->
+                      <div @click="toggleStepDetails(idx)" class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-800/20 select-none">
+                        <div class="flex items-center space-x-3">
+                          <!-- Number Indicator -->
+                          <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
+                               :class="getStepCircleClass(step.status)">
+                            {{ idx + 1 }}
+                          </div>
+                          <div>
+                            <span class="text-sm font-semibold text-slate-200">{{ step.name }}</span>
+                            <span class="text-xs text-slate-500 ml-2">({{ step.provider }})</span>
+                          </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                          <span :class="getStepBadgeClass(step.status)" class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wider">
+                            {{ step.status || 'PENDING' }}
+                          </span>
+                          <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 transition duration-150" 
+                             :class="{ 'rotate-185 transform': stepDetailsOpen === idx }"></i>
+                        </div>
+                      </div>
+
+                      <!-- Step Details Panel -->
+                      <div v-if="stepDetailsOpen === idx" class="px-4 pb-4 pt-1 border-t border-slate-800 bg-slate-950/40 rounded-b-lg space-y-3">
+                        <!-- Parameters -->
+                        <div>
+                          <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Parameters</div>
+                          <pre class="bg-slate-950 p-2.5 rounded border border-slate-900 text-[11px] font-mono text-slate-300 overflow-x-auto">{{ JSON.stringify(step.params || {}, null, 2) }}</pre>
+                        </div>
+                        <!-- Output -->
+                        <div v-if="step.output && Object.keys(step.output).length > 0">
+                          <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Output Data</div>
+                          <pre class="bg-slate-950 p-2.5 rounded border border-slate-900 text-[11px] font-mono text-slate-300 overflow-x-auto">{{ JSON.stringify(step.output, null, 2) }}</pre>
+                        </div>
+                        <!-- Error -->
+                        <div v-if="step.error">
+                          <div class="text-[9px] font-bold text-red-400 uppercase tracking-wider mb-1">Error message</div>
+                          <div class="bg-red-500/10 border border-red-500/20 text-red-300 px-3 py-2 rounded text-xs font-mono">
+                            {{ step.error }}
+                          </div>
+                        </div>
+                        <!-- Meta Stats -->
+                        <div class="flex space-x-6 text-[10px] text-slate-500">
+                          <div>Attempts: <span class="text-slate-300 font-semibold">{{ step.attempts || 0 }}</span></div>
+                          <div v-if="step.updated_at">Last Updated: <span class="text-slate-300 font-semibold">{{ formatTime(step.updated_at) }}</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- EVENT HISTORY LOGS -->
+                <div class="space-y-3">
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center">
+                    <i data-lucide="receipt" class="w-4 h-4 mr-1.5"></i>
+                    Audit Event Trail
+                  </h3>
+                  
+                  <div class="glass-card rounded-xl border border-slate-800 overflow-hidden divide-y divide-slate-800/40">
+                    <table class="w-full text-left border-collapse">
+                      <thead>
+                        <tr class="bg-slate-900/60 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                          <th class="p-3">Time</th>
+                          <th class="p-3">Event Type</th>
+                          <th class="p-3">Details</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-800/50 text-xs">
+                        <tr v-for="ev in selectedExecEvents" :key="ev.id" class="hover:bg-slate-900/20">
+                          <td class="p-3 text-slate-500 font-mono whitespace-nowrap">{{ formatTimeOnly(ev.timestamp) }}</td>
+                          <td class="p-3 whitespace-nowrap">
+                            <span :class="getEventTagClass(ev.type)" class="px-2 py-0.5 rounded text-[9px] font-bold font-mono">
+                              {{ ev.type }}
+                            </span>
+                          </td>
+                          <td class="p-3 text-slate-300 font-mono text-[11px] truncate max-w-[400px]">
+                            {{ ev.payload ? JSON.stringify(ev.payload) : '' }}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 2. FLOW DEFINITIONS TAB -->
+        <div v-if="currentTab === 'flows'" class="flex-1 p-6 space-y-6 overflow-y-auto">
+          <div>
+            <h2 class="text-xl font-bold text-white">Registered Flow Definitions</h2>
+            <p class="text-slate-400 text-xs mt-1">Declaring templates that execution cycles are spawned from.</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-6">
+            <div v-for="flow in flows" :key="flow.id" class="glass-card p-5 rounded-xl border border-slate-800 space-y-4">
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="text-base font-bold text-white">{{ flow.name }}</h3>
+                  <code class="text-[10px] font-mono text-slate-500 bg-slate-950 px-2 py-0.5 rounded border border-slate-900 mt-1 block w-fit">ID: {{ flow.id }}</code>
+                </div>
+                <div class="text-xs text-slate-400 font-semibold bg-slate-800/80 px-2.5 py-1 rounded border border-slate-700">
+                  {{ flow.definition?.steps?.length || 0 }} steps
+                </div>
+              </div>
+
+              <!-- Raw step summary -->
+              <div class="space-y-1.5">
+                <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Step Execution Sequence</div>
+                <div class="flex items-center space-x-2 text-xs text-slate-300">
+                  <div v-for="(step, idx) in flow.definition?.steps || []" :key="idx" class="flex items-center">
+                    <span class="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded text-slate-300">
+                      {{ step.name }} <span class="text-slate-500">({{ step.provider }})</span>
+                    </span>
+                    <i v-if="idx < flow.definition.steps.length - 1" data-lucide="arrow-right" class="w-3.5 h-3.5 mx-1.5 text-slate-600"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Toggle raw JSON definition -->
+              <details class="group mt-2">
+                <summary class="text-xs text-blue-400 hover:text-blue-300 cursor-pointer select-none font-semibold">
+                  View Full Schema
+                </summary>
+                <pre class="bg-slate-950/80 p-3 rounded-lg border border-slate-900 text-[11px] font-mono text-slate-400 overflow-x-auto mt-2">{{ JSON.stringify(flow.definition, null, 2) }}</pre>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. REGISTERED PROVIDERS TAB -->
+        <div v-if="currentTab === 'providers'" class="flex-1 p-6 space-y-6 overflow-y-auto">
+          <div>
+            <h2 class="text-xl font-bold text-white">Registered Adapters & Providers</h2>
+            <p class="text-slate-400 text-xs mt-1">Available Stellar primitives and network protocol bridges currently registered in Mesa.</p>
+          </div>
+
+          <div class="grid grid-cols-3 gap-6">
+            <div v-for="prov in providers" :key="prov.name" class="glass-card p-5 rounded-xl border border-slate-800 space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                  <div class="w-8 h-8 rounded bg-slate-800 flex items-center justify-center">
+                    <i data-lucide="cpu" class="w-4.5 h-4.5 text-blue-400"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider">{{ prov.name }}</h3>
+                    <span class="text-[10px] text-slate-500">Mesa Adapter</span>
+                  </div>
+                </div>
+                
+                <!-- Dynamic Health Badge -->
+                <span :class="prov.health?.status === 'healthy' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' : 'bg-rose-500/10 text-rose-400 border border-rose-500/25'" 
+                      class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                  {{ prov.health?.status || 'unknown' }}
+                </span>
+              </div>
+
+              <!-- Description Stub -->
+              <p class="text-xs text-slate-400">
+                <span v-if="prov.name === 'anchor'">Orchestrates SEP-24 interactive flows and SEP-6 operations.</span>
+                <span v-else-if="prov.name === 'webhook'">Performs outbound event callbacks and handles inbound webhooks.</span>
+                <span v-else-if="prov.name === 'delay'">Suspends threads for a target interval, handling system sleep cycles.</span>
+                <span v-else>Executes custom system transactions and Soroban contracts on target networks.</span>
+              </p>
+
+              <!-- Dynamic Health Details -->
+              <div class="bg-slate-950 p-3 rounded-lg border border-slate-900 space-y-1.5">
+                <div class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Health Details</div>
+                <pre class="text-[10px] font-mono text-slate-300 overflow-x-auto">{{ JSON.stringify(prov.health || { status: 'healthy' }, null, 2) }}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+  </div>
+
+  <!-- Vue Script Application -->
+  <script>
+    const { createApp, ref, onMounted, computed, watch, nextTick } = Vue;
+
+    createApp({
+      setup() {
+        const currentTab = ref('executions');
+        const executions = ref([]);
+        const flows = ref([]);
+        const providers = ref([]);
+        const isRefreshing = ref(false);
+        
+        // Search & Filter state
+        const searchQuery = ref('');
+        const statusFilter = ref('ALL');
+        
+        // Inspector state
+        const selectedExecId = ref(null);
+        const selectedExec = ref(null);
+        const selectedExecEvents = ref([]);
+        const stepDetailsOpen = ref(0);
+        
+        // Webhook Resolver Form state
+        const webhookPayloadText = ref('{\n  "status": "completed",\n  "amount_out": "100"\n}');
+        const isResuming = ref(false);
+
+        // Fetch routines
+        const fetchExecutions = async () => {
+          try {
+            const res = await fetch('/executions');
+            if (res.ok) {
+              executions.value = await res.json();
+            }
+          } catch (err) {
+            console.error('Failed to fetch executions:', err);
+          }
+        };
+
+        const fetchFlows = async () => {
+          try {
+            const res = await fetch('/flows');
+            if (res.ok) {
+              flows.value = await res.json();
+            }
+          } catch (err) {
+            console.error('Failed to fetch flows:', err);
+          }
+        };
+
+        const fetchProviders = async () => {
+          try {
+            const res = await fetch('/providers');
+            if (res.ok) {
+              providers.value = await res.json();
+            }
+          } catch (err) {
+            console.error('Failed to fetch providers:', err);
+          }
+        };
+
+        const selectExecution = async (id) => {
+          selectedExecId.value = id;
+          try {
+            const res = await fetch(`/executions/${id}`);
+            if (res.ok) {
+              const data = await res.json();
+              selectedExec.value = data.execution;
+              selectedExecEvents.value = data.events;
+              
+              // Automatically open details for suspended or active steps
+              const steps = getStepList();
+              const suspIdx = steps.findIndex(s => s.status === 'SUSPENDED');
+              if (suspIdx !== -1) {
+                stepDetailsOpen.value = suspIdx;
+                // Pre-populate payload with smart parameters if possible
+                const suspStep = steps[suspIdx];
+                if (suspStep.params && suspStep.params.amount) {
+                  webhookPayloadText.value = JSON.stringify({
+                    status: 'completed',
+                    amount_out: suspStep.params.amount.toString(),
+                    message: 'Simulated deposit success'
+                  }, null, 2);
+                }
+              } else {
+                const runningIdx = steps.findIndex(s => s.status === 'RUNNING');
+                stepDetailsOpen.value = runningIdx !== -1 ? runningIdx : 0;
+              }
+              
+              nextTick(() => {
+                lucide.createIcons();
+              });
+            }
+          } catch (err) {
+            console.error('Failed to fetch execution details:', err);
+          }
+        };
+
+        const refreshAll = async () => {
+          isRefreshing.value = true;
+          await Promise.all([fetchExecutions(), fetchFlows(), fetchProviders()]);
+          if (selectedExecId.value) {
+            await selectExecution(selectedExecId.value);
+          }
+          isRefreshing.value = false;
+          nextTick(() => {
+            lucide.createIcons();
+          });
+        };
+
+        // Webhook resumption trigger
+        const triggerResumeWebhook = async () => {
+          if (isResuming.value) return;
+          isResuming.value = true;
+          try {
+            let parsedPayload = {};
+            try {
+              parsedPayload = JSON.parse(webhookPayloadText.value);
+            } catch (e) {
+              alert('Invalid JSON in Callback Response Payload.');
+              isResuming.value = false;
+              return;
+            }
+
+            const suspensionKey = getSuspendedKey();
+            const response = await fetch('/webhooks/resume', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                suspensionKey,
+                payload: parsedPayload
+              })
+            });
+
+            if (response.ok) {
+              // Reload details immediately
+              await refreshAll();
+            } else {
+              const errData = await response.json();
+              alert(`Resume failed: ${errData.error || 'Unknown error'}`);
+            }
+          } catch (err) {
+            alert(`Network error during resume: ${err.message}`);
+          } finally {
+            isResuming.value = false;
+          }
+        };
+
+        // UI Helpers
+        const getFlowName = (flowId) => {
+          const flow = flows.value.find(f => f.id === flowId);
+          return flow ? flow.name : flowId;
+        };
+
+        const getStepList = () => {
+          if (!selectedExec) return [];
+          const flow = flows.value.find(f => f.id === selectedExec.value.flow_id);
+          const stepsDef = flow && flow.definition && flow.definition.steps ? flow.definition.steps : [];
+          
+          // Map stored steps status and meta output
+          return stepsDef.map((sDef, idx) => {
+            const runtimeStep = selectedExec.value.steps && selectedExec.value.steps[idx];
+            return {
+              name: sDef.name,
+              provider: sDef.provider,
+              params: sDef.params || {},
+              status: runtimeStep ? runtimeStep.status : 'PENDING',
+              output: runtimeStep ? runtimeStep.output : {},
+              error: runtimeStep ? runtimeStep.error : null,
+              attempts: runtimeStep ? runtimeStep.attempts : 0,
+              updated_at: runtimeStep ? runtimeStep.updated_at : null
+            };
+          });
+        };
+
+        const getSuspendedStepName = () => {
+          const steps = getStepList();
+          const susp = steps.find(s => s.status === 'SUSPENDED');
+          return susp ? susp.name : 'Unknown Step';
+        };
+
+        const getSuspendedKey = () => {
+          const steps = getStepList();
+          const susp = steps.find(s => s.status === 'SUSPENDED');
+          return susp && susp.output ? susp.output.suspensionKey : '';
+        };
+
+        const toggleStepDetails = (idx) => {
+          stepDetailsOpen.value = stepDetailsOpen.value === idx ? null : idx;
+          nextTick(() => {
+            lucide.createIcons();
+          });
+        };
+
+        const copyText = (text) => {
+          navigator.clipboard.writeText(text);
+          alert('Copied to clipboard!');
+        };
+
+        // Filtering computed properties
+        const filteredExecutions = computed(() => {
+          return executions.value.filter(exec => {
+            // Filter by search text
+            const name = getFlowName(exec.flow_id).toLowerCase();
+            const id = exec.id.toLowerCase();
+            const query = searchQuery.value.toLowerCase();
+            const matchesQuery = name.includes(query) || id.includes(query);
+            
+            // Filter by status badge
+            const matchesStatus = statusFilter.value === 'ALL' || exec.status === statusFilter.value;
+            
+            return matchesQuery && matchesStatus;
+          });
+        });
+
+        // Coloring helpers
+        const getStatusClass = (status) => {
+          switch (status) {
+            case 'COMPLETED': return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+            case 'FAILED': return 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+            case 'SUSPENDED': return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+            case 'RUNNING': return 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+            default: return 'bg-slate-800 text-slate-400 border border-slate-700';
+          }
+        };
+
+        const getStepCircleClass = (status) => {
+          switch (status) {
+            case 'COMPLETED': return 'bg-emerald-500 text-black';
+            case 'FAILED': return 'bg-rose-500 text-white';
+            case 'SUSPENDED': return 'bg-amber-500 text-black';
+            case 'RUNNING': return 'bg-blue-500 text-white';
+            default: return 'bg-slate-800 text-slate-500 border border-slate-700';
+          }
+        };
+
+        const getStepBadgeClass = (status) => {
+          switch (status) {
+            case 'COMPLETED': return 'bg-emerald-500/10 text-emerald-400';
+            case 'FAILED': return 'bg-rose-500/10 text-rose-400';
+            case 'SUSPENDED': return 'bg-amber-500/10 text-amber-400';
+            case 'RUNNING': return 'bg-blue-500/10 text-blue-400';
+            default: return 'bg-slate-800 text-slate-500';
+          }
+        };
+
+        const getEventTagClass = (type) => {
+          if (type.includes('fail')) return 'bg-rose-500/15 text-rose-400 border border-rose-500/20';
+          if (type.includes('resum')) return 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20';
+          if (type.includes('suspend')) return 'bg-amber-500/15 text-amber-400 border border-amber-500/20';
+          if (type.includes('creat')) return 'bg-blue-500/15 text-blue-400 border border-blue-500/20';
+          return 'bg-slate-800/80 text-slate-400 border border-slate-700';
+        };
+
+        // Date formatting helpers
+        const formatTime = (isoString) => {
+          if (!isoString) return '';
+          const d = new Date(isoString);
+          return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+        };
+
+        const formatTimeOnly = (isoString) => {
+          if (!isoString) return '';
+          const d = new Date(isoString);
+          return d.toLocaleTimeString();
+        };
+
+        // Lifecycle hooks
+        onMounted(async () => {
+          await refreshAll();
+          // Select the first execution if list is not empty
+          if (executions.value.length > 0) {
+            await selectExecution(executions.value[0].id);
+          }
+          lucide.createIcons();
+          
+          // Set periodic refresh interval
+          setInterval(async () => {
+            await fetchExecutions();
+            if (selectedExecId.value) {
+              // Refresh details of currently selected execution to catch background advancements
+              const res = await fetch(`/executions/${selectedExecId.value}`);
+              if (res.ok) {
+                const data = await res.json();
+                selectedExec.value = data.execution;
+                selectedExecEvents.value = data.events;
+              }
+            }
+          }, 2000);
+        });
+
+        watch(currentTab, () => {
+          nextTick(() => {
+            lucide.createIcons();
+          });
+        });
+
+        return {
+          currentTab,
+          executions,
+          flows,
+          providers,
+          isRefreshing,
+          searchQuery,
+          statusFilter,
+          selectedExecId,
+          selectedExec,
+          selectedExecEvents,
+          stepDetailsOpen,
+          webhookPayloadText,
+          isResuming,
+          refreshAll,
+          selectExecution,
+          triggerResumeWebhook,
+          getFlowName,
+          getStepList,
+          getSuspendedStepName,
+          getSuspendedKey,
+          toggleStepDetails,
+          copyText,
+          filteredExecutions,
+          getStatusClass,
+          getStepCircleClass,
+          getStepBadgeClass,
+          getEventTagClass,
+          formatTime,
+          formatTimeOnly,
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

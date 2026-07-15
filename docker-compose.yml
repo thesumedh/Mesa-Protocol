@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mesa
+      POSTGRES_USER: mesa
+      POSTGRES_PASSWORD: mesa
+    ports:
+      - '5432:5432'
+    volumes:
+      - mesa_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mesa']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  runtime:
+    build:
+      context: ./packages/runtime
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://mesa:mesa@postgres:5432/mesa
+      PORT: 3001
+      NODE_ENV: development
+    ports:
+      - '3001:3001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mesa_pgdata:

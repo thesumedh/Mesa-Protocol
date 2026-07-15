@@ -166,9 +166,9 @@
 <span class="material-symbols-outlined">menu</span>
 </button>
 <div class="hidden md:flex items-center gap-xs text-on-surface-variant">
-<span class="text-label-md font-label-md hover:text-primary cursor-pointer">Governance</span>
+<span class="text-label-md font-label-md hover:text-primary cursor-pointer" onclick="window.location.hash = '#governance'">Governance</span>
 <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-<span class="text-label-md font-label-md text-primary font-bold">MP-042</span>
+<span id="proposal-detail-breadcrumb" class="text-label-md font-label-md text-primary font-bold">MP-042</span>
 </div>
 </div>
 <div class="flex items-center gap-lg">
@@ -191,10 +191,10 @@
 <div class="mb-xl flex flex-col md:flex-row md:items-end justify-between gap-md">
 <div class="space-y-sm">
 <div class="flex items-center gap-sm">
-<span class="px-md py-xs rounded-full bg-secondary-container text-on-secondary-container text-label-sm font-bold uppercase tracking-wider">Voting Open</span>
-<span class="text-label-sm text-on-surface-variant font-medium">MP-042 • Created Mar 24, 2024</span>
+<span id="proposal-detail-badge" class="px-md py-xs rounded-full bg-secondary-container text-on-secondary-container text-label-sm font-bold uppercase tracking-wider">Voting Open</span>
+<span id="proposal-detail-meta" class="text-label-sm text-on-surface-variant font-medium">MP-042 • Created Mar 24, 2024</span>
 </div>
-<h2 class="text-headline-xl font-headline-xl text-primary leading-tight">Replace Inactive Member: 0x4f...3a1</h2>
+<h2 id="proposal-detail-title" class="text-headline-xl font-headline-xl text-primary leading-tight">Replace Inactive Member: 0x4f...3a1</h2>
 </div>
 <div class="flex gap-sm">
 <button class="flex items-center gap-xs px-md py-sm border border-outline-variant rounded-lg text-label-md font-bold hover:bg-surface-container transition-colors">
@@ -212,13 +212,13 @@
 <!-- Description Card -->
 <div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant">
 <h3 class="text-headline-md font-headline-md text-primary mb-md">Rationale</h3>
-<div class="text-body-md text-on-surface-variant space-y-md">
+<div id="proposal-detail-rationale" class="text-body-md text-on-surface-variant space-y-md">
 <p>This proposal addresses the consistent inactivity of member <code class="bg-surface-container px-xs rounded">0x4f...3a1</code> within the Diamond Savings Circle. The member has missed 2 consecutive contribution rounds, which has stalled the rotation and impacted the liquidity available to other participants.</p>
 <p>To ensure the health and continuity of the circle, we propose replacing them with <code class="bg-surface-container px-xs rounded">0x8a...2e4</code>. The new candidate has a verified credit score of 780+ on the Stellar network and has successfully completed 5 previous Mesa Protocol rotations.</p>
 </div>
 </div>
 <!-- Proposed Changes Table -->
-<div class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<div id="proposal-detail-changes-section" class="bg-surface-container-lowest p-lg rounded-xl shadow-sm border border-outline-variant overflow-hidden">
 <h3 class="text-headline-md font-headline-md text-primary mb-md">Proposed Changes</h3>
 <div class="overflow-x-auto">
 <table class="w-full text-left">
@@ -380,7 +380,7 @@
 <footer class="w-full py-xl px-margin-desktop flex flex-col md:flex-row justify-between items-center mt-auto border-t border-outline-variant bg-surface-container">
 <div class="flex flex-col gap-xs items-center md:items-start mb-lg md:mb-0">
 <span class="text-label-md font-label-md font-bold text-primary">Mesa Protocol</span>
-<p class="text-body-sm font-body-sm text-on-surface-variant">© 2024 Mesa Protocol. Powered by Stellar.</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant">© 2026 Mesa Protocol. Powered by Stellar.</p>
 </div>
 <div class="flex flex-wrap justify-center gap-lg">
 <a class="text-on-surface-variant hover:text-primary transition-colors text-label-sm font-label-sm" href="#">Documentation</a>
@@ -390,8 +390,252 @@
 </div>
 </footer>
 </main>
-<script>
-        // Simple micro-interaction for vote button scaling
+    <script>
+        // Simple step navigation logic
+        const hash = window.location.hash;
+        const queryIdx = hash.indexOf('?');
+        let propId = 'MP-042'; // default
+        if (queryIdx !== -1) {
+            const searchParams = new URLSearchParams(hash.slice(queryIdx + 1));
+            propId = searchParams.get('id') || 'MP-042';
+        }
+
+        document.getElementById('proposal-detail-breadcrumb').textContent = propId;
+
+        // Static proposal datasets
+        const staticProposals = {
+            'MP-042': {
+                id: 'MP-042',
+                category: 'Rule Change',
+                title: 'Adjust Minimum Collateral Ratio for Community Pools',
+                date: 'Created Mar 24, 2024',
+                badgeBg: 'bg-secondary-container text-on-secondary-container',
+                rationale: '<p>This proposal aims to lower the collateralization requirements from 150% to 125% for verified community circles.</p><p>Lowering the requirement is projected to increase capital velocity by 25% based on recent stress testing models and historical repayment rates on Stellar testnet.</p>',
+                changesHtml: `
+                    <h3 class="text-headline-md font-headline-md text-primary mb-md">Proposed Changes</h3>
+                    <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                    <thead class="border-b border-outline-variant">
+                    <tr>
+                    <th class="py-sm text-label-sm font-bold text-on-surface-variant uppercase">Parameter</th>
+                    <th class="py-sm text-label-sm font-bold text-on-surface-variant uppercase">Old State</th>
+                    <th class="py-sm text-label-sm font-bold text-on-surface-variant uppercase">New State</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant">
+                    <tr>
+                    <td class="py-md text-label-md font-bold">Collateral Ratio</td>
+                    <td class="py-md text-body-md text-error">150%</td>
+                    <td class="py-md text-body-md text-secondary font-bold">125%</td>
+                    </tr>
+                    </tbody>
+                    </table>
+                    </div>
+                `,
+                yesPct: 68,
+                noPct: 32,
+                yesAmt: '12.4K',
+                noAmt: '5.8K',
+                quorumText: 'Quorum reached: 18,200 / 15,000 USDC',
+                timelineHtml: `
+                    <div class="relative">
+                    <div class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-secondary ring-4 ring-secondary-container"></div>
+                    <p class="text-label-md font-bold text-primary">Created</p>
+                    <p class="text-body-sm text-on-surface-variant">Mar 24, 10:00 AM</p>
+                    </div>
+                    <div class="relative">
+                    <div class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-secondary ring-4 ring-secondary-container"></div>
+                    <p class="text-label-md font-bold text-primary">Reached Quorum</p>
+                    <p class="text-body-sm text-on-surface-variant">Mar 25, 02:30 PM</p>
+                    </div>
+                    <div class="relative">
+                    <div class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-surface-container border-2 border-outline"></div>
+                    <p class="text-label-md font-bold text-primary">Ends In</p>
+                    <p class="text-headline-md font-bold text-error">47h 12m</p>
+                    </div>
+                `
+            },
+            'MP-043': {
+                id: 'MP-043',
+                category: 'Emergency Action',
+                title: 'Immediate Pause of Pool Creation in Southeast Asia Region',
+                date: 'Created Mar 25, 2024',
+                badgeBg: 'bg-error-container/20 text-on-error-container',
+                rationale: '<p>Due to high network congestion and fluctuating gas conditions affecting the MoneyGram payout endpoints in SE Asia, we propose a temporary 48-hour pause on new pool registrations in this specific region.</p><p>This will prevent users from experiencing stuck deposits while the node infrastructure is being upgraded.</p>',
+                changesHtml: `
+                    <h3 class="text-headline-md font-headline-md text-primary mb-md">Proposed Changes</h3>
+                    <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                    <thead class="border-b border-outline-variant">
+                    <tr>
+                    <th class="py-sm text-label-sm font-bold text-on-surface-variant uppercase">Parameter</th>
+                    <th class="py-sm text-label-sm font-bold text-on-surface-variant uppercase">Old State</th>
+                    <th class="py-sm text-label-sm font-bold text-on-surface-variant uppercase">New State</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant">
+                    <tr>
+                    <td class="py-md text-label-md font-bold">SE Asia Registrations</td>
+                    <td class="py-md text-body-md text-secondary">Active</td>
+                    <td class="py-md text-body-md text-error font-bold">Paused (48 Hours)</td>
+                    </tr>
+                    </tbody>
+                    </table>
+                    </div>
+                `,
+                yesPct: 92,
+                noPct: 8,
+                yesAmt: '44.1K',
+                noAmt: '3.9K',
+                quorumText: 'Quorum reached: 48,000 / 25,000 USDC',
+                timelineHtml: `
+                    <div class="relative">
+                    <div class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-secondary ring-4 ring-secondary-container"></div>
+                    <p class="text-label-md font-bold text-primary">Created</p>
+                    <p class="text-body-sm text-on-surface-variant">Mar 25, 08:00 AM</p>
+                    </div>
+                    <div class="relative">
+                    <div class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-secondary ring-4 ring-secondary-container"></div>
+                    <p class="text-label-md font-bold text-primary">Reached Quorum</p>
+                    <p class="text-body-sm text-on-surface-variant">Mar 25, 09:30 AM</p>
+                    </div>
+                    <div class="relative">
+                    <div class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-surface-container border-2 border-outline"></div>
+                    <p class="text-label-md font-bold text-primary">Ends In</p>
+                    <p class="text-headline-md font-bold text-error">4h 12m</p>
+                    </div>
+                `
+            }
+        };
+
+        // Check if there is a matching user proposal in localStorage
+        const userProposals = JSON.parse(localStorage.getItem('mesa_submitted_proposals') || '[]');
+        const matchedUser = userProposals.find(p => p.id === propId);
+
+        let prop = staticProposals[propId];
+        if (matchedUser) {
+            prop = {
+                id: matchedUser.id,
+                category: matchedUser.category,
+                title: matchedUser.title,
+                date: `Created ${matchedUser.timestamp || 'Today'}`,
+                badgeBg: matchedUser.category === 'Emergency Action' ? 'bg-error-container/20 text-on-error-container' : 'bg-secondary-container/20 text-on-secondary-container',
+                rationale: `<p>${matchedUser.rationale || 'No rationale provided.'}</p>`,
+                changesHtml: `
+                    <h3 class="text-headline-md font-headline-md text-primary mb-md">Proposed Changes</h3>
+                    <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                    <thead class="border-b border-outline-variant">
+                    <tr>
+                    <th class="py-sm text-label-sm font-bold text-on-surface-variant uppercase">Parameter</th>
+                    <th class="py-sm text-label-sm font-bold text-on-surface-variant uppercase">Old State</th>
+                    <th class="py-sm text-label-sm font-bold text-on-surface-variant uppercase">New State</th>
+                    </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant">
+                    <tr>
+                    <td class="py-md text-label-md font-bold">${matchedUser.param || 'Collateral Ratio'}</td>
+                    <td class="py-md text-body-md text-on-surface-variant">150%</td>
+                    <td class="py-md text-body-md text-secondary font-bold">${matchedUser.newVal || '125%'}</td>
+                    </tr>
+                    </tbody>
+                    </table>
+                    </div>
+                `,
+                yesPct: 100,
+                noPct: 0,
+                yesAmt: '4.2K',
+                noAmt: '0',
+                quorumText: 'Quorum reached: 4,280 / 4,000 USDC',
+                timelineHtml: `
+                    <div class="relative">
+                    <div class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-secondary ring-4 ring-secondary-container"></div>
+                    <p class="text-label-md font-bold text-primary">Created</p>
+                    <p class="text-body-sm text-on-surface-variant">${matchedUser.timestamp || 'Today'}, 10:00 AM</p>
+                    </div>
+                    <div class="relative">
+                    <div class="absolute -left-[27px] top-0 w-4 h-4 rounded-full bg-surface-container border-2 border-outline"></div>
+                    <p class="text-label-md font-bold text-primary">Ends In</p>
+                    <p class="text-headline-md font-bold text-error">47h 59m</p>
+                    </div>
+                `
+            };
+        }
+
+        // Fallback to MP-042 if not found
+        if (!prop) {
+            prop = staticProposals['MP-042'];
+        }
+
+        // Bind data to DOM
+        document.getElementById('proposal-detail-title').textContent = prop.title;
+        document.getElementById('proposal-detail-meta').textContent = `${prop.id} • ${prop.date}`;
+        document.getElementById('proposal-detail-badge').textContent = prop.category;
+        document.getElementById('proposal-detail-badge').className = `px-md py-xs rounded-full ${prop.badgeBg} text-label-sm font-bold uppercase tracking-wider`;
+        document.getElementById('proposal-detail-rationale').innerHTML = prop.rationale;
+        document.getElementById('proposal-detail-changes-section').innerHTML = prop.changesHtml;
+        
+        // Update timeline
+        const timelineContainer = document.querySelector('.relative.space-y-lg.pl-lg.border-l-2.border-outline-variant.ml-sm');
+        if (timelineContainer) {
+            timelineContainer.innerHTML = prop.timelineHtml;
+        }
+
+        // Update initial chart state
+        function updateChart(yes, no) {
+            const total = yes + no;
+            const yesPct = total > 0 ? Math.round((yes / total) * 100) : 0;
+            const noPct = total > 0 ? Math.round((no / total) * 100) : 0;
+
+            const bars = document.querySelectorAll('.vote-bar');
+            const labels = document.querySelectorAll('.space-y-xs.mb-xl .flex.justify-between.text-label-sm.font-bold');
+            
+            if (bars[0] && labels[0]) {
+                bars[0].style.width = `${yesPct}%`;
+                labels[0].innerHTML = `<span>YES</span><span>${yesPct}% (${(yes / 1000).toFixed(1)}K USDC)</span>`;
+            }
+            if (bars[1] && labels[1]) {
+                bars[1].style.width = `${noPct}%`;
+                labels[1].innerHTML = `<span>NO</span><span>${noPct}% (${(no / 1000).toFixed(1)}K USDC)</span>`;
+            }
+        }
+
+        // Extract numbers from amts
+        let yesVal = parseFloat(prop.yesAmt) * 1000;
+        let noVal = parseFloat(prop.noAmt) * 1000;
+        updateChart(yesVal, noVal);
+
+        // Vote button action simulation
+        const btnYes = document.querySelector('button.bg-secondary');
+        const btnNo = document.querySelector('button.bg-error');
+
+        let userVoted = false;
+
+        if (btnYes && btnNo) {
+            btnYes.addEventListener('click', () => {
+                if (userVoted) return;
+                yesVal += 500;
+                updateChart(yesVal, noVal);
+                userVoted = true;
+                btnYes.innerHTML = '<span class="material-symbols-outlined">check_circle</span> VOTED YES';
+                btnYes.disabled = true;
+                btnNo.style.opacity = '0.5';
+                btnNo.disabled = true;
+            });
+
+            btnNo.addEventListener('click', () => {
+                if (userVoted) return;
+                noVal += 500;
+                updateChart(yesVal, noVal);
+                userVoted = true;
+                btnNo.innerHTML = '<span class="material-symbols-outlined">cancel</span> VOTED NO';
+                btnNo.disabled = true;
+                btnYes.style.opacity = '0.5';
+                btnYes.disabled = true;
+            });
+        }
+
+        // Micro-interaction for general buttons
         document.querySelectorAll('button').forEach(button => {
             button.addEventListener('mousedown', () => {
                 button.classList.add('scale-95');
@@ -403,16 +647,5 @@
                 button.classList.remove('scale-95');
             });
         });
-
-        // Simulating some real-time updates to the chart
-        setInterval(() => {
-            const bars = document.querySelectorAll('.vote-bar');
-            bars.forEach(bar => {
-                const currentWidth = parseFloat(bar.style.width);
-                const jitter = (Math.random() - 0.5) * 0.5;
-                const newWidth = Math.min(Math.max(currentWidth + jitter, 1), 99);
-                bar.style.width = `${newWidth}%`;
-            });
-        }, 5000);
     </script>
 </body></html>
