@@ -24,7 +24,29 @@ export async function initSchema(): Promise<void> {
     console.log('[MesaRuntime] InMemoryPool schema initialization skipped.');
     return;
   }
-  const sql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+  
+  const possiblePaths = [
+    path.join(__dirname, 'schema.sql'),
+    path.join(__dirname, 'store', 'schema.sql'),
+    path.join(__dirname, '..', 'src', 'store', 'schema.sql'),
+    path.join(process.cwd(), 'schema.sql'),
+    path.join(process.cwd(), 'src', 'store', 'schema.sql'),
+    path.join(process.cwd(), 'dist', 'store', 'schema.sql'),
+  ];
+
+  let schemaPath = '';
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      schemaPath = p;
+      break;
+    }
+  }
+
+  if (!schemaPath) {
+    throw new Error(`[MesaRuntime] Could not locate schema.sql in any of the expected paths: ${JSON.stringify(possiblePaths)}`);
+  }
+
+  const sql = fs.readFileSync(schemaPath, 'utf8');
   await getPool().query(sql);
   console.log('[MesaRuntime] Postgres schema initialized.');
 }

@@ -80,7 +80,13 @@ export async function executeStep(
       console.log(`[MesaRuntime] ✔ Step ${stepIndex} (${stepDef.name}) completed.`);
 
     } else if (result.outcome === 'suspended') {
-      await store.updateStep(stepRecord.id, { status: 'SUSPENDED', output: { suspensionKey: result.suspensionKey } });
+      await store.updateStep(stepRecord.id, { 
+        status: 'SUSPENDED', 
+        output: { 
+          suspensionKey: result.suspensionKey,
+          ...(result.output || {})
+        } 
+      });
       await store.appendEvent(execution.id, 'step.suspended', { stepIndex, name: stepDef.name, suspensionKey: result.suspensionKey });
       console.log(`[MesaRuntime] ⏸  Step ${stepIndex} (${stepDef.name}) suspended — waiting for: ${result.suspensionKey}`);
 

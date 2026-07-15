@@ -219,7 +219,25 @@ async function initSchema() {
     console.log("[MesaRuntime] InMemoryPool schema initialization skipped.");
     return;
   }
-  const sql = fs.readFileSync(path.join(__dirname, "schema.sql"), "utf8");
+  const possiblePaths = [
+    path.join(__dirname, "schema.sql"),
+    path.join(__dirname, "store", "schema.sql"),
+    path.join(__dirname, "..", "src", "store", "schema.sql"),
+    path.join(process.cwd(), "schema.sql"),
+    path.join(process.cwd(), "src", "store", "schema.sql"),
+    path.join(process.cwd(), "dist", "store", "schema.sql")
+  ];
+  let schemaPath = "";
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      schemaPath = p;
+      break;
+    }
+  }
+  if (!schemaPath) {
+    throw new Error(`[MesaRuntime] Could not locate schema.sql in any of the expected paths: ${JSON.stringify(possiblePaths)}`);
+  }
+  const sql = fs.readFileSync(schemaPath, "utf8");
   await getPool().query(sql);
   console.log("[MesaRuntime] Postgres schema initialized.");
 }
@@ -418,7 +436,13 @@ async function executeStep(execution, stepDef, stepIndex) {
       await appendEvent(execution.id, "step.completed", { stepIndex, name: stepDef.name, output: result.output });
       console.log(`[MesaRuntime] \u2714 Step ${stepIndex} (${stepDef.name}) completed.`);
     } else if (result.outcome === "suspended") {
-      await updateStep(stepRecord.id, { status: "SUSPENDED", output: { suspensionKey: result.suspensionKey } });
+      await updateStep(stepRecord.id, {
+        status: "SUSPENDED",
+        output: {
+          suspensionKey: result.suspensionKey,
+          ...result.output || {}
+        }
+      });
       await appendEvent(execution.id, "step.suspended", { stepIndex, name: stepDef.name, suspensionKey: result.suspensionKey });
       console.log(`[MesaRuntime] \u23F8  Step ${stepIndex} (${stepDef.name}) suspended \u2014 waiting for: ${result.suspensionKey}`);
     } else {
