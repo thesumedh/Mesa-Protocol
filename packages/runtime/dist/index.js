@@ -853,6 +853,57 @@ var AnchorProvider = class {
     if (!anchorUrl || !asset || !userAddress) {
       throw new Error("AnchorProvider (sep24Deposit): anchorUrl, asset, and userAddress are required.");
     }
+    const autoTrustline = step.params.autoTrustline !== false;
+    if (autoTrustline && asset !== "XLM") {
+      let assetCode = asset;
+      let assetIssuer = "";
+      if (asset.includes(":")) {
+        const parts = asset.split(":");
+        assetCode = parts[0];
+        assetIssuer = parts[1];
+      } else if (asset === "USDC") {
+        assetIssuer = "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5";
+      }
+      if (assetIssuer) {
+        try {
+          const horizonUrl = step.params.horizonUrl || "https://horizon-testnet.stellar.org";
+          console.log(`[AnchorProvider] Checking trustline for ${assetCode} on ${userAddress}...`);
+          const accountInfo = await this.httpGet(`${horizonUrl}/accounts/${userAddress}`, {});
+          let hasTrustline = false;
+          if (accountInfo && accountInfo.balances) {
+            hasTrustline = accountInfo.balances.some(
+              (bal) => bal.asset_code === assetCode && bal.asset_issuer === assetIssuer
+            );
+          }
+          if (!hasTrustline) {
+            if (!userSecret) {
+              console.warn(`[AnchorProvider] Trustline for ${assetCode}:${assetIssuer} is missing, but userSecret is not provided. Cannot auto-create trustline.`);
+            } else {
+              console.log(`[AnchorProvider] Trustline missing. Automatically establishing trustline for ${assetCode}:${assetIssuer}...`);
+              const userKeypair = import_stellar_sdk.Keypair.fromSecret(userSecret);
+              const server = new import_stellar_sdk.Horizon.Server(horizonUrl);
+              const account = await server.loadAccount(userAddress);
+              const usdcAsset = new import_stellar_sdk.Asset(assetCode, assetIssuer);
+              const tx = new import_stellar_sdk.TransactionBuilder(account, {
+                fee: "1000",
+                networkPassphrase: import_stellar_sdk.Networks.TESTNET
+              }).addOperation(
+                import_stellar_sdk.Operation.changeTrust({
+                  asset: usdcAsset
+                })
+              ).setTimeout(60).build();
+              tx.sign(userKeypair);
+              const submitResult = await server.submitTransaction(tx);
+              console.log(`[AnchorProvider] Trustline successfully established. Hash: ${submitResult.hash}`);
+            }
+          } else {
+            console.log(`[AnchorProvider] Trustline for ${assetCode} already exists.`);
+          }
+        } catch (err) {
+          console.error(`[AnchorProvider] Failed to check/create trustline:`, err.message);
+        }
+      }
+    }
     console.log(`[AnchorProvider] Initiating real SEP-24 deposit to anchor: ${anchorUrl}`);
     const toml = await this.fetchToml(anchorUrl);
     const jwt = userJwt ?? await this.sep10Auth(toml.WEB_AUTH_ENDPOINT, userAddress, toml.SIGNING_KEY, userSecret);
