@@ -44,6 +44,12 @@ export function createServer(): express.Express {
       if (!name || !definition) return res.status(400).json({ error: 'name and definition are required' }) as any;
 
       const flowId = id ?? randomUUID();
+      const existingFlow = await store.getFlow(flowId);
+      if (existingFlow) {
+        console.log(`[MesaRuntime] Flow already registered: ${existingFlow.id} (${existingFlow.name}). Reusing.`);
+        return res.status(201).json({ flowId: existingFlow.id, name: existingFlow.name, reused: true });
+      }
+
       const flow = await store.createFlow(flowId, name, definition);
 
       console.log(`[MesaRuntime] Flow registered: ${flow.id} (${flow.name})`);

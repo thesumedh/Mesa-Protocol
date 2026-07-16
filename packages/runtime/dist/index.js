@@ -569,6 +569,11 @@ function createServer() {
       const { id, name, definition } = req.body;
       if (!name || !definition) return res.status(400).json({ error: "name and definition are required" });
       const flowId = id ?? (0, import_crypto2.randomUUID)();
+      const existingFlow = await getFlow(flowId);
+      if (existingFlow) {
+        console.log(`[MesaRuntime] Flow already registered: ${existingFlow.id} (${existingFlow.name}). Reusing.`);
+        return res.status(201).json({ flowId: existingFlow.id, name: existingFlow.name, reused: true });
+      }
       const flow = await createFlow(flowId, name, definition);
       console.log(`[MesaRuntime] Flow registered: ${flow.id} (${flow.name})`);
       res.status(201).json({ flowId: flow.id, name: flow.name });
