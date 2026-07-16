@@ -130,7 +130,7 @@ async function runStellarTest() {
 
   // 6. Wait for execution to suspend on SEP-24 Deposit Step
   console.log('\nWaiting for execution to progress and suspend...');
-  let maxRetries = 20;
+  let maxRetries = 50;
   let execDetails: any = null;
   let suspKey: string = '';
 
