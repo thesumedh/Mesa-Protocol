@@ -63,9 +63,9 @@
         </div>
         <div>
           <span class="text-lg font-bold tracking-tight text-white flex items-center">
-            MESA <span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full ml-2 border border-blue-500/20">RUNTIME</span>
+            Mesa Runtime <span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full ml-2 border border-blue-500/20">LIVE</span>
           </span>
-          <span class="text-xs text-slate-400 block -mt-1">Stellar Embedded Finance Console</span>
+          <span class="text-xs text-slate-400 block -mt-1 font-medium">Embedded Finance Runtime for Stellar</span>
         </div>
       </div>
       
@@ -91,12 +91,14 @@
       <div class="flex items-center space-x-3 bg-slate-900/60 rounded-xl px-4 py-2 border border-slate-800/80 w-full md:w-auto">
         <div class="text-[10px] uppercase font-bold tracking-wider text-slate-500 flex items-center mr-1">
           <i data-lucide="route" class="w-3.5 h-3.5 mr-1 text-slate-400"></i>
-          Orchestration
+          Orchestration League
         </div>
         <div class="flex items-center space-x-2 text-[11px]">
-          <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">SDK</span>
+          <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">Developer App</span>
           <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-700"></i>
-          <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold">Runtime</span>
+          <span class="px-2 py-0.5 rounded bg-blue-600/20 text-blue-300 border border-blue-500/20 font-bold">Mesa SDK</span>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-700"></i>
+          <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold">Workflow Runtime</span>
           <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-700"></i>
           <span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold">Scheduler</span>
           <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-700"></i>
@@ -448,41 +450,76 @@
                           </span>
                         </div>
 
-                        <!-- Nested Events -->
+                        <!-- Nested Collapsible Events -->
                         <div v-if="phase.events.length > 0" class="pl-3 border-l border-slate-800/60 space-y-3 mt-2">
-                          <div v-for="ev in phase.events" :key="ev.id" class="text-xs text-slate-300 space-y-1">
-                            <div class="flex items-center space-x-1.5">
-                              <span :class="formatEventDisplay(ev).colorClass" class="px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase tracking-wider">
-                                {{ formatEventDisplay(ev).title }}
-                              </span>
-                              <span class="text-slate-400 font-mono text-[9px]">{{ formatTimeOnly(ev.timestamp) }}</span>
+                          <div v-for="ev in phase.events" :key="ev.id" class="text-xs text-slate-300 bg-slate-950/20 border border-slate-800/40 rounded-lg p-2.5 space-y-1.5">
+                            <div class="flex items-center justify-between">
+                              <div class="flex items-center space-x-1.5">
+                                <span :class="formatEventDisplay(ev).colorClass" class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider">
+                                  {{ formatEventDisplay(ev).title }}
+                                </span>
+                                <span class="text-slate-400 font-mono text-[9px]">{{ formatTimeOnly(ev.timestamp) }}</span>
+                              </div>
+                              
+                              <!-- Display Step Attempt / Duration if available in payload -->
+                              <div class="flex items-center space-x-2 text-[10px] text-slate-400">
+                                <span v-if="ev.payload?.attempt" class="bg-slate-805 px-1.5 py-0.5 rounded font-semibold text-[9px] border border-slate-700">
+                                  Attempt {{ ev.payload.attempt }}
+                                </span>
+                                <span v-if="ev.payload?.durationMs" class="text-slate-450 font-medium">
+                                  Duration {{ (ev.payload.durationMs / 1000).toFixed(1) }}s
+                                </span>
+                              </div>
                             </div>
-                            <p class="text-slate-400 text-[11px] leading-relaxed">{{ formatEventDisplay(ev).description }}</p>
                             
+                            <!-- Friendly Description -->
+                            <p class="text-slate-300 text-[11.5px] leading-relaxed pt-0.5 font-medium">
+                              {{ formatEventDisplay(ev).description }}
+                            </p>
+
+                            <!-- Key-Value metadata helper fields (e.g. Asset/Issuer/Provider details) -->
+                            <div v-if="ev.payload?.asset || ev.payload?.issuer || ev.payload?.provider || ev.payload?.amount" 
+                                 class="grid grid-cols-2 md:grid-cols-3 gap-2 bg-slate-950/40 p-2 rounded border border-slate-900 text-[10px] my-1.5 text-slate-400">
+                              <div v-if="ev.payload?.asset">
+                                <span class="text-slate-500 font-semibold block uppercase text-[8px] tracking-wider">Asset</span>
+                                <span class="text-slate-300 font-mono font-bold">{{ ev.payload.asset }}</span>
+                              </div>
+                              <div v-if="ev.payload?.issuer">
+                                <span class="text-slate-500 font-semibold block uppercase text-[8px] tracking-wider">Issuer</span>
+                                <span class="text-slate-300 font-mono" :title="ev.payload.issuer">{{ ev.payload.issuer.substring(0, 8) }}...{{ ev.payload.issuer.substring(ev.payload.issuer.length - 8) }}</span>
+                              </div>
+                              <div v-if="ev.payload?.provider">
+                                <span class="text-slate-500 font-semibold block uppercase text-[8px] tracking-wider">Provider</span>
+                                <span class="text-indigo-400 font-bold">⭐ {{ getFriendlyProviderName(ev.payload.provider) }}</span>
+                              </div>
+                              <div v-if="ev.payload?.amount">
+                                <span class="text-slate-500 font-semibold block uppercase text-[8px] tracking-wider">Amount</span>
+                                <span class="text-emerald-400 font-bold">{{ ev.payload.amount }}</span>
+                              </div>
+                            </div>
+
                             <!-- If there is a Transaction Hash, display link to StellarExpert -->
-                            <div v-if="formatEventDisplay(ev).txHash" class="mt-1 flex items-center space-x-1 text-[10px] font-mono text-indigo-400 bg-indigo-500/5 px-2 py-1 rounded border border-indigo-500/10 w-fit">
-                              <i data-lucide="external-link" class="w-3 h-3"></i>
-                              <span>TX Hash:</span>
+                            <div v-if="formatEventDisplay(ev).txHash" class="mt-1 flex items-center space-x-1.5 text-[10px] font-mono text-indigo-400 bg-indigo-500/5 px-2 py-1 rounded border border-indigo-500/10 w-fit">
+                              <i data-lucide="external-link" class="w-3 h-3 text-indigo-400"></i>
+                              <span class="text-slate-400">TX:</span>
                               <span class="text-slate-300 font-bold">{{ formatEventDisplay(ev).txHash.substring(0, 12) }}...</span>
                               <a :href="'https://stellar.expert/explorer/testnet/tx/' + formatEventDisplay(ev).txHash" target="_blank" class="hover:underline text-indigo-300 font-bold ml-1">
                                 View on Stellar Expert →
                               </a>
                             </div>
+
+                            <!-- Collapsible Technical Details / Raw Payload -->
+                            <details class="group mt-2">
+                              <summary class="text-[9px] text-slate-500 hover:text-slate-300 cursor-pointer select-none font-extrabold flex items-center space-x-1 uppercase tracking-wider">
+                                <span class="group-open:hidden">▼ Show Raw Payload</span>
+                                <span class="hidden group-open:inline">▲ Hide Raw Payload</span>
+                              </summary>
+                              <pre class="bg-slate-950 p-2.5 rounded border border-slate-900 text-[10px] font-mono text-slate-400 overflow-x-auto mt-1.5 max-h-40 overflow-y-auto">{{ JSON.stringify(ev.payload || {}, null, 2) }}</pre>
+                            </details>
                           </div>
                         </div>
 
-                        <!-- Optional System Payload for the Phase's events -->
-                        <details class="group mt-2" v-if="phase.events.length > 0">
-                          <summary class="text-[10px] text-slate-500 hover:text-slate-300 cursor-pointer select-none font-semibold">
-                            Show Phase Payload
-                          </summary>
-                          <div class="bg-slate-950 p-2.5 rounded border border-slate-900 text-[10px] font-mono text-slate-400 overflow-x-auto mt-1.5 max-h-40 overflow-y-auto">
-                            <div v-for="ev in phase.events" :key="'p-' + ev.id" class="mb-2 last:mb-0 pb-2 border-b border-slate-800/40 last:border-0">
-                              <div class="text-[9px] text-indigo-400 font-bold">{{ ev.type }}</div>
-                              <pre class="mt-1 text-[9px]">{{ JSON.stringify(ev.payload || {}, null, 2) }}</pre>
-                            </div>
-                          </div>
-                        </details>
+
                       </div>
                     </div>
                   </div>
@@ -862,6 +899,15 @@
           }
         };
 
+        const getFriendlyProviderName = (provider) => {
+          if (!provider) return '';
+          const name = String(provider).toLowerCase();
+          if (name === 'anchor') return 'Anchor Provider';
+          if (name === 'stellar') return 'Stellar Provider';
+          if (name === 'webhook') return 'Webhook Provider';
+          return provider.charAt(0).toUpperCase() + provider.slice(1) + ' Provider';
+        };
+
         const getStepList = () => {
           if (!selectedExec) return [];
           const flow = flows.value.find(f => f.id === selectedExec.value.flow_id);
@@ -1129,7 +1175,7 @@
             dotColor = 'bg-rose-500';
           } else if (ev.type === 'trustline.creating') {
             title = '🟣 Preparing Account';
-            description = `Creating trustline for asset ${payload.asset}...`;
+            description = `Creating trustline for asset ${payload.asset || 'USDC'}...`;
             colorClass = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
             dotColor = 'bg-indigo-500';
           } else if (ev.type === 'trustline.created') {
@@ -1138,15 +1184,20 @@
             colorClass = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
             dotColor = 'bg-indigo-500';
           } else if (ev.type === 'trustline.verified') {
-            title = '🟣 Trustline Verified';
-            description = `Account already has a trustline for ${payload.asset}.`;
-            colorClass = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
-            dotColor = 'bg-indigo-500';
+            title = '✓ Account Ready';
+            description = `USDC trustline already exists.`;
+            colorClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+            dotColor = 'bg-emerald-500';
           } else if (ev.type === 'trustline.failed') {
             title = '🔴 Trustline Establishment Failed';
             description = payload.error;
             colorClass = 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
             dotColor = 'bg-rose-500';
+          } else if (ev.type === 'step.started') {
+            title = '✓ Step Execution Started';
+            description = `Step index ${payload.stepIndex || 0} (${payload.name || 'Step'}) initiated.`;
+            colorClass = 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+            dotColor = 'bg-blue-500';
           } else if (ev.type === 'anchor.sep10.started') {
             title = '🔐 SEP-10 Auth Initiated';
             description = payload.message || 'Requesting web authentication challenge transaction...';
