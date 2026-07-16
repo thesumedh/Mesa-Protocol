@@ -226,6 +226,28 @@
 
               <!-- Inspector Body -->
               <div class="flex-1 overflow-y-auto p-6 space-y-6">
+
+                <!-- WORKFLOW TIMELINE PROGRESS & STATE -->
+                <div class="bg-slate-900/30 border border-slate-800 rounded-xl p-5 space-y-4 shrink-0">
+                  <div class="flex items-center justify-between">
+                    <div class="space-y-1">
+                      <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Current State</span>
+                      <span :class="getCurrentStepBadge().colorClass" class="px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider block w-fit">
+                        {{ getCurrentStepBadge().label }}
+                      </span>
+                    </div>
+                    
+                    <div class="text-right space-y-1">
+                      <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Progress</span>
+                      <span class="text-lg font-extrabold text-white block">{{ getProgressPercent() }}%</span>
+                    </div>
+                  </div>
+
+                  <!-- Progress Bar -->
+                  <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <div class="h-full bg-emerald-500 rounded-full transition-all duration-500" :style="{ width: getProgressPercent() + '%' }"></div>
+                  </div>
+                </div>
                 
                 <!-- SUSPENDED RESOLVER ACTION CARD -->
                 <div v-if="selectedExec.status === 'SUSPENDED'" class="p-5 rounded-xl border border-amber-500/30 bg-amber-500/5 glow-accent space-y-4">
@@ -267,113 +289,69 @@
                     </button>
                   </div>
                 </div>
-
-                <!-- STEPS TIMELINE -->
-                <div class="space-y-3">
-                  <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center">
-                    <i data-lucide="list-todo" class="w-4 h-4 mr-1.5"></i>
-                    Workflow Steps ({{ getStepList().length }})
-                  </h3>
-                  
-                  <div class="space-y-2.5">
-                    <div v-for="(step, idx) in getStepList()" :key="idx" class="rounded-lg border bg-slate-900/40" 
-                         :class="step.status === 'SUSPENDED' ? 'border-amber-500/40 bg-amber-500/[0.01]' : 'border-slate-800'">
-                      
-                      <!-- Step Header -->
-                      <div @click="toggleStepDetails(idx)" class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-800/20 select-none">
-                        <div class="flex items-center space-x-3">
-                          <!-- Number Indicator -->
-                          <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
-                               :class="getStepCircleClass(step.status)">
-                            {{ idx + 1 }}
-                          </div>
-                          <div>
-                            <span class="text-sm font-semibold text-slate-200">{{ step.name }}</span>
-                            <span class="text-xs text-slate-500 ml-2">({{ step.provider }})</span>
-                          </div>
-                        </div>
-                        
-                        <div class="flex items-center space-x-3">
-                          <span :class="getStepBadgeClass(step.status)" class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wider">
-                            {{ step.status || 'PENDING' }}
-                          </span>
-                          <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 transition duration-150" 
-                             :class="{ 'rotate-185 transform': stepDetailsOpen === idx }"></i>
-                        </div>
-                      </div>
-
-                      <!-- Step Details Panel -->
-                      <div v-if="stepDetailsOpen === idx" class="px-4 pb-4 pt-1 border-t border-slate-800 bg-slate-950/40 rounded-b-lg space-y-3">
-                        <!-- Parameters -->
-                        <div>
-                          <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Parameters</div>
-                          <pre class="bg-slate-950 p-2.5 rounded border border-slate-900 text-[11px] font-mono text-slate-300 overflow-x-auto">{{ JSON.stringify(step.params || {}, null, 2) }}</pre>
-                        </div>
-                        <!-- Output -->
-                        <div v-if="step.output && Object.keys(step.output).length > 0">
-                          <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Output Data</div>
-                          <pre class="bg-slate-950 p-2.5 rounded border border-slate-900 text-[11px] font-mono text-slate-300 overflow-x-auto">{{ JSON.stringify(step.output, null, 2) }}</pre>
-                        </div>
-                        <!-- Error -->
-                        <div v-if="step.error">
-                          <div class="text-[9px] font-bold text-red-400 uppercase tracking-wider mb-1">Error message</div>
-                          <div class="bg-red-500/10 border border-red-500/20 text-red-300 px-3 py-2 rounded text-xs font-mono">
-                            {{ step.error }}
-                          </div>
-                        </div>
-                        <!-- Meta Stats -->
-                        <div class="flex space-x-6 text-[10px] text-slate-500">
-                          <div>Attempts: <span class="text-slate-300 font-semibold">{{ step.attempts || 0 }}</span></div>
-                          <div v-if="step.updated_at">Last Updated: <span class="text-slate-300 font-semibold">{{ formatTime(step.updated_at) }}</span></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- AUDIT EVENT TRAIL TIMELINE -->
+                <!-- GROUPED PHASES TIMELINE -->
                 <div class="space-y-4">
                   <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center">
-                    <i data-lucide="receipt" class="w-4 h-4 mr-1.5 shrink-0"></i>
-                    Audit Event Trail
+                    <i data-lucide="git-commit" class="w-4 h-4 mr-1.5 shrink-0"></i>
+                    Workflow Timeline
                   </h3>
 
-                  <div class="relative pl-6 border-l border-slate-800 ml-3 space-y-5">
-                    <div v-for="ev in selectedExecEvents" :key="ev.id" class="relative">
+                  <div class="relative pl-6 border-l border-slate-800 ml-3 space-y-6">
+                    <div v-for="phase in groupedPhases" :key="phase.id" class="relative">
                       <!-- Dot node -->
                       <div class="absolute -left-[31px] top-1.5 w-2 h-2 rounded-full border border-slate-950 flex items-center justify-center"
-                           :class="formatEventDisplay(ev).dotColor">
+                           :class="phase.dotColor">
                       </div>
 
-                      <div class="bg-slate-900/30 border border-slate-800/80 rounded-xl p-4 space-y-2 hover:bg-slate-900/50 transition duration-150">
+                      <div class="bg-slate-900/30 border border-slate-800/80 rounded-xl p-4 space-y-3 hover:bg-slate-900/50 transition duration-150">
+                        <!-- Phase Header -->
                         <div class="flex items-center justify-between">
-                          <div class="flex items-center space-x-2">
-                            <span :class="formatEventDisplay(ev).colorClass" class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider">
-                              {{ formatEventDisplay(ev).title }}
-                            </span>
-                            <span class="text-[9px] text-slate-500 font-mono">{{ ev.type }}</span>
+                          <div>
+                            <h4 class="text-sm font-bold text-white flex items-center">
+                              {{ phase.name }}
+                              <span class="text-[10px] text-slate-500 font-mono ml-2">({{ formatDuration(phase.durationMs) }})</span>
+                            </h4>
+                            <p class="text-xs text-slate-500">{{ phase.subtitle }}</p>
                           </div>
-                          <span class="text-[10px] text-slate-500 font-mono">{{ formatTimeOnly(ev.timestamp) }}</span>
+                          <span :class="getStatusClass(phase.status)" class="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-md tracking-wider">
+                            {{ phase.status }}
+                          </span>
                         </div>
 
-                        <p class="text-xs text-slate-300 font-medium leading-relaxed">{{ formatEventDisplay(ev).description }}</p>
-
-                        <!-- If there is a Transaction Hash, display link to StellarExpert -->
-                        <div v-if="formatEventDisplay(ev).txHash" class="flex items-center space-x-1.5 text-[11px] font-mono text-indigo-400 bg-indigo-500/5 px-2.5 py-1.5 rounded border border-indigo-500/10 w-fit">
-                          <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                          <span>TX Hash:</span>
-                          <span class="text-slate-300 font-bold">{{ formatEventDisplay(ev).txHash.substring(0, 12) }}...</span>
-                          <a :href="'https://stellar.expert/explorer/testnet/tx/' + formatEventDisplay(ev).txHash" target="_blank" class="hover:underline text-indigo-300 font-bold ml-2">
-                            View on Stellar Expert →
-                          </a>
+                        <!-- Nested Events -->
+                        <div v-if="phase.events.length > 0" class="pl-3 border-l border-slate-800/60 space-y-3 mt-2">
+                          <div v-for="ev in phase.events" :key="ev.id" class="text-xs text-slate-300 space-y-1">
+                            <div class="flex items-center space-x-1.5">
+                              <span :class="formatEventDisplay(ev).colorClass" class="px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase tracking-wider">
+                                {{ formatEventDisplay(ev).title }}
+                              </span>
+                              <span class="text-slate-400 font-mono text-[9px]">{{ formatTimeOnly(ev.timestamp) }}</span>
+                            </div>
+                            <p class="text-slate-400 text-[11px] leading-relaxed">{{ formatEventDisplay(ev).description }}</p>
+                            
+                            <!-- If there is a Transaction Hash, display link to StellarExpert -->
+                            <div v-if="formatEventDisplay(ev).txHash" class="mt-1 flex items-center space-x-1 text-[10px] font-mono text-indigo-400 bg-indigo-500/5 px-2 py-1 rounded border border-indigo-500/10 w-fit">
+                              <i data-lucide="external-link" class="w-3 h-3"></i>
+                              <span>TX Hash:</span>
+                              <span class="text-slate-300 font-bold">{{ formatEventDisplay(ev).txHash.substring(0, 12) }}...</span>
+                              <a :href="'https://stellar.expert/explorer/testnet/tx/' + formatEventDisplay(ev).txHash" target="_blank" class="hover:underline text-indigo-300 font-bold ml-1">
+                                View on Stellar Expert →
+                              </a>
+                            </div>
+                          </div>
                         </div>
 
-                        <!-- Toggle raw JSON payload details -->
-                        <details class="group mt-2">
+                        <!-- Optional System Payload for the Phase's events -->
+                        <details class="group mt-2" v-if="phase.events.length > 0">
                           <summary class="text-[10px] text-slate-500 hover:text-slate-300 cursor-pointer select-none font-semibold">
-                            Show System Payload
+                            Show Phase Payload
                           </summary>
-                          <pre class="bg-slate-950 p-2.5 rounded border border-slate-900 text-[10.5px] font-mono text-slate-400 overflow-x-auto mt-1.5">{{ JSON.stringify(ev.payload || {}, null, 2) }}</pre>
+                          <div class="bg-slate-950 p-2.5 rounded border border-slate-900 text-[10px] font-mono text-slate-400 overflow-x-auto mt-1.5 max-h-40 overflow-y-auto">
+                            <div v-for="ev in phase.events" :key="'p-' + ev.id" class="mb-2 last:mb-0 pb-2 border-b border-slate-800/40 last:border-0">
+                              <div class="text-[9px] text-indigo-400 font-bold">{{ ev.type }}</div>
+                              <pre class="mt-1 text-[9px]">{{ JSON.stringify(ev.payload || {}, null, 2) }}</pre>
+                            </div>
+                          </div>
                         </details>
                       </div>
                     </div>
@@ -647,6 +625,7 @@
               output: runtimeStep ? runtimeStep.output : {},
               error: runtimeStep ? runtimeStep.error : null,
               attempts: runtimeStep ? runtimeStep.attempts : 0,
+              created_at: runtimeStep ? runtimeStep.created_at : null,
               updated_at: runtimeStep ? runtimeStep.updated_at : null
             };
           });
@@ -675,6 +654,101 @@
           navigator.clipboard.writeText(text);
           alert('Copied to clipboard!');
         };
+
+        const getProgressPercent = () => {
+          if (!selectedExec.value) return 0;
+          if (selectedExec.value.status === 'COMPLETED') return 100;
+          const steps = getStepList();
+          if (steps.length === 0) return 0;
+          const completed = steps.filter(s => s.status === 'COMPLETED').length;
+          return Math.round((completed / steps.length) * 100);
+        };
+
+        const getCurrentStepBadge = () => {
+          if (!selectedExec.value) return { label: '', colorClass: '' };
+          if (selectedExec.value.status === 'COMPLETED') {
+            return { label: '✓ Workflow Completed', colorClass: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' };
+          }
+          if (selectedExec.value.status === 'FAILED') {
+            return { label: '✗ Workflow Failed', colorClass: 'bg-rose-500/10 text-rose-400 border border-rose-500/20' };
+          }
+          const steps = getStepList();
+          const active = steps.find(s => s.status === 'RUNNING' || s.status === 'SUSPENDED' || s.status === 'FAILED' || s.status === 'RETRYING');
+          if (active) {
+            let icon = '🟡';
+            let label = active.name;
+            if (active.status === 'SUSPENDED') {
+              icon = '⏳';
+              label = `Waiting for ${active.name}`;
+            } else if (active.status === 'RUNNING') {
+              icon = '⚡';
+              label = `Executing ${active.name}`;
+            }
+            return { label: `${icon} ${label}`, colorClass: 'bg-amber-500/10 text-amber-400 border border-amber-500/20' };
+          }
+          return { label: 'Pending Start', colorClass: 'bg-slate-800 text-slate-400 border border-slate-700' };
+        };
+
+        const formatDuration = (ms) => {
+          if (ms < 100) return '< 0.1s';
+          return (ms / 1000).toFixed(1) + 's';
+        };
+
+        const groupedPhases = computed(() => {
+          if (!selectedExec.value) return [];
+          const phases = [];
+          const events = selectedExecEvents.value || [];
+          const steps = getStepList();
+
+          // 1. Check if there are any trustline events
+          const trustEvents = events.filter(e => e.type.startsWith('trustline.'));
+          if (trustEvents.length > 0) {
+            const sorted = [...trustEvents].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+            const start = new Date(sorted[0].timestamp).getTime();
+            const end = new Date(sorted[sorted.length - 1].timestamp).getTime();
+            const duration = end - start;
+
+            let status = 'COMPLETED';
+            if (sorted.some(e => e.type === 'trustline.failed')) status = 'FAILED';
+            else if (sorted.some(e => e.type === 'trustline.creating') && !sorted.some(e => e.type === 'trustline.created')) status = 'RUNNING';
+
+            phases.push({
+              id: 'preflight-trustline',
+              name: 'Prepare Account',
+              subtitle: 'changeTrust verification & setup',
+              status,
+              durationMs: duration,
+              events: sorted,
+              dotColor: status === 'COMPLETED' ? 'bg-indigo-500' : (status === 'FAILED' ? 'bg-rose-500' : 'bg-amber-500 animate-pulse')
+            });
+          }
+
+          // 2. Add step phases
+          steps.forEach((step, idx) => {
+            const stepEvents = events.filter(e => e.payload && e.payload.stepIndex === idx);
+            let duration = 0;
+            if (step.status === 'COMPLETED' || step.status === 'FAILED') {
+              const start = step.created_at ? new Date(step.created_at).getTime() : 0;
+              const end = step.updated_at ? new Date(step.updated_at).getTime() : 0;
+              duration = Math.max(0, end - start);
+            } else if (step.status === 'RUNNING' || step.status === 'SUSPENDED') {
+              const start = step.created_at ? new Date(step.created_at).getTime() : 0;
+              duration = Math.max(0, Date.now() - start);
+            }
+
+            phases.push({
+              id: `step-${idx}`,
+              name: step.name,
+              subtitle: `Step execution adapter: ${step.provider}`,
+              status: step.status,
+              durationMs: duration,
+              events: stepEvents,
+              dotColor: step.status === 'COMPLETED' ? 'bg-emerald-500' : (step.status === 'FAILED' ? 'bg-rose-500' : (step.status === 'SUSPENDED' ? 'bg-amber-500' : (step.status === 'RUNNING' ? 'bg-blue-500 animate-pulse' : 'bg-slate-800')))
+            });
+          });
+
+          return phases;
+        });
 
         // Filtering computed properties
         const filteredExecutions = computed(() => {
@@ -882,6 +956,10 @@
           formatTime,
           formatTimeOnly,
           formatEventDisplay,
+          getProgressPercent,
+          getCurrentStepBadge,
+          formatDuration,
+          groupedPhases,
         };
       }
     }).mount('#app');

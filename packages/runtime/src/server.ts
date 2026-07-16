@@ -61,8 +61,23 @@ export function createServer(): express.Express {
       const execution = await store.getExecution(req.params.id);
       if (!execution) return res.status(404).json({ error: 'Execution not found' }) as any;
 
+      const pool = store.getPool();
+      const stepsRes = await pool.query(
+        `SELECT step_index, status, output, error, attempts, created_at, updated_at
+         FROM steps
+         WHERE execution_id = $1
+         ORDER BY step_index ASC`,
+        [execution.id]
+      );
+
       const events = await store.getEvents(req.params.id);
-      res.json({ execution, events });
+      res.json({
+        execution: {
+          ...execution,
+          steps: stepsRes.rows,
+        },
+        events
+      });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       res.status(500).json({ error: msg });

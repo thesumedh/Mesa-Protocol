@@ -581,8 +581,22 @@ function createServer() {
     try {
       const execution = await getExecution(req.params.id);
       if (!execution) return res.status(404).json({ error: "Execution not found" });
+      const pool2 = getPool();
+      const stepsRes = await pool2.query(
+        `SELECT step_index, status, output, error, attempts, created_at, updated_at
+         FROM steps
+         WHERE execution_id = $1
+         ORDER BY step_index ASC`,
+        [execution.id]
+      );
       const events = await getEvents(req.params.id);
-      res.json({ execution, events });
+      res.json({
+        execution: {
+          ...execution,
+          steps: stepsRes.rows
+        },
+        events
+      });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       res.status(500).json({ error: msg });
