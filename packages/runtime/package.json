@@ -11,7 +11,9 @@
     "test:anchor": "ts-node src/test/anchor.test.ts",
     "test:dashboard": "ts-node src/test/dashboard.test.ts",
     "test:stellar": "ts-node src/test/stellar.test.ts",
-    "test:payroll": "ts-node src/test/payroll.test.ts"
+    "test:payroll": "ts-node src/test/payroll.test.ts",
+    "demo:stellar": "ts-node src/demo/stellar.demo.ts",
+    "demo:payroll": "ts-node src/demo/payroll.demo.ts"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^12.3.0",

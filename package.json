@@ -14,7 +14,9 @@
     "build:sdk": "npm run build --workspace=packages/sdk",
     "build:runtime": "npm run build --workspace=packages/runtime",
     "runtime:dev": "npm run dev --workspace=packages/runtime",
-    "test:e2e": "npx tsx packages/mesa-sdk/src/integration_test.ts"
+    "test:e2e": "npx tsx packages/mesa-sdk/src/integration_test.ts",
+    "demo:stellar": "npm run demo:stellar --workspace=packages/runtime",
+    "demo:payroll": "npm run demo:payroll --workspace=packages/runtime"
   },
   "devDependencies": {
     "vite": "^5.0.0",
