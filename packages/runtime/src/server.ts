@@ -162,7 +162,7 @@ export function createServer(): express.Express {
     try {
       const pool = store.getPool();
       const result = await pool.query(
-        `SELECT id, flow_id, status, context, created_at, updated_at
+        `SELECT id, flow_id, status, context, created_at
          FROM executions
          ORDER BY created_at DESC`
       );
@@ -195,7 +195,7 @@ export function createServer(): express.Express {
     try {
       const pool = store.getPool();
       const result = await pool.query(
-        `SELECT id, name, definition, created_at, updated_at
+        `SELECT id, name, definition, created_at
          FROM flows
          ORDER BY created_at DESC`
       );

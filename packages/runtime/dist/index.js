@@ -167,7 +167,7 @@ var InMemoryPool = class {
       });
       return { rows };
     }
-    if (cleanText.startsWith("SELECT id, flow_id, status, context, created_at, updated_at FROM executions")) {
+    if (cleanText.startsWith("SELECT id, flow_id, status, context, created_at, updated_at FROM executions") || cleanText.startsWith("SELECT id, flow_id, status, context, created_at FROM executions")) {
       const rows = Array.from(this.executions.values()).sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
       return { rows };
     }
@@ -175,7 +175,7 @@ var InMemoryPool = class {
       const rows = Array.from(this.steps.values()).filter((s) => s.execution_id === params[0]).sort((a, b) => a.step_index - b.step_index);
       return { rows };
     }
-    if (cleanText.startsWith("SELECT id, name, definition, created_at, updated_at FROM flows")) {
+    if (cleanText.startsWith("SELECT id, name, definition, created_at, updated_at FROM flows") || cleanText.startsWith("SELECT id, name, definition, created_at FROM flows")) {
       const rows = Array.from(this.flows.values()).sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
       return { rows };
     }
@@ -664,7 +664,7 @@ function createServer() {
     try {
       const pool2 = getPool();
       const result = await pool2.query(
-        `SELECT id, flow_id, status, context, created_at, updated_at
+        `SELECT id, flow_id, status, context, created_at
          FROM executions
          ORDER BY created_at DESC`
       );
@@ -691,7 +691,7 @@ function createServer() {
     try {
       const pool2 = getPool();
       const result = await pool2.query(
-        `SELECT id, name, definition, created_at, updated_at
+        `SELECT id, name, definition, created_at
          FROM flows
          ORDER BY created_at DESC`
       );

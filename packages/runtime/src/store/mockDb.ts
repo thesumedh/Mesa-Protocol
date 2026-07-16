@@ -172,8 +172,9 @@ export class InMemoryPool {
       return { rows };
     }
 
-    // 13. SELECT id, flow_id, status, context, created_at, updated_at FROM executions
-    if (cleanText.startsWith('SELECT id, flow_id, status, context, created_at, updated_at FROM executions')) {
+    // 13. SELECT id, flow_id, status, context, created_at FROM executions
+    if (cleanText.startsWith('SELECT id, flow_id, status, context, created_at, updated_at FROM executions') ||
+        cleanText.startsWith('SELECT id, flow_id, status, context, created_at FROM executions')) {
       const rows = Array.from(this.executions.values())
         .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
       return { rows };
@@ -187,8 +188,9 @@ export class InMemoryPool {
       return { rows };
     }
 
-    // 15. SELECT id, name, definition, created_at, updated_at FROM flows
-    if (cleanText.startsWith('SELECT id, name, definition, created_at, updated_at FROM flows')) {
+    // 15. SELECT id, name, definition, created_at FROM flows
+    if (cleanText.startsWith('SELECT id, name, definition, created_at, updated_at FROM flows') ||
+        cleanText.startsWith('SELECT id, name, definition, created_at FROM flows')) {
       const rows = Array.from(this.flows.values())
         .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
       return { rows };
