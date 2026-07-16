@@ -878,8 +878,18 @@ var AnchorProvider = class {
           if (!hasTrustline) {
             if (!userSecret) {
               console.warn(`[AnchorProvider] Trustline for ${assetCode}:${assetIssuer} is missing, but userSecret is not provided. Cannot auto-create trustline.`);
+              await appendEvent(context.executionId, "trustline.failed", {
+                asset: assetCode,
+                issuer: assetIssuer,
+                error: "userSecret missing, cannot auto-create trustline."
+              });
             } else {
               console.log(`[AnchorProvider] Trustline missing. Automatically establishing trustline for ${assetCode}:${assetIssuer}...`);
+              await appendEvent(context.executionId, "trustline.creating", {
+                asset: assetCode,
+                issuer: assetIssuer,
+                message: `Trustline missing. Establishing changeTrust operation for ${assetCode}...`
+              });
               const userKeypair = import_stellar_sdk.Keypair.fromSecret(userSecret);
               const server = new import_stellar_sdk.Horizon.Server(horizonUrl);
               const account = await server.loadAccount(userAddress);
@@ -895,12 +905,28 @@ var AnchorProvider = class {
               tx.sign(userKeypair);
               const submitResult = await server.submitTransaction(tx);
               console.log(`[AnchorProvider] Trustline successfully established. Hash: ${submitResult.hash}`);
+              await appendEvent(context.executionId, "trustline.created", {
+                asset: assetCode,
+                issuer: assetIssuer,
+                txHash: submitResult.hash,
+                message: `Confirmed. Trustline for ${assetCode} established successfully.`
+              });
             }
           } else {
             console.log(`[AnchorProvider] Trustline for ${assetCode} already exists.`);
+            await appendEvent(context.executionId, "trustline.verified", {
+              asset: assetCode,
+              issuer: assetIssuer,
+              message: `Trustline for ${assetCode} is verified.`
+            });
           }
         } catch (err) {
           console.error(`[AnchorProvider] Failed to check/create trustline:`, err.message);
+          await appendEvent(context.executionId, "trustline.failed", {
+            asset: assetCode,
+            issuer: assetIssuer,
+            error: err.message
+          });
         }
       }
     }

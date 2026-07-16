@@ -1,4 +1,5 @@
 import { MesaProvider, StepDefinition, ExecutionContext, StepResult, ExternalEvent } from '../../runtime/src/provider';
+import * as store from '../../runtime/src/store';
 import { Keypair, TransactionBuilder, Networks, Operation, Asset, Horizon } from '@stellar/stellar-sdk';
 import * as https from 'https';
 import * as http from 'http';
@@ -119,8 +120,19 @@ export class AnchorProvider implements MesaProvider {
           if (!hasTrustline) {
             if (!userSecret) {
               console.warn(`[AnchorProvider] Trustline for ${assetCode}:${assetIssuer} is missing, but userSecret is not provided. Cannot auto-create trustline.`);
+              await store.appendEvent(context.executionId, 'trustline.failed', {
+                asset: assetCode,
+                issuer: assetIssuer,
+                error: 'userSecret missing, cannot auto-create trustline.'
+              });
             } else {
               console.log(`[AnchorProvider] Trustline missing. Automatically establishing trustline for ${assetCode}:${assetIssuer}...`);
+              await store.appendEvent(context.executionId, 'trustline.creating', {
+                asset: assetCode,
+                issuer: assetIssuer,
+                message: `Trustline missing. Establishing changeTrust operation for ${assetCode}...`
+              });
+
               const userKeypair = Keypair.fromSecret(userSecret);
               const server = new Horizon.Server(horizonUrl);
               const account = await server.loadAccount(userAddress);
@@ -141,12 +153,28 @@ export class AnchorProvider implements MesaProvider {
               tx.sign(userKeypair);
               const submitResult = await server.submitTransaction(tx);
               console.log(`[AnchorProvider] Trustline successfully established. Hash: ${submitResult.hash}`);
+              await store.appendEvent(context.executionId, 'trustline.created', {
+                asset: assetCode,
+                issuer: assetIssuer,
+                txHash: submitResult.hash,
+                message: `Confirmed. Trustline for ${assetCode} established successfully.`
+              });
             }
           } else {
             console.log(`[AnchorProvider] Trustline for ${assetCode} already exists.`);
+            await store.appendEvent(context.executionId, 'trustline.verified', {
+              asset: assetCode,
+              issuer: assetIssuer,
+              message: `Trustline for ${assetCode} is verified.`
+            });
           }
         } catch (err: any) {
           console.error(`[AnchorProvider] Failed to check/create trustline:`, err.message);
+          await store.appendEvent(context.executionId, 'trustline.failed', {
+            asset: assetCode,
+            issuer: assetIssuer,
+            error: err.message
+          });
         }
       }
     }
