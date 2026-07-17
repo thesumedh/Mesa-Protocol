@@ -16,9 +16,11 @@
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "test": "ts-node src/flow.test.ts"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@stellar/stellar-sdk": "^12.0.0",
-    "mesa": "file:../.."
+    "@stellar/stellar-sdk": "^12.0.0"
   },
   "devDependencies": {
     "@stellar/freighter-api": "^3.0.0",
