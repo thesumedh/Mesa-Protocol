@@ -82,12 +82,15 @@ var FlowBuilder = class {
   _id;
   _name;
   _steps = [];
-  constructor(name, id) {
-    if (!name || typeof name !== "string") {
+  _client;
+  constructor(name, id, client) {
+    if (name === "") {
       throw new TypeError("Mesa SDK: Flow name must be a non-empty string.");
     }
-    this._name = name;
-    this._id = id ?? randomUUID();
+    const flowId = id ?? randomUUID();
+    this._name = name ?? `flow-${flowId}`;
+    this._id = flowId;
+    this._client = client;
   }
   /**
    * Wait for an incoming payment to an address on Stellar.
@@ -235,47 +238,67 @@ var FlowBuilder = class {
    * Shortcut to build, register, and execute this flow directly.
    */
   async execute(context = {}) {
+    if (this._client) {
+      return this._client.execute(this.build(), context);
+    }
     return Mesa.execute(this.build(), context);
   }
 };
 var _defaultClient = null;
-var Mesa = {
+var Mesa = class {
+  _client;
+  constructor(config) {
+    const url = config?.endpoint ?? config?.runtimeUrl;
+    this._client = new MesaClient({ runtimeUrl: url });
+  }
   /**
-   * Configure the default client. Call once at application startup.
-   *
-   * @example
-   * Mesa.configure({ runtimeUrl: 'http://localhost:3001' });
-   */
-  configure(config) {
-    _defaultClient = new MesaClient(config);
-  },
-  /**
-   * Start building a new flow.
-   *
-   * @example
-   * const flow = Mesa.flow('cross-border-payment')
-   *   .receive({ asset: 'XLM', minAmount: 10, toAddress: '...' })
-   *   .transfer({ to: '...', asset: 'USDC' })
-   *   .webhook({ url: '...' })
-   *   .build();
+   * Start building a new flow definition.
    */
   flow(name, id) {
-    return new FlowBuilder(name, id);
-  },
+    if (name === "") {
+      throw new TypeError("Mesa SDK: Flow name must be a non-empty string.");
+    }
+    return new FlowBuilder(name, id, this._client);
+  }
   /**
    * Register a flow definition with the runtime, then start an execution.
-   *
-   * @example
-   * const { executionId } = await Mesa.execute(flow);
    */
   async execute(flow, context = {}) {
-    const client = _defaultClient ?? new MesaClient({});
-    return client.execute(flow, context);
-  },
+    return this._client.execute(flow, context);
+  }
   /**
    * Get the current status of a running execution.
    */
   async status(executionId) {
+    return this._client.status(executionId);
+  }
+  // --- Static methods (for backwards compatibility with global configure flow) ---
+  /**
+   * Configure the default client. Call once at application startup.
+   */
+  static configure(config) {
+    _defaultClient = new MesaClient(config);
+  }
+  /**
+   * Start building a new flow using the default configuration.
+   */
+  static flow(name, id) {
+    if (name === "") {
+      throw new TypeError("Mesa SDK: Flow name must be a non-empty string.");
+    }
+    return new FlowBuilder(name, id, _defaultClient ?? void 0);
+  }
+  /**
+   * Register and execute a flow definition using the default client.
+   */
+  static async execute(flow, context = {}) {
+    const client = _defaultClient ?? new MesaClient({});
+    return client.execute(flow, context);
+  }
+  /**
+   * Get execution status using the default client.
+   */
+  static async status(executionId) {
     const client = _defaultClient ?? new MesaClient({});
     return client.status(executionId);
   }

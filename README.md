@@ -2,11 +2,28 @@
 
 Build resilient financial workflows in minutes.
 
+```bash
+npm install @mesaprotocol/sdk
+```
+
 ```ts
-await Mesa.flow()
-  .receive(...)
-  .convert(...)
-  .transfer(...)
+import { Mesa } from "@mesaprotocol/sdk";
+
+const mesa = new Mesa({
+  endpoint: "http://localhost:3001"
+});
+
+await mesa.flow()
+  .receive({
+    asset: "XLM",
+    minAmount: 10,
+    toAddress: "GBHTYH2NLVWRAPSC3IRRFPG6CFHP5VLODBQUYVSKJ3BZ3QN6HEXZ5DXU"
+  })
+  .transfer({
+    to: "GCIE7JJJVTCX4YGSME3FXZQB3GY4MY7PJNW6VXMHPYUDPHBDQN2IYE5Z",
+    asset: "XLM",
+    amount: 10
+  })
   .execute();
 ```
 

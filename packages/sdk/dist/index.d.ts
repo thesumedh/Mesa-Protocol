@@ -1,3 +1,36 @@
+interface MesaConfig {
+    runtimeUrl?: string;
+}
+interface ExecutionResult {
+    executionId: string;
+    flowId: string;
+    status: string;
+}
+/**
+ * MesaClient
+ *
+ * Sends flow definitions and execution requests to the Mesa Runtime.
+ * For use in server-side code (Node.js). Browser usage goes through
+ * the Mesa Runtime directly (never expose runtime to browser clients).
+ */
+declare class MesaClient {
+    private runtimeUrl;
+    constructor(config?: MesaConfig);
+    /**
+     * Register the flow definition, then start an execution.
+     */
+    execute(flow: FlowDefinition, context?: Record<string, unknown>): Promise<ExecutionResult>;
+    /**
+     * Get status and event log for an execution.
+     */
+    status(executionId: string): Promise<{
+        execution: unknown;
+        events: unknown[];
+    }>;
+    private _post;
+    private _get;
+}
+
 interface StepDefinition {
     name: string;
     provider: string;
@@ -17,7 +50,8 @@ declare class FlowBuilder {
     private readonly _id;
     private readonly _name;
     private _steps;
-    constructor(name: string, id?: string);
+    private readonly _client?;
+    constructor(name?: string, id?: string, client?: MesaClient);
     /**
      * Wait for an incoming payment to an address on Stellar.
      * The runtime suspends execution until the payment is detected
@@ -90,32 +124,18 @@ declare class FlowBuilder {
         executionId: string;
     }>;
 }
-declare const Mesa: {
-    /**
-     * Configure the default client. Call once at application startup.
-     *
-     * @example
-     * Mesa.configure({ runtimeUrl: 'http://localhost:3001' });
-     */
-    configure(config: {
+declare class Mesa {
+    private _client;
+    constructor(config?: {
+        endpoint?: string;
         runtimeUrl?: string;
-    }): void;
+    });
     /**
-     * Start building a new flow.
-     *
-     * @example
-     * const flow = Mesa.flow('cross-border-payment')
-     *   .receive({ asset: 'XLM', minAmount: 10, toAddress: '...' })
-     *   .transfer({ to: '...', asset: 'USDC' })
-     *   .webhook({ url: '...' })
-     *   .build();
+     * Start building a new flow definition.
      */
-    flow(name: string, id?: string): FlowBuilder;
+    flow(name?: string, id?: string): FlowBuilder;
     /**
      * Register a flow definition with the runtime, then start an execution.
-     *
-     * @example
-     * const { executionId } = await Mesa.execute(flow);
      */
     execute(flow: FlowDefinition, context?: Record<string, unknown>): Promise<{
         executionId: string;
@@ -127,39 +147,29 @@ declare const Mesa: {
         execution: unknown;
         events: unknown[];
     }>;
-};
-
-interface MesaConfig {
-    runtimeUrl?: string;
-}
-interface ExecutionResult {
-    executionId: string;
-    flowId: string;
-    status: string;
-}
-/**
- * MesaClient
- *
- * Sends flow definitions and execution requests to the Mesa Runtime.
- * For use in server-side code (Node.js). Browser usage goes through
- * the Mesa Runtime directly (never expose runtime to browser clients).
- */
-declare class MesaClient {
-    private runtimeUrl;
-    constructor(config?: MesaConfig);
     /**
-     * Register the flow definition, then start an execution.
+     * Configure the default client. Call once at application startup.
      */
-    execute(flow: FlowDefinition, context?: Record<string, unknown>): Promise<ExecutionResult>;
+    static configure(config: {
+        runtimeUrl?: string;
+    }): void;
     /**
-     * Get status and event log for an execution.
+     * Start building a new flow using the default configuration.
      */
-    status(executionId: string): Promise<{
+    static flow(name?: string, id?: string): FlowBuilder;
+    /**
+     * Register and execute a flow definition using the default client.
+     */
+    static execute(flow: FlowDefinition, context?: Record<string, unknown>): Promise<{
+        executionId: string;
+    }>;
+    /**
+     * Get execution status using the default client.
+     */
+    static status(executionId: string): Promise<{
         execution: unknown;
         events: unknown[];
     }>;
-    private _post;
-    private _get;
 }
 
 interface MesaSigner {

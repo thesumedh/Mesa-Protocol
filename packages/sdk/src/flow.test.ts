@@ -122,6 +122,34 @@ async function runSdkTest() {
     failed++;
   }
 
+  // 11. Class-based Client and Name-less Flow builder pattern
+  try {
+    const mesa = new Mesa({ endpoint: 'http://localhost:3001' });
+    const builder = mesa.flow() // Nameless flow
+      .receive({
+        asset: 'XLM',
+        minAmount: 50,
+        toAddress: 'GBHTYH2NLVWRAPSC3IRRFPG6CFHP5VLODBQUYVSKJ3BZ3QN6HEXZ5DXU',
+      })
+      .transfer({
+        to: 'GBHTYH2NLVWRAPSC3IRRFPG6CFHP5VLODBQUYVSKJ3BZ3QN6HEXZ5DXU',
+        asset: 'XLM',
+        amount: 47.5,
+      });
+
+    const flow = builder.build();
+    if (flow.steps.length === 2 && flow.name.startsWith('flow-')) {
+      console.log('✔ Test passed: Class-based client and name-less flow builder pattern');
+      passed++;
+    } else {
+      console.error(`✗ Test failed: Class-based client and name-less flow builder pattern (got ${flow.steps.length} steps, name: "${flow.name}")`);
+      failed++;
+    }
+  } catch (err: any) {
+    console.error('✗ Test failed: Class-based client and name-less flow builder pattern threw error:', err.message);
+    failed++;
+  }
+
   console.log('\n==================================================');
   console.log(`📊 TESTS SUMMARY: ${passed} PASSED, ${failed} FAILED`);
   console.log('==================================================');

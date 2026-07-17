@@ -50,13 +50,16 @@ export class FlowBuilder {
   private readonly _id: string;
   private readonly _name: string;
   private _steps: StepDefinition[] = [];
+  private readonly _client?: MesaClient;
 
-  constructor(name: string, id?: string) {
-    if (!name || typeof name !== 'string') {
+  constructor(name?: string, id?: string, client?: MesaClient) {
+    if (name === '') {
       throw new TypeError('Mesa SDK: Flow name must be a non-empty string.');
     }
-    this._name = name;
-    this._id = id ?? randomUUID();
+    const flowId = id ?? randomUUID();
+    this._name = name ?? `flow-${flowId}`;
+    this._id = flowId;
+    this._client = client;
   }
 
   /**
@@ -241,55 +244,81 @@ export class FlowBuilder {
    * Shortcut to build, register, and execute this flow directly.
    */
   async execute(context: Record<string, unknown> = {}): Promise<{ executionId: string }> {
+    if (this._client) {
+      return this._client.execute(this.build(), context);
+    }
     return Mesa.execute(this.build(), context);
   }
 }
 
-// ─── Mesa Namespace ───────────────────────────────────────────────────────────
+// ─── Mesa Class / Namespace ───────────────────────────────────────────────────
 
 let _defaultClient: MesaClient | null = null;
 
-export const Mesa = {
-  /**
-   * Configure the default client. Call once at application startup.
-   *
-   * @example
-   * Mesa.configure({ runtimeUrl: 'http://localhost:3001' });
-   */
-  configure(config: { runtimeUrl?: string }): void {
-    _defaultClient = new MesaClient(config);
-  },
+export class Mesa {
+  private _client: MesaClient;
+
+  constructor(config?: { endpoint?: string; runtimeUrl?: string }) {
+    const url = config?.endpoint ?? config?.runtimeUrl;
+    this._client = new MesaClient({ runtimeUrl: url });
+  }
 
   /**
-   * Start building a new flow.
-   *
-   * @example
-   * const flow = Mesa.flow('cross-border-payment')
-   *   .receive({ asset: 'XLM', minAmount: 10, toAddress: '...' })
-   *   .transfer({ to: '...', asset: 'USDC' })
-   *   .webhook({ url: '...' })
-   *   .build();
+   * Start building a new flow definition.
    */
-  flow(name: string, id?: string): FlowBuilder {
-    return new FlowBuilder(name, id);
-  },
+  flow(name?: string, id?: string): FlowBuilder {
+    if (name === '') {
+      throw new TypeError('Mesa SDK: Flow name must be a non-empty string.');
+    }
+    return new FlowBuilder(name, id, this._client);
+  }
 
   /**
    * Register a flow definition with the runtime, then start an execution.
-   *
-   * @example
-   * const { executionId } = await Mesa.execute(flow);
    */
   async execute(flow: FlowDefinition, context: Record<string, unknown> = {}): Promise<{ executionId: string }> {
-    const client = _defaultClient ?? new MesaClient({});
-    return client.execute(flow, context);
-  },
+    return this._client.execute(flow, context);
+  }
 
   /**
    * Get the current status of a running execution.
    */
   async status(executionId: string): Promise<{ execution: unknown; events: unknown[] }> {
+    return this._client.status(executionId);
+  }
+
+  // --- Static methods (for backwards compatibility with global configure flow) ---
+
+  /**
+   * Configure the default client. Call once at application startup.
+   */
+  static configure(config: { runtimeUrl?: string }): void {
+    _defaultClient = new MesaClient(config);
+  }
+
+  /**
+   * Start building a new flow using the default configuration.
+   */
+  static flow(name?: string, id?: string): FlowBuilder {
+    if (name === '') {
+      throw new TypeError('Mesa SDK: Flow name must be a non-empty string.');
+    }
+    return new FlowBuilder(name, id, _defaultClient ?? undefined);
+  }
+
+  /**
+   * Register and execute a flow definition using the default client.
+   */
+  static async execute(flow: FlowDefinition, context: Record<string, unknown> = {}): Promise<{ executionId: string }> {
+    const client = _defaultClient ?? new MesaClient({});
+    return client.execute(flow, context);
+  }
+
+  /**
+   * Get execution status using the default client.
+   */
+  static async status(executionId: string): Promise<{ execution: unknown; events: unknown[] }> {
     const client = _defaultClient ?? new MesaClient({});
     return client.status(executionId);
-  },
-};
+  }
+}
