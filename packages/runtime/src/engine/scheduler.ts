@@ -42,9 +42,10 @@ export class Scheduler {
 
   private async poll(): Promise<void> {
     const executions = await store.getPendingExecutions();
-    for (const execution of executions) {
-      await this.advance(execution);
-    }
+    // Process all pending executions concurrently — no reason to serialise them
+    await Promise.all(executions.map(e => this.advance(e).catch(err =>
+      console.error(`[MesaRuntime] Scheduler advance error for ${e.id}:`, err)
+    )));
   }
 
   private async advance(execution: store.ExecutionRecord): Promise<void> {

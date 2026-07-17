@@ -1,216 +1,283 @@
-import { Pool } from 'pg';
+/**
+ * InMemoryPool
+ *
+ * A typed in-memory database adapter that implements the same query interface
+ * as pg.Pool, used when DATABASE_URL=mock or NODE_ENV=test.
+ *
+ * Replaces the previous fragile string-matching implementation. All queries are
+ * matched by intent (INSERT, SELECT, UPDATE) using a SET-clause parser that
+ * extracts column->parameter-index mappings from the SQL text, rather than
+ * assuming fixed parameter positions.
+ */
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface FlowRow {
+  id: string;
+  name: string;
+  definition: object;
+  created_at: Date;
+}
+
+interface ExecutionRow {
+  id: string;
+  flow_id: string;
+  status: string;
+  context: Record<string, unknown>;
+  current_step: number;
+  started_at: Date | null;
+  completed_at: Date | null;
+  created_at: Date;
+}
+
+interface StepRow {
+  id: string;
+  execution_id: string;
+  step_index: number;
+  name: string;
+  provider: string;
+  status: string;
+  input: Record<string, unknown> | null;
+  output: Record<string, unknown> | null;
+  error: string | null;
+  attempts: number;
+  next_retry: Date | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface EventRow {
+  id: number;
+  execution_id: string;
+  type: string;
+  payload: Record<string, unknown> | null;
+  timestamp: Date;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function parseJson<T>(value: string | null): T | null {
+  if (value === null || value === undefined) return null;
+  try { return JSON.parse(value); } catch { return null; }
+}
+
+/**
+ * Parses the SET clause of an UPDATE statement and returns a map of
+ * column name -> zero-indexed parameter position.
+ *
+ * Example: "UPDATE foo SET status = $1, context = $2 WHERE id = $3"
+ * Returns: { status: 0, context: 1 }
+ */
+function parseSetClause(sql: string): Map<string, number> {
+  const map = new Map<string, number>();
+  const pattern = /(\w+)\s*=\s*\$(\d+)/g;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(sql)) !== null) {
+    const col = match[1];
+    const idx = parseInt(match[2], 10) - 1; // convert to 0-based
+    if (col !== 'id') { // skip the WHERE id clause
+      map.set(col, idx);
+    }
+  }
+  return map;
+}
+
+// ─── In-Memory Pool ───────────────────────────────────────────────────────────
 
 export class InMemoryPool {
-  private flows = new Map<string, any>();
-  private executions = new Map<string, any>();
-  private steps = new Map<string, any>();
-  private events: any[] = [];
+  private flows   = new Map<string, FlowRow>();
+  private executions = new Map<string, ExecutionRow>();
+  private steps   = new Map<string, StepRow>();   // key: `${executionId}:${stepIndex}`
+  private stepById = new Map<string, StepRow>();  // key: step.id
+  private events: EventRow[] = [];
 
   async query(text: string, params: any[] = []): Promise<{ rows: any[] }> {
-    const cleanText = text.replace(/\s+/g, ' ').trim();
+    const sql = text.replace(/\s+/g, ' ').trim();
 
-    // 1. INSERT INTO flows
-    if (cleanText.startsWith('INSERT INTO flows')) {
+    // ─── flows ────────────────────────────────────────────────────────────────
+
+    if (sql.startsWith('INSERT INTO flows')) {
       const [id, name, definitionJson] = params;
-      const flow = { id, name, definition: JSON.parse(definitionJson), created_at: new Date() };
-      this.flows.set(id, flow);
-      return { rows: [flow] };
+      const row: FlowRow = {
+        id,
+        name,
+        definition: parseJson<object>(definitionJson) ?? {},
+        created_at: new Date(),
+      };
+      this.flows.set(id, row);
+      return { rows: [row] };
     }
 
-    // 2. SELECT * FROM flows WHERE id = $1
-    if (cleanText.startsWith('SELECT * FROM flows WHERE id = $1')) {
-      const flow = this.flows.get(params[0]);
-      return { rows: flow ? [flow] : [] };
+    if (sql.startsWith('SELECT * FROM flows WHERE id = $1')) {
+      const row = this.flows.get(params[0]);
+      return { rows: row ? [row] : [] };
     }
 
-    // 3. INSERT INTO executions
-    if (cleanText.startsWith('INSERT INTO executions')) {
+    if (sql.includes('FROM flows') && sql.includes('ORDER BY created_at')) {
+      const rows = Array.from(this.flows.values())
+        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+      return { rows };
+    }
+
+    // ─── executions ───────────────────────────────────────────────────────────
+
+    if (sql.startsWith('INSERT INTO executions')) {
       const [id, flowId, contextJson] = params;
-      const execution = {
+      const row: ExecutionRow = {
         id,
         flow_id: flowId,
         status: 'PENDING',
-        context: JSON.parse(contextJson),
+        context: parseJson<Record<string, unknown>>(contextJson) ?? {},
         current_step: 0,
         started_at: null,
         completed_at: null,
         created_at: new Date(),
       };
-      this.executions.set(id, execution);
-      return { rows: [execution] };
+      this.executions.set(id, row);
+      return { rows: [row] };
     }
 
-    // 4. SELECT * FROM executions WHERE id = $1
-    if (cleanText.startsWith('SELECT * FROM executions WHERE id = $1')) {
-      const execution = this.executions.get(params[0]);
-      return { rows: execution ? [execution] : [] };
+    if (sql.startsWith('SELECT * FROM executions WHERE id = $1')) {
+      const row = this.executions.get(params[0]);
+      return { rows: row ? [row] : [] };
     }
 
-    // 5. UPDATE executions SET ... WHERE id = $...
-    if (cleanText.startsWith('UPDATE executions SET')) {
-      const id = params[params.length - 1];
-      const execution = this.executions.get(id);
-      if (execution) {
-        // Simple manual parsing of SET clauses
-        if (cleanText.includes('status =')) {
-          execution.status = params[0];
-        }
-        if (cleanText.includes('context =')) {
-          const idx = cleanText.indexOf('context =') > -1 ? (cleanText.includes('status =') ? 1 : 0) : -1;
-          if (idx !== -1) execution.context = JSON.parse(params[idx]);
-        }
-        if (cleanText.includes('current_step =')) {
-          const idx = params.indexOf(id) - 1; // current_step is usually just before the ID
-          execution.current_step = params[idx];
-        }
-        if (cleanText.includes('started_at =')) {
-          execution.started_at = new Date();
-        }
-        if (cleanText.includes('completed_at =')) {
-          execution.completed_at = new Date();
-        }
-      }
-      return { rows: execution ? [execution] : [] };
-    }
-
-    // 6. SELECT * FROM executions WHERE status IN ('PENDING', 'RUNNING')
-    if (cleanText.startsWith('SELECT * FROM executions WHERE status IN')) {
+    if (sql.startsWith('SELECT * FROM executions WHERE status IN')) {
       const rows = Array.from(this.executions.values())
         .filter(e => e.status === 'PENDING' || e.status === 'RUNNING')
         .sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
       return { rows };
     }
 
-    // 7. INSERT INTO steps
-    if (cleanText.startsWith('INSERT INTO steps')) {
+    if (sql.startsWith('UPDATE executions SET')) {
+      const id = params[params.length - 1];
+      const row = this.executions.get(id);
+      if (row) {
+        const colMap = parseSetClause(sql);
+        if (colMap.has('status'))       row.status       = params[colMap.get('status')!];
+        if (colMap.has('context'))      row.context      = parseJson(params[colMap.get('context')!]) ?? row.context;
+        if (colMap.has('current_step')) row.current_step = params[colMap.get('current_step')!];
+        if (colMap.has('started_at'))   row.started_at   = params[colMap.get('started_at')!] ?? new Date();
+        if (colMap.has('completed_at')) row.completed_at = params[colMap.get('completed_at')!] ?? new Date();
+      }
+      return { rows: row ? [row] : [] };
+    }
+
+    if (sql.startsWith('SELECT id, flow_id, status, context, created_at FROM executions') ||
+        sql.startsWith('SELECT id, flow_id, status, context, created_at, updated_at FROM executions')) {
+      const rows = Array.from(this.executions.values())
+        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+      return { rows };
+    }
+
+    // ─── steps ────────────────────────────────────────────────────────────────
+
+    if (sql.startsWith('INSERT INTO steps')) {
       const [id, executionId, stepIndex, name, provider, status, inputJson, outputJson, error, attempts, nextRetry] = params;
-      const step = {
+      const row: StepRow = {
         id,
         execution_id: executionId,
         step_index: stepIndex,
         name,
         provider,
         status,
-        input: inputJson ? JSON.parse(inputJson) : null,
-        output: outputJson ? JSON.parse(outputJson) : null,
+        input:  parseJson(inputJson),
+        output: parseJson(outputJson),
         error,
         attempts,
         next_retry: nextRetry,
         created_at: new Date(),
         updated_at: new Date(),
       };
-      this.steps.set(`${executionId}:${stepIndex}`, step);
-      return { rows: [step] };
+      this.steps.set(`${executionId}:${stepIndex}`, row);
+      this.stepById.set(id, row);
+      return { rows: [row] };
     }
 
-    // 8. SELECT * FROM steps WHERE execution_id = $1 AND step_index = $2
-    if (cleanText.startsWith('SELECT * FROM steps WHERE execution_id = $1 AND step_index = $2')) {
-      const step = this.steps.get(`${params[0]}:${params[1]}`);
-      return { rows: step ? [step] : [] };
+    if (sql.startsWith('SELECT * FROM steps WHERE execution_id = $1 AND step_index = $2')) {
+      const row = this.steps.get(`${params[0]}:${params[1]}`);
+      return { rows: row ? [row] : [] };
     }
 
-    // 9. UPDATE steps SET
-    if (cleanText.startsWith('UPDATE steps SET')) {
+    if (sql.startsWith('UPDATE steps SET')) {
       const id = params[params.length - 1];
-      // Find step by id
-      const step = Array.from(this.steps.values()).find(s => s.id === id);
-      if (step) {
-        step.updated_at = new Date();
-        if (cleanText.includes('status =')) {
-          step.status = params[0];
-        }
-        if (cleanText.includes('output =')) {
-          const idx = cleanText.includes('status =') ? 1 : 0;
-          step.output = params[idx] ? JSON.parse(params[idx]) : null;
-        }
-        if (cleanText.includes('error =')) {
-          step.error = params[params.indexOf(id) - 1];
-        }
-        if (cleanText.includes('attempts =')) {
-          step.attempts = params[params.indexOf(id) - 1];
-        }
+      const row = this.stepById.get(id);
+      if (row) {
+        row.updated_at = new Date();
+        const colMap = parseSetClause(sql);
+        if (colMap.has('status'))     row.status     = params[colMap.get('status')!];
+        if (colMap.has('output'))     row.output     = parseJson(params[colMap.get('output')!]);
+        if (colMap.has('error'))      row.error      = params[colMap.get('error')!];
+        if (colMap.has('attempts'))   row.attempts   = params[colMap.get('attempts')!];
+        if (colMap.has('next_retry')) row.next_retry = params[colMap.get('next_retry')!];
       }
-      return { rows: step ? [step] : [] };
+      return { rows: row ? [row] : [] };
     }
 
-    // 10. INSERT INTO events
-    if (cleanText.startsWith('INSERT INTO events')) {
+    if (sql.startsWith('SELECT step_index, status, output, error, attempts, created_at, updated_at FROM steps WHERE execution_id = $1') ||
+        sql.includes('FROM steps WHERE execution_id = $1 ORDER BY step_index')) {
+      const rows = Array.from(this.steps.values())
+        .filter(s => s.execution_id === params[0])
+        .sort((a, b) => a.step_index - b.step_index);
+      return { rows };
+    }
+
+    // Join query: used by POST /webhooks/resume to find suspended steps by key
+    if (sql.includes('FROM steps s JOIN executions e')) {
+      const key = params[0];
+      const rows = Array.from(this.steps.values())
+        .filter(s => s.status === 'SUSPENDED' && (s.output as any)?.suspensionKey === key)
+        .map(s => {
+          const exec = this.executions.get(s.execution_id);
+          return {
+            ...s,
+            exec_context:      exec?.context ?? {},
+            flow_id:           exec?.flow_id ?? '',
+            execution_id_ref:  s.execution_id,
+          };
+        });
+      return { rows };
+    }
+
+    // Generic steps-by-execution fallback
+    if (sql.includes('FROM steps') && sql.includes('execution_id = $1')) {
+      const rows = Array.from(this.steps.values())
+        .filter(s => s.execution_id === params[0])
+        .sort((a, b) => a.step_index - b.step_index);
+      return { rows };
+    }
+
+    // ─── events ───────────────────────────────────────────────────────────────
+
+    if (sql.startsWith('INSERT INTO events')) {
       const [executionId, type, payloadJson] = params;
-      const event = {
-        id: this.events.length + 1,
+      const row: EventRow = {
+        id:           this.events.length + 1,
         execution_id: executionId,
         type,
-        payload: payloadJson ? JSON.parse(payloadJson) : null,
-        timestamp: new Date(),
+        payload:      parseJson(payloadJson),
+        timestamp:    new Date(),
       };
-      this.events.push(event);
-      return { rows: [event] };
+      this.events.push(row);
+      return { rows: [row] };
     }
 
-    // 11. SELECT * FROM events WHERE execution_id = $1
-    if (cleanText.startsWith('SELECT * FROM events WHERE execution_id = $1')) {
+    if (sql.startsWith('SELECT * FROM events WHERE execution_id = $1')) {
       const rows = this.events
         .filter(ev => ev.execution_id === params[0])
         .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
       return { rows };
     }
 
-    // 12. Join query: SELECT s.*, e.context as exec_context...
-    if (cleanText.includes('FROM steps s JOIN executions e')) {
-      const key = params[0];
-      const rows = Array.from(this.steps.values())
-        .filter(s => s.status === 'SUSPENDED' && s.output?.suspensionKey === key)
-        .map(s => {
-          const exec = this.executions.get(s.execution_id);
-          return {
-            ...s,
-            exec_context: exec ? exec.context : {},
-            flow_id: exec ? exec.flow_id : '',
-            execution_id_ref: s.execution_id,
-          };
-        });
-      return { rows };
-    }
-
-    // 13. SELECT id, flow_id, status, context, created_at FROM executions
-    if (cleanText.startsWith('SELECT id, flow_id, status, context, created_at, updated_at FROM executions') ||
-        cleanText.startsWith('SELECT id, flow_id, status, context, created_at FROM executions')) {
-      const rows = Array.from(this.executions.values())
-        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
-      return { rows };
-    }
-
-    // 14. SELECT step_index, status, output, error, attempts, created_at, updated_at FROM steps WHERE execution_id = $1
-    if (cleanText.startsWith('SELECT step_index, status, output, error, attempts, created_at, updated_at FROM steps WHERE execution_id = $1')) {
-      const rows = Array.from(this.steps.values())
-        .filter(s => s.execution_id === params[0])
-        .sort((a, b) => a.step_index - b.step_index);
-      return { rows };
-    }
-
-    // 15. SELECT id, name, definition, created_at FROM flows
-    if (cleanText.startsWith('SELECT id, name, definition, created_at, updated_at FROM flows') ||
-        cleanText.startsWith('SELECT id, name, definition, created_at FROM flows')) {
-      const rows = Array.from(this.flows.values())
-        .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
-      return { rows };
-    }
-
-    // 16. Generic SELECT steps WHERE execution_id = $1
-    if (cleanText.includes('FROM steps WHERE execution_id = $1')) {
-      const rows = Array.from(this.steps.values())
-        .filter(s => s.execution_id === params[0])
-        .sort((a, b) => a.step_index - b.step_index);
-      return { rows };
-    }
-
+    // Unmatched query — log a warning to make failures visible rather than silent
+    console.warn(`[InMemoryPool] Unhandled query: ${sql.substring(0, 80)}...`);
     return { rows: [] };
   }
 
-  // No-op methods to satisfy Pool interface
+  // No-op methods to satisfy pg Pool interface
   async connect(): Promise<any> {
     return {
-      query: this.query.bind(this),
+      query:   this.query.bind(this),
       release: () => {},
     };
   }

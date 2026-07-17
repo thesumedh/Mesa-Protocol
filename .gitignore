@@ -30,3 +30,12 @@ temp_dapp_clone/
 
 # Sandbox development folders
 dev-sandbox/
+
+# Legacy UI explorations (not part of the published product)
+design/
+
+# Legacy Soroban contract exploration (Mesa is now a TypeScript runtime)
+mesa-protocol/
+
+# NPM pack tarballs
+*.tgz

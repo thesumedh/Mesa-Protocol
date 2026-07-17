@@ -1,11 +1,25 @@
 {
   "name": "@mesaprotocol/runtime",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Mesa durable financial workflow runtime",
   "main": "dist/index.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thesumedh/Mesa-Protocol.git"
+  },
+  "homepage": "https://github.com/thesumedh/Mesa-Protocol#readme",
+  "keywords": [
+    "stellar",
+    "soroban",
+    "workflow",
+    "orchestration"
+  ],
   "files": [
     "dist",
-    "Dockerfile"
+    "Dockerfile",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs --shims && node -e \"const fs = require('fs'); fs.mkdirSync('dist/store', { recursive: true }); fs.copyFileSync('src/store/schema.sql', 'dist/store/schema.sql'); fs.mkdirSync('dist/server', { recursive: true }); fs.copyFileSync('src/server/dashboard.html', 'dist/server/dashboard.html');\"",

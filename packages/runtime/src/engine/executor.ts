@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { getProvider, ExecutionContext, StepDefinition } from '../provider';
+import { secretsResolver } from '../secrets';
 import * as store from '../store';
 
 const MAX_ATTEMPTS = 5;
@@ -67,7 +68,16 @@ export async function executeStep(
 
   try {
     const provider = getProvider(stepDef.provider);
-    const result = await provider.execute(stepDef, context);
+
+    // Resolve any secret references from environment variables before
+    // passing params to the provider. Private keys must never be stored
+    // in the workflow definition — use senderSecretRef: 'ENV_VAR_NAME' instead.
+    const resolvedStep: StepDefinition = {
+      ...stepDef,
+      params: secretsResolver.resolve(stepDef.params),
+    };
+
+    const result = await provider.execute(resolvedStep, context);
 
     if (result.outcome === 'completed') {
       // Merge output into shared execution context
