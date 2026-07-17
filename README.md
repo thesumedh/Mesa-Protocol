@@ -104,43 +104,41 @@ Mesa uses PostgreSQL to durably persist execution steps, states, and history log
 docker compose up -d
 ```
 
-### 3. Run the Live Testnet Corridor
-Execute our automated end-to-end corridor test. This script will:
-- Dynamically generate two Stellar keypairs (User and Merchant).
-- Fund both accounts using **Friendbot** to activate them on Testnet.
-- Register a live corridor flow with two steps: a real SEP-24 deposit and a real payment.
-- Request and sign a **real SEP-10 challenge transaction** against `testanchor.stellar.org` using the user's private key.
-- Submit the SEP-24 deposit request, receive the interactive URL, and **suspend** execution.
-- Simulate an external webhook callback to **resume** the flow.
-- Retrieve the sender's sequence number and submit a **real payment transaction** to the Testnet ledger, returning the transaction hash and ledger slot.
-
+### 3. Run the Mesa Runtime
+Start the workflow orchestrator runtime server:
 ```bash
-npm run build:runtime
-npm run test:stellar --workspace=packages/runtime
+npm run runtime:dev
 ```
 
-### 4. Run the Live NGO Aid Distribution & Swap Payout
-Verify a second, completely separate workflow involving a **Stellar Path Payment swap**:
-- Generates random NGO and Beneficiary keypairs and activates them on Testnet via Friendbot.
-- Executes a SEP-24 deposit flow to get funding.
-- Executes an on-chain **Path Payment Strict Send** operation to convert and settle assets across a routed path on the DEX.
-
+### 4. Run the Hello World Example
+In a new terminal window, execute the Hello World workflow using the Mesa SDK:
 ```bash
-npm run test:payroll --workspace=packages/runtime
+cd examples/hello-world
+npm install
+npm start
 ```
+
+### 5. Monitor Live Executions
+Open the Developer Console in your browser to inspect the running workflow, see the logs, and interact with the execution timeline:
+👉 **[http://localhost:3001/dashboard](http://localhost:3001/dashboard)**
 
 ---
 
-## 🖥️ Visual Developer Console
+## 🖥️ E2E Test Scenarios
 
-Mesa includes a premium developer dashboard to monitor workflow executions, debug active steps, inspect timeline event traces, and simulate external callbacks.
+Verify the full power of Mesa on the Stellar Testnet:
 
-To start the runtime server locally:
+### 1. Cross-Border Corridor Demo
+A complete corridor run (Anchor Deposit $\rightarrow$ DEX Swap $\rightarrow$ Ledger Payout):
 ```bash
-npm run start --workspace=packages/runtime
+npx ts-node examples/remittance/index.ts
 ```
-Once running, navigate to:
-👉 **[http://localhost:3000/dashboard](http://localhost:3000/dashboard)**
+
+### 2. Live Stellar Corridor Test Suite
+Runs the automated test suite simulating interactive deposits and payouts on Testnet:
+```bash
+npm run test --workspace=packages/runtime
+```
 
 ---
 

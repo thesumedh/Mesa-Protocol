@@ -5,8 +5,7 @@
   "workspaces": [
     "packages/sdk",
     "packages/runtime",
-    "packages/providers/*",
-    "packages/mesa-cli"
+    "packages/providers/*"
   ],
   "scripts": {
     "dev": "vite",
@@ -14,7 +13,7 @@
     "build:sdk": "npm run build --workspace=packages/sdk",
     "build:runtime": "npm run build --workspace=packages/runtime",
     "runtime:dev": "npm run dev --workspace=packages/runtime",
-    "test:e2e": "npx tsx packages/mesa-sdk/src/integration_test.ts",
+    "test": "npm run test --workspace=packages/sdk && npm run test --workspace=packages/runtime",
     "demo:stellar": "npm run demo:stellar --workspace=packages/runtime",
     "demo:payroll": "npm run demo:payroll --workspace=packages/runtime"
   },

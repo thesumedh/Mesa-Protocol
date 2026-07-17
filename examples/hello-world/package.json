@@ -1,17 +1,17 @@
 {
-  "name": "mesa-node-cli-example",
+  "name": "mesa-hello-world-example",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@mesa/sdk": "file:../../packages/mesa-sdk",
-    "@stellar/stellar-sdk": "^16.0.1",
+    "@mesa/sdk": "file:../../packages/sdk",
+    "@stellar/stellar-sdk": "^12.3.0",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "tsx": "^4.19.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.3.3"
   }
 }

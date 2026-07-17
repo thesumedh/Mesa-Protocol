@@ -1,25 +1,30 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<html lang="en" class="h-full bg-[#030712] text-slate-100 font-sans">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mesa — Developer Console</title>
-  <!-- Google Fonts: Inter -->
+  
+  <!-- Premium Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Vue.js 3 CDN -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  
   <script>
     tailwind.config = {
       theme: {
         extend: {
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
           },
         },
       },
@@ -32,213 +37,201 @@
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #0b1329;
+      background: #02040a;
     }
     ::-webkit-scrollbar-thumb {
-      background: #1e293b;
-      border-radius: 4px;
+      background: #111827;
+      border-radius: 99px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #334155;
+      background: #1f2937;
     }
-    .glass-card {
-      background: rgba(30, 41, 59, 0.4);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+    
+    /* Vercel/Linear style glow effects */
+    .glow-card {
+      background: rgba(10, 15, 30, 0.5);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    .glow-card:hover {
+      border-color: rgba(99, 102, 241, 0.25);
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.08);
+      transform: translateY(-1px);
+    }
+    
+    .glow-card-selected {
+      background: rgba(99, 102, 241, 0.08) !important;
+      border-color: rgba(99, 102, 241, 0.45) !important;
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.12);
+    }
+
     .glow-accent {
-      box-shadow: 0 0 25px rgba(59, 130, 246, 0.15);
+      box-shadow: 0 0 35px rgba(99, 102, 241, 0.2);
+    }
+
+    [v-cloak] {
+      display: none !important;
     }
   </style>
 </head>
-<body class="h-full flex flex-col font-sans antialiased overflow-hidden">
-  <div id="app" class="flex flex-col h-full" v-cloak>
+<body class="h-full flex flex-col font-sans antialiased overflow-hidden bg-[#02040a] relative">
+  <!-- Interactive Ambient Background Glow Orbs -->
+  <div class="absolute top-[-10%] left-[20%] w-[450px] h-[450px] bg-gradient-to-br from-indigo-500/10 to-transparent rounded-full filter blur-[100px] pointer-events-none z-0"></div>
+  <div class="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] bg-gradient-to-br from-purple-500/8 to-transparent rounded-full filter blur-[120px] pointer-events-none z-0"></div>
+
+  <div id="app" class="flex flex-col h-full z-10 relative" v-cloak>
     
     <!-- Top Header -->
-    <header class="h-16 flex items-center justify-between px-6 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md z-10 shrink-0">
+    <header class="h-16 flex items-center justify-between px-6 border-b border-slate-900 bg-slate-950/70 backdrop-blur-xl z-10 shrink-0">
       <div class="flex items-center space-x-3">
         <!-- Logo Icon -->
-        <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center glow-accent">
-          <i data-lucide="layers" class="w-5 h-5 text-white"></i>
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg border border-indigo-400/20">
+          <i data-lucide="layers" class="w-5.5 h-5.5 text-white"></i>
         </div>
         <div>
-          <span class="text-lg font-bold tracking-tight text-white flex items-center">
-            Mesa Runtime <span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full ml-2 border border-blue-500/20">LIVE</span>
+          <span class="text-[17px] font-display font-bold tracking-tight text-white flex items-center">
+            Mesa Runtime 
+            <span class="text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md ml-2.5 border border-emerald-500/20 flex items-center">
+              <span class="h-1 w-1 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+              Live
+            </span>
           </span>
-          <span class="text-xs text-slate-400 block -mt-1 font-medium">Embedded Finance Runtime for Stellar</span>
+          <span class="text-[11px] text-slate-400 block -mt-0.5 font-medium tracking-wide">Embedded Finance Runtime for Stellar</span>
         </div>
       </div>
       
       <!-- Auto Refresh Controls -->
       <div class="flex items-center space-x-4">
-        <div class="flex items-center text-xs space-x-2 text-slate-400">
+        <div class="flex items-center text-xs space-x-2 text-slate-400 bg-slate-900/60 border border-slate-800/80 px-3 py-1.5 rounded-lg">
           <span class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span>Auto-refreshing (2s)</span>
+          <span class="font-medium">Auto-refreshing (2s)</span>
         </div>
-        <button @click="refreshAll" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition duration-150 flex items-center space-x-1 text-xs">
+        <button @click="refreshAll" class="px-3.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-white transition duration-150 flex items-center space-x-1.5 text-xs font-semibold">
           <i data-lucide="refresh-cw" class="w-3.5 h-3.5" :class="{ 'animate-spin': isRefreshing }"></i>
           <span>Reload</span>
         </button>
       </div>
     </header>
-
-    <!-- Top Orchestrating Banner -->
-    <div class="bg-slate-950 border-b border-slate-900 px-6 py-2 flex items-center justify-between overflow-x-auto text-[11px] text-slate-400 shrink-0 font-medium select-none space-x-6">
-      <div class="flex items-center space-x-1.5 text-slate-500 uppercase tracking-wider font-extrabold text-[10px] whitespace-nowrap">
-        <i data-lucide="activity" class="w-3.5 h-3.5 text-blue-500 animate-pulse"></i>
-        <span>Currently Orchestrating:</span>
-      </div>
-      <div class="flex items-center space-x-4 md:space-x-6 text-[10.5px]">
-        <!-- Flows -->
-        <span class="flex items-center space-x-1 whitespace-nowrap">
-          <span class="text-emerald-500 font-extrabold">✓</span>
-          <span class="text-slate-200 font-extrabold font-mono">{{ flows.length }}</span>
-          <span class="text-slate-400">Flows Registered</span>
-        </span>
-        <span class="text-slate-800">|</span>
-        
-        <!-- Providers -->
-        <span class="flex items-center space-x-1 whitespace-nowrap">
-          <span class="text-emerald-500 font-extrabold">✓</span>
-          <span class="text-slate-200 font-extrabold font-mono">{{ providers.length || 4 }}</span>
-          <span class="text-slate-400">Providers</span>
-        </span>
-        <span class="text-slate-800">|</span>
-
-        <!-- Executions -->
-        <span class="flex items-center space-x-1 whitespace-nowrap">
-          <span class="text-emerald-500 font-extrabold">✓</span>
-          <span class="text-slate-200 font-extrabold font-mono">{{ executions.length }}</span>
-          <span class="text-slate-400">Executions</span>
-        </span>
-        <span class="text-slate-800">|</span>
-
-        <!-- Steps Executed -->
-        <span class="flex items-center space-x-1 whitespace-nowrap">
-          <span class="text-emerald-500 font-extrabold">✓</span>
-          <span class="text-slate-200 font-extrabold font-mono">{{ getExecutedStepsCount() }}</span>
-          <span class="text-slate-400">Steps Executed</span>
-        </span>
-        <span class="text-slate-800">|</span>
-
-        <!-- Trustlines Created -->
-        <span class="flex items-center space-x-1 whitespace-nowrap">
-          <span class="text-emerald-500 font-extrabold">✓</span>
-          <span class="text-slate-200 font-extrabold font-mono">{{ getTrustlinesCount() }}</span>
-          <span class="text-slate-400">Trustlines Created</span>
-        </span>
-        <span class="text-slate-800">|</span>
-
-        <!-- SEP-10 Sessions -->
-        <span class="flex items-center space-x-1 whitespace-nowrap">
-          <span class="text-emerald-500 font-extrabold">✓</span>
-          <span class="text-slate-200 font-extrabold font-mono">{{ getSep10Count() }}</span>
-          <span class="text-slate-400">SEP-10 Sessions</span>
-        </span>
-        <span class="text-slate-800">|</span>
-
-        <!-- SEP-24 Sessions -->
-        <span class="flex items-center space-x-1 whitespace-nowrap">
-          <span class="text-emerald-500 font-extrabold">✓</span>
-          <span class="text-slate-200 font-extrabold font-mono">{{ getSep24Count() }}</span>
-          <span class="text-slate-400">SEP-24 Sessions</span>
-        </span>
-        <span class="text-slate-800">|</span>
-
-        <!-- On-chain Settlements -->
-        <span class="flex items-center space-x-1 whitespace-nowrap">
-          <span class="text-emerald-500 font-extrabold">✓</span>
-          <span class="text-slate-200 font-extrabold font-mono">{{ getSettlementsCount() }}</span>
-          <span class="text-slate-400">On-chain Settlements</span>
-        </span>
-      </div>
-    </div>
-
-    <!-- Top Overview Dashboard Panel -->
-    <section class="border-b border-slate-800/80 bg-slate-900/40 px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-4 shrink-0 z-10">
-      <!-- 1. Interactive Architecture Diagram -->
-      <div @click="showArchModal = true" class="flex items-center space-x-3 bg-slate-900/60 hover:bg-slate-850/60 rounded-xl px-4 py-2 border border-slate-800/80 cursor-pointer transition duration-150 group w-full md:w-auto">
-        <div class="text-[10px] uppercase font-extrabold tracking-wider text-slate-400 flex items-center mr-1 group-hover:text-indigo-400 transition">
+    <!-- Unified Overview Stats Banner & Architecture Blueprint Link -->
+    <section class="border-b border-slate-900 bg-slate-950/60 px-6 py-3 flex flex-col xl:flex-row items-center justify-between gap-4 shrink-0 z-10">
+      
+      <!-- Left: Dynamic Interactive Architecture Diagram Link -->
+      <div @click="showArchModal = true" class="flex items-center space-x-3 bg-slate-900/40 hover:bg-slate-900/60 rounded-xl px-4 py-2 border border-slate-800/80 cursor-pointer transition duration-155 group w-full xl:w-auto shadow-inner hover:border-indigo-500/30">
+        <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 flex items-center mr-1 group-hover:text-indigo-405 transition font-display">
           <i data-lucide="network" class="w-3.5 h-3.5 mr-1.5 text-indigo-400 animate-pulse"></i>
-          Runtime Architecture
+          System Architecture
         </div>
         <div class="flex items-center space-x-1.5 text-[10.5px]">
-          <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">Developer App</span>
+          <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold font-display">Developer App</span>
           <i data-lucide="chevron-right" class="w-3 h-3 text-slate-700"></i>
-          <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold">Mesa SDK</span>
+          <span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold font-display">Mesa SDK</span>
           <i data-lucide="chevron-right" class="w-3 h-3 text-slate-700"></i>
-          <span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold">Workflow Engine</span>
+          <span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold font-display">Workflow Engine</span>
           <i data-lucide="chevron-right" class="w-3 h-3 text-slate-700"></i>
-          <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">Providers</span>
+          <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold font-display">Providers</span>
           <i data-lucide="chevron-right" class="w-3 h-3 text-slate-700"></i>
-          <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-extrabold flex items-center">
+          <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-450 border border-emerald-500/30 font-extrabold flex items-center font-display">
             Stellar Network
             <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 ml-1.5 animate-pulse"></span>
           </span>
-          <span class="text-slate-600 group-hover:text-slate-400 text-[10px] ml-1.5 transition font-bold uppercase tracking-wider">Show Blueprint ▼</span>
+          <span class="text-slate-500 group-hover:text-slate-350 text-[10px] ml-2 transition font-bold uppercase tracking-wider font-display">Show Blueprint ▼</span>
         </div>
       </div>
       
-      <!-- 2. Hero Cards Grid -->
-      <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 w-full md:w-auto">
-        <!-- Runtime Status Hero Card -->
-        <div class="glass-card glow-accent px-4 py-2 rounded-xl border border-slate-800/80 flex items-center space-x-3 w-full md:w-44 animate-fade-in">
-          <div class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
-            <i data-lucide="cpu" class="w-4 h-4 animate-pulse"></i>
+      <!-- Right: Unified Grid of Metric Stats -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5 w-full xl:w-auto">
+        <!-- Runtime Status -->
+        <div class="glow-card px-3 py-1.5 rounded-xl flex items-center space-x-2 bg-slate-900/10 border border-slate-800/80">
+          <div class="p-1 rounded-lg bg-emerald-500/10 text-emerald-450">
+            <i data-lucide="cpu" class="w-3.5 h-3.5"></i>
           </div>
           <div>
-            <span class="text-[9px] text-slate-400 block font-medium uppercase tracking-wider">Runtime Status</span>
-            <span class="text-xs font-extrabold text-emerald-400 flex items-center mt-0.5">
-              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 animate-ping"></span>
-              Healthy
+            <span class="text-[8px] text-slate-400 block font-bold uppercase tracking-wider font-display">Status</span>
+            <span class="text-[11px] font-extrabold text-emerald-400 flex items-center font-display">
+              🟢 Healthy
             </span>
           </div>
         </div>
 
-        <!-- Flows Hero Card -->
-        <div class="glass-card glow-accent px-4 py-2 rounded-xl border border-slate-800/80 flex items-center space-x-3 w-full md:w-40">
-          <div class="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
-            <i data-lucide="folder" class="w-4 h-4"></i>
+        <!-- Flows -->
+        <div class="glow-card px-3 py-1.5 rounded-xl flex items-center space-x-2 bg-slate-900/10 border border-slate-800/80">
+          <div class="p-1 rounded-lg bg-blue-500/10 text-blue-400">
+            <i data-lucide="folder" class="w-3.5 h-3.5"></i>
           </div>
           <div>
-            <span class="text-[9px] text-slate-400 block font-medium uppercase tracking-wider">Flows</span>
-            <span class="text-sm font-extrabold text-white">{{ flows.length }}</span>
+            <span class="text-[8px] text-slate-400 block font-bold uppercase tracking-wider font-display">Flows</span>
+            <span class="text-[11px] font-extrabold text-white font-mono">{{ flows.length }}</span>
           </div>
         </div>
 
-        <!-- Providers Hero Card -->
-        <div class="glass-card glow-accent px-4 py-2 rounded-xl border border-slate-800/80 flex items-center space-x-3 w-full md:w-40">
-          <div class="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">
-            <i data-lucide="plug" class="w-4 h-4"></i>
+        <!-- Providers -->
+        <div class="glow-card px-3 py-1.5 rounded-xl flex items-center space-x-2 bg-slate-900/10 border border-slate-800/80">
+          <div class="p-1 rounded-lg bg-amber-500/10 text-amber-400">
+            <i data-lucide="plug" class="w-3.5 h-3.5"></i>
           </div>
           <div>
-            <span class="text-[9px] text-slate-400 block font-medium uppercase tracking-wider">Providers</span>
-            <span class="text-sm font-extrabold text-white">{{ providers.length || 4 }}</span>
+            <span class="text-[8px] text-slate-400 block font-bold uppercase tracking-wider font-display">Providers</span>
+            <span class="text-[11px] font-extrabold text-white font-mono">{{ providers.length || 4 }}</span>
           </div>
         </div>
 
-        <!-- Completed Hero Card -->
-        <div class="glass-card glow-accent px-4 py-2 rounded-xl border border-slate-800/80 flex items-center space-x-3 w-full md:w-40">
-          <div class="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">
-            <i data-lucide="check-circle" class="w-4 h-4"></i>
+        <!-- Executions -->
+        <div class="glow-card px-3 py-1.5 rounded-xl flex items-center space-x-2 bg-slate-900/10 border border-slate-800/80">
+          <div class="p-1 rounded-lg bg-indigo-500/10 text-indigo-400">
+            <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
           </div>
           <div>
-            <span class="text-[9px] text-slate-400 block font-medium uppercase tracking-wider">Completed</span>
-            <span class="text-sm font-extrabold text-white">{{ executions.filter(e => e.status === 'COMPLETED').length }}</span>
+            <span class="text-[8px] text-slate-400 block font-bold uppercase tracking-wider font-display">Completed</span>
+            <span class="text-[11px] font-extrabold text-white font-mono">{{ executions.filter(e => e.status === 'COMPLETED').length }}</span>
           </div>
         </div>
 
-        <!-- Suspended Hero Card -->
-        <div class="glass-card glow-accent px-4 py-2 rounded-xl border border-slate-800/80 flex items-center space-x-3 w-full md:w-40">
-          <div class="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
-            <i data-lucide="pause-circle" class="w-4 h-4"></i>
+        <!-- Suspended -->
+        <div class="glow-card px-3 py-1.5 rounded-xl flex items-center space-x-2 bg-slate-900/10 border border-slate-800/80">
+          <div class="p-1 rounded-lg bg-purple-500/10 text-purple-400">
+            <i data-lucide="pause-circle" class="w-3.5 h-3.5"></i>
           </div>
           <div>
-            <span class="text-[9px] text-slate-400 block font-medium uppercase tracking-wider">Suspended</span>
-            <span class="text-sm font-extrabold text-white">{{ executions.filter(e => e.status === 'SUSPENDED').length }}</span>
+            <span class="text-[8px] text-slate-400 block font-bold uppercase tracking-wider font-display">Suspended</span>
+            <span class="text-[11px] font-extrabold text-white font-mono">{{ executions.filter(e => e.status === 'SUSPENDED').length }}</span>
+          </div>
+        </div>
+
+        <!-- Steps Executed -->
+        <div class="glow-card px-3 py-1.5 rounded-xl flex items-center space-x-2 bg-slate-900/10 border border-slate-800/80">
+          <div class="p-1 rounded-lg bg-pink-500/10 text-pink-400">
+            <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+          </div>
+          <div>
+            <span class="text-[8px] text-slate-400 block font-bold uppercase tracking-wider font-display">Steps</span>
+            <span class="text-[11px] font-extrabold text-white font-mono">{{ getExecutedStepsCount() }}</span>
+          </div>
+        </div>
+
+        <!-- Trustlines Created -->
+        <div class="glow-card px-3 py-1.5 rounded-xl flex items-center space-x-2 bg-slate-900/10 border border-slate-800/80">
+          <div class="p-1 rounded-lg bg-teal-500/10 text-teal-400">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+          </div>
+          <div>
+            <span class="text-[8px] text-slate-400 block font-bold uppercase tracking-wider font-display">Trustlines</span>
+            <span class="text-[11px] font-extrabold text-white font-mono">{{ getTrustlinesCount() }}</span>
+          </div>
+        </div>
+
+        <!-- On-chain Settlements -->
+        <div class="glow-card px-3 py-1.5 rounded-xl flex items-center space-x-2 bg-slate-900/10 border border-slate-800/80">
+          <div class="p-1 rounded-lg bg-emerald-500/10 text-emerald-450">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          </div>
+          <div>
+            <span class="text-[8px] text-slate-400 block font-bold uppercase tracking-wider font-display">Settled</span>
+            <span class="text-[11px] font-extrabold text-white font-mono">{{ getSettlementsCount() }}</span>
           </div>
         </div>
       </div>
@@ -248,24 +241,24 @@
     <div class="flex flex-1 overflow-hidden">
       
       <!-- Navigation Sidebar -->
-      <aside class="w-64 border-r border-slate-800 bg-slate-900/50 flex flex-col shrink-0">
+      <aside class="w-64 border-r border-slate-900 bg-slate-950/20 flex flex-col shrink-0">
         <nav class="flex-1 p-4 space-y-1.5">
           <button @click="currentTab = 'executions'" 
-                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition duration-150"
-                  :class="currentTab === 'executions' ? 'bg-blue-600 text-white shadow-md glow-accent' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
-            <i data-lucide="activity" class="w-4 h-4"></i>
+                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition duration-150 border"
+                  :class="currentTab === 'executions' ? 'bg-indigo-600/10 border-indigo-500/30 text-white shadow-sm shadow-indigo-500/5 font-bold' : 'border-transparent text-slate-400 hover:bg-slate-900/50 hover:text-white'">
+            <i data-lucide="activity" class="w-4 h-4" :class="currentTab === 'executions' ? 'text-indigo-400' : 'text-slate-500'"></i>
             <span>Executions</span>
           </button>
           <button @click="currentTab = 'flows'" 
-                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition duration-150"
-                  :class="currentTab === 'flows' ? 'bg-blue-600 text-white shadow-md glow-accent' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
-            <i data-lucide="git-merge" class="w-4 h-4"></i>
+                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition duration-150 border"
+                  :class="currentTab === 'flows' ? 'bg-indigo-600/10 border-indigo-500/30 text-white shadow-sm shadow-indigo-500/5 font-bold' : 'border-transparent text-slate-400 hover:bg-slate-900/50 hover:text-white'">
+            <i data-lucide="git-merge" class="w-4 h-4" :class="currentTab === 'flows' ? 'text-indigo-400' : 'text-slate-500'"></i>
             <span>Flow Definitions</span>
           </button>
           <button @click="currentTab = 'providers'" 
-                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition duration-150"
-                  :class="currentTab === 'providers' ? 'bg-blue-600 text-white shadow-md glow-accent' : 'text-slate-300 hover:bg-slate-800 hover:text-white'">
-            <i data-lucide="plug" class="w-4 h-4"></i>
+                  class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition duration-150 border"
+                  :class="currentTab === 'providers' ? 'bg-indigo-600/10 border-indigo-500/30 text-white shadow-sm shadow-indigo-500/5 font-bold' : 'border-transparent text-slate-400 hover:bg-slate-900/50 hover:text-white'">
+            <i data-lucide="plug" class="w-4 h-4" :class="currentTab === 'providers' ? 'text-indigo-400' : 'text-slate-500'"></i>
             <span>Registered Providers</span>
           </button>
         </nav>
@@ -314,8 +307,26 @@
               </div>
             </div>
 
+            <!-- Quick Start Tips -->
+            <div class="px-4 py-3 bg-indigo-500/10 border-b border-indigo-500/20 text-xs text-indigo-300 flex items-start space-x-2.5">
+              <i data-lucide="terminal" class="w-4 h-4 mt-0.5 text-indigo-400 shrink-0 animate-pulse"></i>
+              <div class="space-y-1 w-full">
+                <span class="font-bold block text-[11px]">Run a demo workflow in your terminal:</span>
+                <div class="flex flex-wrap gap-1.5 pt-1">
+                  <button @click="copyText('npm run demo:stellar')" class="bg-indigo-950/80 px-2 py-1 rounded font-mono text-[9px] border border-indigo-500/30 hover:bg-indigo-900 transition flex items-center space-x-1">
+                    <span>npm run demo:stellar</span>
+                    <i data-lucide="copy" class="w-2.5 h-2.5"></i>
+                  </button>
+                  <button @click="copyText('npm run demo:payroll')" class="bg-indigo-950/80 px-2 py-1 rounded font-mono text-[9px] border border-indigo-500/30 hover:bg-indigo-900 transition flex items-center space-x-1">
+                    <span>npm run demo:payroll</span>
+                    <i data-lucide="copy" class="w-2.5 h-2.5"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <!-- Executions Scrollable List -->
-            <div class="flex-1 overflow-y-auto divide-y divide-slate-800/60">
+            <div class="flex-1 overflow-y-auto space-y-3 p-3">
               <div v-if="filteredExecutions.length === 0" class="p-8 text-center text-slate-500">
                 <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
                 <p class="text-xs">No executions match criteria</p>
@@ -323,32 +334,32 @@
               <div v-for="exec in filteredExecutions" 
                    :key="exec.id" 
                    @click="selectExecution(exec.id)"
-                   class="p-4 cursor-pointer transition duration-150 flex flex-col space-y-3 hover:bg-slate-800/40 border-b border-slate-800/50"
-                   :class="selectedExecId === exec.id ? 'bg-slate-800/70 border-l-4 border-blue-500' : ''">
+                   class="p-4 rounded-xl cursor-pointer transition duration-150 flex flex-col space-y-3 border border-slate-900 bg-slate-950/20 hover:border-slate-800/80"
+                   :class="selectedExecId === exec.id ? 'glow-card-selected' : 'glow-card'">
                 
                 <div class="flex items-start justify-between">
-                  <div class="font-bold text-white text-sm tracking-tight flex items-center">
+                  <div class="font-bold text-white text-sm tracking-tight flex items-center font-display">
                     {{ getFlowFriendlyName(exec.flow_id) }}
                   </div>
                   <!-- Status Badge with bullet color -->
                   <span :class="getStatusClass(exec.status)" class="px-2.5 py-0.5 text-[9px] font-extrabold rounded uppercase tracking-wider flex items-center shadow-sm">
-                    <span class="h-1.5 w-1.5 rounded-full mr-1.5" :class="getStatusBulletClass(exec.status)"></span>
+                    <span class="h-1.5 w-1.5 rounded-full mr-1.5 animate-pulse" :class="getStatusBulletClass(exec.status)"></span>
                     {{ exec.status === 'PERMANENTLY_FAILED' ? 'FAILED' : exec.status }}
                   </span>
                 </div>
 
                 <!-- Info parameters grid -->
-                <div class="grid grid-cols-3 gap-2 bg-slate-900/30 p-2 rounded-lg border border-slate-800/50 text-[10px] text-slate-400 font-medium">
+                <div class="grid grid-cols-3 gap-2 bg-[#02040a]/40 p-2 rounded-lg border border-slate-900/80 text-[10px] text-slate-400 font-medium">
                   <div>
-                    <span class="text-slate-500 block uppercase text-[8px] tracking-wider font-extrabold mb-0.5">Execution Time</span>
+                    <span class="text-slate-500 block uppercase text-[8px] tracking-wider font-extrabold mb-0.5 font-display">Time</span>
                     <span class="text-slate-200 font-bold font-mono">{{ getExecutionDuration(exec) }}</span>
                   </div>
                   <div>
-                    <span class="text-slate-500 block uppercase text-[8px] tracking-wider font-extrabold mb-0.5">Attempts</span>
+                    <span class="text-slate-500 block uppercase text-[8px] tracking-wider font-extrabold mb-0.5 font-display">Attempts</span>
                     <span class="text-slate-200 font-bold font-mono">{{ getCardAttempts(exec) }}</span>
                   </div>
                   <div>
-                    <span class="text-slate-500 block uppercase text-[8px] tracking-wider font-extrabold mb-0.5">Provider</span>
+                    <span class="text-slate-500 block uppercase text-[8px] tracking-wider font-extrabold mb-0.5 font-display">Provider</span>
                     <span class="text-indigo-400 font-extrabold truncate block font-mono" :title="getCardProvidersChain(exec)">
                       {{ getCardProvidersChain(exec) }}
                     </span>
@@ -357,7 +368,7 @@
                 
                 <div class="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
                   <div class="flex items-center space-x-2">
-                    <span class="bg-slate-800/80 px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-350">
+                    <span class="bg-slate-900 border border-slate-800 px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-355">
                       {{ exec.steps ? exec.steps.length : 0 }} Steps
                     </span>
                     <span class="text-slate-500 font-mono text-[10px]">
@@ -564,35 +575,36 @@
                     <span class="text-[10px] text-slate-500 font-medium">Automatic execution workflow states</span>
                   </div>
                   
-                  <!-- Stepper steps grid/row -->
-                  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                    <div v-for="(milestone, idx) in getMilestones()" 
-                         :key="milestone.id"
-                         class="flex flex-col items-center justify-between p-3 rounded-lg border text-center transition-all duration-300 relative"
-                         :class="getMilestoneClass(milestone.status)">
-                      
-                      <!-- Connector line for desktop -->
-                      <div v-if="idx < 6" 
-                           class="hidden lg:block absolute top-7 -right-2.5 w-4 h-[1px] z-0"
-                           :class="milestone.status === 'completed' ? 'bg-emerald-500/40' : (milestone.status === 'active' ? 'bg-blue-500/50 animate-pulse' : 'bg-slate-800/80')"></div>
+                  <!-- Stepper steps flex-wrap row -->
+                  <div class="flex flex-wrap items-center gap-3">
+                    <template v-for="(milestone, idx) in getMilestones()" :key="milestone.id">
+                      <!-- Step card -->
+                      <div class="flex-1 min-w-[125px] max-w-[200px] flex flex-col items-center justify-between p-3 rounded-lg border text-center transition-all duration-300"
+                           :class="getMilestoneClass(milestone.status)">
+                        <!-- Icon -->
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center mb-2"
+                             :class="[getMilestoneIconClass(milestone.status), milestone.status === 'active' ? 'animate-bounce' : '']">
+                          <i :data-lucide="milestone.status === 'completed' ? 'check' : milestone.icon" class="w-4 h-4"></i>
+                        </div>
 
-                      <!-- Icon -->
-                      <div class="w-8 h-8 rounded-full flex items-center justify-center mb-2 z-10"
-                           :class="[getMilestoneIconClass(milestone.status), milestone.status === 'active' ? 'animate-bounce' : '']">
-                        <i :data-lucide="milestone.status === 'completed' ? 'check' : milestone.icon" class="w-4 h-4"></i>
+                        <!-- Label -->
+                        <span class="text-[10px] font-extrabold tracking-tight block truncate w-full text-slate-200">
+                          {{ milestone.label }}
+                        </span>
+                        
+                        <!-- Status Text -->
+                        <span class="text-[8px] font-bold uppercase tracking-wider block mt-1"
+                              :class="getMilestoneTextClass(milestone.status)">
+                          {{ getMilestoneStatusText(milestone) }}
+                        </span>
                       </div>
 
-                      <!-- Label -->
-                      <span class="text-[10px] font-extrabold tracking-tight block truncate w-full text-slate-200">
-                        {{ milestone.label }}
-                      </span>
-                      
-                      <!-- Status Text -->
-                      <span class="text-[8px] font-bold uppercase tracking-wider block mt-1"
-                            :class="getMilestoneTextClass(milestone.status)">
-                        {{ getMilestoneStatusText(milestone) }}
-                      </span>
-                    </div>
+                      <!-- Chevron Arrow Divider -->
+                      <div v-if="idx < getMilestones().length - 1" class="flex items-center justify-center shrink-0"
+                           :class="milestone.status === 'completed' ? 'text-emerald-500/50' : (milestone.status === 'active' ? 'text-indigo-400/80 animate-pulse' : 'text-slate-800')">
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                      </div>
+                    </template>
                   </div>
                 </div>
                 
@@ -731,9 +743,33 @@
                               </summary>
                               <pre class="bg-slate-950 p-2.5 rounded border border-slate-900 text-[10px] font-mono text-slate-400 overflow-x-auto mt-1.5 max-h-40 overflow-y-auto">{{ JSON.stringify(ev.payload || {}, null, 2) }}</pre>
                             </details>
-                          </div>
                         </div>
 
+                        <!-- Step Inputs & Outputs Collapsible -->
+                        <div v-if="(phase.params && Object.keys(phase.params).length > 0) || (phase.output && Object.keys(phase.output).length > 0) || phase.error" 
+                             class="mt-3 pt-3 border-t border-slate-800/40">
+                          <details class="group">
+                            <summary class="text-[10px] text-slate-400 hover:text-slate-200 cursor-pointer select-none font-bold flex items-center space-x-1.5">
+                              <i data-lucide="braces" class="w-3.5 h-3.5 text-indigo-400"></i>
+                              <span>Parameters & Execution Output</span>
+                            </summary>
+                            <div class="mt-2.5 grid grid-cols-1 md:grid-cols-2 gap-3 text-[10.5px]">
+                              <!-- Inputs / Params -->
+                              <div v-if="phase.params && Object.keys(phase.params).length > 0" class="bg-slate-950/60 p-2.5 rounded-lg border border-slate-900/80">
+                                <div class="text-[9px] uppercase font-bold text-slate-500 mb-1.5 tracking-wider">Step Parameters (Input)</div>
+                                <pre class="font-mono text-slate-350 overflow-x-auto max-h-32 overflow-y-auto leading-relaxed">{{ JSON.stringify(phase.params, null, 2) }}</pre>
+                              </div>
+                              <!-- Outputs / Results -->
+                              <div v-if="(phase.output && Object.keys(phase.output).length > 0) || phase.error" class="bg-slate-950/60 p-2.5 rounded-lg border border-slate-900/80">
+                                <div class="text-[9px] uppercase font-bold text-slate-500 mb-1.5 tracking-wider">Execution Output & State</div>
+                                <div v-if="phase.error" class="text-rose-450 font-medium mb-1 font-mono">
+                                  <strong>Error:</strong> {{ phase.error }}
+                                </div>
+                                <pre v-if="phase.output && Object.keys(phase.output).length > 0" class="font-mono text-slate-350 overflow-x-auto max-h-32 overflow-y-auto leading-relaxed">{{ JSON.stringify(phase.output, null, 2) }}</pre>
+                              </div>
+                            </div>
+                          </details>
+                        </div>
 
                       </div>
                     </div>
@@ -1098,6 +1134,20 @@
           }
         };
 
+        const formatStepName = (name) => {
+          if (!name) return '';
+          return name
+            .split(/[-_]/)
+            .map(word => {
+              const upper = word.toUpperCase();
+              if (upper === 'NGO' || upper === 'SEP' || upper === 'JWT' || upper === 'TX') {
+                return upper;
+              }
+              return word.charAt(0).toUpperCase() + word.slice(1);
+            })
+            .join(' ');
+        };
+
         // UI Helpers
         const getFlowName = (flowId) => {
           const flow = flows.value.find(f => f.id === flowId);
@@ -1142,106 +1192,100 @@
 
         const getMilestones = () => {
           if (!selectedExec.value) return [];
-          const events = selectedExecEvents.value || [];
           const status = selectedExec.value.status;
-          const flowId = selectedExec.value.flow_id;
+          const steps = getStepList();
 
-          // 1. Created
-          const isCreated = true;
+          const list = [];
+          
+          // 1. Created Milestone
+          list.push({
+            id: 'created',
+            label: '1. Created',
+            status: 'completed',
+            icon: 'play'
+          });
 
-          // 2. Trustline verification
-          const trustVerified = events.some(e => e.type === 'trustline.verified');
-          const trustCreated = events.some(e => e.type === 'trustline.created');
-          const trustCreating = events.some(e => e.type === 'trustline.creating');
-          let trustStatus = 'pending';
-          if (flowId === 'ngo-aid-distribution') {
-             trustStatus = 'completed';
-          } else {
-             if (trustVerified || trustCreated) trustStatus = 'completed';
-             else if (trustCreating) trustStatus = 'active';
-          }
+          // 2. Map each step in definition
+          steps.forEach((step, index) => {
+            let stepStatus = 'pending';
+            if (step.status === 'COMPLETED') stepStatus = 'completed';
+            else if (step.status === 'RUNNING') stepStatus = 'active';
+            else if (step.status === 'FAILED') stepStatus = 'failed';
+            else if (step.status === 'SUSPENDED') stepStatus = 'active';
 
-          // 3. SEP-10 Auth
-          const authStart = events.some(e => e.type === 'anchor.sep10.started');
-          const authDone = events.some(e => e.type === 'anchor.sep10.completed');
-          let authStatus = 'pending';
-          if (flowId === 'ngo-aid-distribution') {
-             authStatus = 'completed';
-          } else {
-             if (authDone) authStatus = 'completed';
-             else if (authStart) authStatus = 'active';
-          }
+            // Pick icon based on step provider or name
+            let icon = 'activity';
+            const nameLower = step.name.toLowerCase();
+            const providerLower = String(step.provider).toLowerCase();
 
-          // 4. SEP-24 Deposit
-          const depStart = events.some(e => e.type === 'anchor.sep24.initiated');
-          const stepSusp = events.some(e => e.type === 'step.suspended');
-          let depStatus = 'pending';
-          if (flowId === 'ngo-aid-distribution') {
-             depStatus = 'completed';
-          } else {
-             if (depStart) depStatus = 'completed';
-             else if (stepSusp) depStatus = 'active';
-          }
+            if (nameLower.includes('auth') || nameLower.includes('login')) {
+              icon = 'lock';
+            } else if (nameLower.includes('deposit') || nameLower.includes('receive')) {
+              icon = 'arrow-down-right';
+            } else if (nameLower.includes('transfer') || nameLower.includes('pay') || nameLower.includes('send')) {
+              icon = 'send';
+            } else if (nameLower.includes('trustline') || nameLower.includes('ready')) {
+              icon = 'shield-check';
+            } else if (providerLower === 'webhook') {
+              icon = 'webhook';
+            } else if (providerLower === 'delay') {
+              icon = 'clock';
+            }
 
-          // 5. Webhook Resume
-          const webhookDone = events.some(e => e.type === 'step.resumed');
-          let webhookStatus = 'pending';
-          if (flowId === 'ngo-aid-distribution') {
-             webhookStatus = 'completed';
-          } else {
-             if (webhookDone) webhookStatus = 'completed';
-             else if (status === 'SUSPENDED') webhookStatus = 'active';
-          }
+            list.push({
+              id: `step-${index}`,
+              label: `${index + 2}. ${formatStepName(step.name)}`,
+              status: stepStatus,
+              icon: icon
+            });
+          });
 
-          // 6. Path Payment / Settlement
-          const stepList = getStepList();
-          const payoutStep = stepList[1] || (flowId === 'ngo-aid-distribution' ? stepList[0] : null);
-          let payoutStatus = 'pending';
-          if (payoutStep) {
-            if (payoutStep.status === 'COMPLETED') payoutStatus = 'completed';
-            else if (payoutStep.status === 'RUNNING') payoutStatus = 'active';
-            else if (payoutStep.status === 'FAILED') payoutStatus = 'failed';
-          }
+          // 3. Finalized Milestone
+          let finalizedStatus = 'pending';
+          if (status === 'COMPLETED') finalizedStatus = 'completed';
+          else if (status === 'FAILED' || status === 'PERMANENTLY_FAILED') finalizedStatus = 'failed';
+          else if (status === 'RUNNING' || status === 'SUSPENDED') finalizedStatus = 'active';
 
-          // 7. Completed
-          let completedStatus = 'pending';
-          if (status === 'COMPLETED') completedStatus = 'completed';
-          else if (status === 'FAILED' || status === 'PERMANENTLY_FAILED') completedStatus = 'failed';
+          list.push({
+            id: 'finalized',
+            label: `${steps.length + 2}. Finalized`,
+            status: finalizedStatus,
+            icon: 'check-circle'
+          });
 
-          return [
-            { id: 'created', label: '1. Created', status: 'completed', icon: 'play' },
-            { id: 'trustline', label: '2. Trustline', status: trustStatus, icon: 'shield-check' },
-            { id: 'auth', label: '3. SEP-10 Auth', status: authStatus, icon: 'lock' },
-            { id: 'deposit', label: '4. SEP-24 Deposit', status: depStatus, icon: 'arrow-down-right' },
-            { id: 'resume', label: '5. Webhook Resume', status: webhookStatus, icon: 'webhook' },
-            { id: 'payment', label: '6. Settlement', status: payoutStatus, icon: 'refresh-cw' },
-            { id: 'completed', label: '7. Finalized', status: completedStatus, icon: 'check-circle' }
-          ];
+          // Trigger Lucide icons reload
+          nextTick(() => {
+            if (window.lucide) {
+              window.lucide.createIcons();
+            }
+          });
+
+          return list;
         };
 
         const getMilestoneClass = (status) => {
           switch (status) {
-            case 'completed': return 'border-emerald-500/30 bg-emerald-500/5';
-            case 'active': return 'border-blue-500/50 bg-blue-500/10 shadow-md glow-accent';
-            case 'failed': return 'border-rose-500/30 bg-rose-500/5';
-            default: return 'border-slate-800 bg-slate-900/10';
+            case 'completed': return 'border-emerald-500/25 bg-emerald-500/5';
+            case 'active': return 'border-indigo-500/40 bg-indigo-500/10 shadow-lg shadow-indigo-500/5';
+            case 'failed': return 'border-rose-500/25 bg-rose-500/5';
+            default: return 'border-slate-800/80 bg-slate-900/10';
           }
         };
 
         const getMilestoneIconClass = (status) => {
           switch (status) {
-            case 'completed': return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
-            case 'active': return 'bg-blue-500/15 text-blue-400 border border-blue-500/40';
-            case 'failed': return 'bg-rose-500/10 text-rose-400 border border-rose-500/30';
-            default: return 'bg-slate-800 text-slate-500 border border-slate-700';
+            case 'completed': return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25';
+            case 'active': return 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/35';
+            case 'failed': return 'bg-rose-500/10 text-rose-455 border border-rose-500/25';
+            default: return 'bg-slate-900 text-slate-500 border border-slate-800';
           }
         };
 
         const getMilestoneTextClass = (status) => {
           switch (status) {
-            case 'completed': return 'text-emerald-400';
-            case 'active': return 'text-blue-400';
-            case 'failed': return 'text-rose-400';
+            case 'completed': return 'text-emerald-450';
+            case 'active': return 'text-indigo-400';
+            case 'failed': return 'text-rose-450';
             default: return 'text-slate-500';
           }
         };
@@ -1480,11 +1524,14 @@
 
             phases.push({
               id: `step-${idx}`,
-              name: step.name,
+              name: formatStepName(step.name),
               subtitle: `Step execution adapter: ${step.provider}`,
               status: step.status,
               durationMs: duration,
               events: stepEvents,
+              params: step.params,
+              output: step.output,
+              error: step.error,
               dotColor: step.status === 'COMPLETED' ? 'bg-emerald-500' : (step.status === 'FAILED' ? 'bg-rose-500' : (step.status === 'SUSPENDED' ? 'bg-amber-500' : (step.status === 'RUNNING' ? 'bg-blue-500 animate-pulse' : 'bg-slate-800')))
             });
           });
@@ -1702,6 +1749,16 @@
             lucide.createIcons();
           });
         });
+
+        watch(executions, (newVal) => {
+          if (newVal && newVal.length > 0) {
+            const latest = newVal[0];
+            const isNewActive = !selectedExecId.value || (selectedExecId.value !== latest.id && ['RUNNING', 'SUSPENDED'].includes(latest.status));
+            if (isNewActive) {
+              selectExecution(latest.id);
+            }
+          }
+        }, { deep: true });
 
         return {
           currentTab,

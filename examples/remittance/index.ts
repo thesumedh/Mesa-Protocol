@@ -11,13 +11,13 @@
  *   docker compose up
  *
  * Then:
- *   npx ts-node examples/cross-border-payment/index.ts
+ *   npx ts-node examples/remittance/index.ts
  */
 
 import { Mesa } from '@mesa/sdk';
 
 const ESCROW_ADDRESS = 'GBHTYH2NLVWRAPSC3IRRFPG6CFHP5VLODBQUYVSKJ3BZ3QN6HEXZ5DXU';
-const DESTINATION   = 'GCIE7JJJVTCX4YGSME3FXZQB3GY4MY7PJNW6VXMHPYUDPHBDQN2IYE';
+const DESTINATION   = 'GCIE7JJJVTCX4YGSME3FXZQB3GY4MY7PJNW6VXMHPYUDPHBDQN2IYE5Z'; // Valid 56-character G-address
 const WEBHOOK_URL   = 'https://myapp.example.com/webhooks/mesa';
 
 async function main() {
