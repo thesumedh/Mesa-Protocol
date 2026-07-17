@@ -27,3 +27,6 @@ Thumbs.db
 # Temp files
 temp_clone/
 temp_dapp_clone/
+
+# Sandbox development folders
+dev-sandbox/

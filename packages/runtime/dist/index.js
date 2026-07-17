@@ -951,7 +951,7 @@ var AnchorProvider = class {
     }
     console.log(`[AnchorProvider] Initiating real SEP-24 deposit to anchor: ${anchorUrl}`);
     const toml = await this.fetchToml(anchorUrl);
-    const jwt = userJwt ?? await this.sep10Auth(toml.WEB_AUTH_ENDPOINT, userAddress, toml.SIGNING_KEY, userSecret);
+    const jwt = userJwt ?? await this.sep10Auth(context.executionId, toml.WEB_AUTH_ENDPOINT, userAddress, toml.SIGNING_KEY, userSecret);
     const depositRes = await this.httpPost(
       `${toml.TRANSFER_SERVER_SEP0024}/transactions/deposit/interactive`,
       { asset_code: asset, account: userAddress, amount: amount?.toString() },
@@ -961,6 +961,11 @@ var AnchorProvider = class {
     if (!depositRes.url || !depositRes.id) {
       throw new Error(`AnchorProvider: deposit did not return interactive url or transaction id. Response: ${JSON.stringify(depositRes)}`);
     }
+    await appendEvent(context.executionId, "anchor.sep24.initiated", {
+      asset,
+      interactiveUrl: depositRes.url,
+      message: `Interactive SEP-24 deposit initiated. Session ID: ${depositRes.id}`
+    });
     const suspensionKey = `anchor:sep24:${anchorUrl}:${depositRes.id}`;
     return {
       outcome: "suspended",
@@ -980,7 +985,7 @@ var AnchorProvider = class {
     }
     console.log(`[AnchorProvider] Initiating real SEP-24 withdraw to anchor: ${anchorUrl}`);
     const toml = await this.fetchToml(anchorUrl);
-    const jwt = userJwt ?? await this.sep10Auth(toml.WEB_AUTH_ENDPOINT, userAddress, toml.SIGNING_KEY, userSecret);
+    const jwt = userJwt ?? await this.sep10Auth(context.executionId, toml.WEB_AUTH_ENDPOINT, userAddress, toml.SIGNING_KEY, userSecret);
     const withdrawRes = await this.httpPost(
       `${toml.TRANSFER_SERVER_SEP0024}/transactions/withdraw/interactive`,
       {
@@ -994,6 +999,11 @@ var AnchorProvider = class {
     if (!withdrawRes.url || !withdrawRes.id) {
       throw new Error("AnchorProvider: withdraw did not return interactive url or transaction id");
     }
+    await appendEvent(context.executionId, "anchor.sep24.initiated", {
+      asset,
+      interactiveUrl: withdrawRes.url,
+      message: `Interactive SEP-24 withdraw initiated. Session ID: ${withdrawRes.id}`
+    });
     const suspensionKey = `anchor:sep24:${anchorUrl}:${withdrawRes.id}`;
     return {
       outcome: "suspended",
@@ -1038,14 +1048,20 @@ var AnchorProvider = class {
     return { status: "healthy", details: { mode: process.env.ANCHOR_MOCK === "true" ? "mock" : "live" } };
   }
   // ─── SEP-10 Web Authentication Stub ────────────────────────────────────────
-  async sep10Auth(webAuthEndpoint, userAddress, serverSigningKey, userSecret) {
+  async sep10Auth(executionId, webAuthEndpoint, userAddress, serverSigningKey, userSecret) {
     console.log(`[AnchorProvider] Requesting SEP-10 challenge for ${userAddress} at ${webAuthEndpoint}`);
+    await appendEvent(executionId, "anchor.sep10.started", {
+      message: `Requesting challenge transaction from SEP-10 Auth endpoint: ${webAuthEndpoint}`
+    });
     const challengeRes = await this.httpGet(webAuthEndpoint, { account: userAddress });
     if (!challengeRes.transaction) {
       throw new Error("SEP-10: no challenge transaction returned from auth endpoint.");
     }
     if (!userSecret) {
       console.warn("[AnchorProvider] No secret key provided for SEP-10 challenge signing. Falling back to mock token.");
+      await appendEvent(executionId, "anchor.sep10.completed", {
+        message: "No secret key provided. Acquired mock SEP-10 JWT token."
+      });
       return "mock-sep10-jwt-token";
     }
     try {
@@ -1059,8 +1075,14 @@ var AnchorProvider = class {
       if (!authRes.token) {
         throw new Error(`Auth endpoint response missing token: ${JSON.stringify(authRes)}`);
       }
+      await appendEvent(executionId, "anchor.sep10.completed", {
+        message: "Successfully signed challenge and acquired SEP-10 JWT token."
+      });
       return authRes.token;
     } catch (err) {
+      await appendEvent(executionId, "anchor.sep10.failed", {
+        error: err.message
+      });
       throw new Error(`SEP-10 authentication failed: ${err.message}`);
     }
   }
