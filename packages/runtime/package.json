@@ -1,5 +1,5 @@
 {
-  "name": "@mesa/runtime",
+  "name": "@mesaprotocol/runtime",
   "version": "0.1.0",
   "description": "Mesa durable financial workflow runtime",
   "main": "dist/index.js",

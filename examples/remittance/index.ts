@@ -14,7 +14,7 @@
  *   npx ts-node examples/remittance/index.ts
  */
 
-import { Mesa } from '@mesa/sdk';
+import { Mesa } from '@mesaprotocol/sdk';
 
 const ESCROW_ADDRESS = 'GBHTYH2NLVWRAPSC3IRRFPG6CFHP5VLODBQUYVSKJ3BZ3QN6HEXZ5DXU';
 const DESTINATION   = 'GCIE7JJJVTCX4YGSME3FXZQB3GY4MY7PJNW6VXMHPYUDPHBDQN2IYE5Z'; // Valid 56-character G-address

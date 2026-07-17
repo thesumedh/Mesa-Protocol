@@ -1,12 +1,12 @@
 /**
- * @mesa/sdk
+ * @mesaprotocol/sdk
  *
  * Mesa is a financial workflow orchestration platform for Stellar.
  * This SDK lets developers describe workflows as code.
  * The Mesa Runtime executes them durably.
  *
  * Usage:
- *   import { Mesa } from '@mesa/sdk';
+ *   import { Mesa } from '@mesaprotocol/sdk';
  *
  *   const flow = Mesa.flow('cross-border-payment')
  *     .receive({ asset: 'XLM', minAmount: 10, toAddress: '...' })

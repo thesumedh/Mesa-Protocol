@@ -6,7 +6,7 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@mesa/sdk": "file:../../packages/sdk",
+    "@mesaprotocol/sdk": "file:../../packages/sdk",
     "@stellar/stellar-sdk": "^12.3.0",
     "dotenv": "^16.4.5"
   },

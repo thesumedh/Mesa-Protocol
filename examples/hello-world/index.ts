@@ -1,4 +1,4 @@
-import { Mesa } from '@mesa/sdk';
+import { Mesa } from '@mesaprotocol/sdk';
 
 // 1. Configure the SDK to point to the local Mesa runtime
 Mesa.configure({ runtimeUrl: 'http://localhost:3001' });

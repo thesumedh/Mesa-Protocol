@@ -1,5 +1,5 @@
 {
-  "name": "@mesa/sdk",
+  "name": "@mesaprotocol/sdk",
   "version": "0.2.0",
   "description": "Mesa financial workflow SDK for Stellar",
   "main": "dist/index.js",
