@@ -29,163 +29,176 @@ var dotenv = __toESM(require("dotenv"));
 var import_pg = require("pg");
 
 // src/store/mockDb.ts
+function parseJson(value) {
+  if (value === null || value === void 0) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+function parseSetClause(sql) {
+  const map = /* @__PURE__ */ new Map();
+  const pattern = /(\w+)\s*=\s*\$(\d+)/g;
+  let match;
+  while ((match = pattern.exec(sql)) !== null) {
+    const col = match[1];
+    const idx = parseInt(match[2], 10) - 1;
+    if (col !== "id") {
+      map.set(col, idx);
+    }
+  }
+  return map;
+}
 var InMemoryPool = class {
   flows = /* @__PURE__ */ new Map();
   executions = /* @__PURE__ */ new Map();
   steps = /* @__PURE__ */ new Map();
+  // key: `${executionId}:${stepIndex}`
+  stepById = /* @__PURE__ */ new Map();
+  // key: step.id
   events = [];
   async query(text, params = []) {
-    const cleanText = text.replace(/\s+/g, " ").trim();
-    if (cleanText.startsWith("INSERT INTO flows")) {
+    const sql = text.replace(/\s+/g, " ").trim();
+    if (sql.startsWith("INSERT INTO flows")) {
       const [id, name, definitionJson] = params;
-      const flow = { id, name, definition: JSON.parse(definitionJson), created_at: /* @__PURE__ */ new Date() };
-      this.flows.set(id, flow);
-      return { rows: [flow] };
+      const row = {
+        id,
+        name,
+        definition: parseJson(definitionJson) ?? {},
+        created_at: /* @__PURE__ */ new Date()
+      };
+      this.flows.set(id, row);
+      return { rows: [row] };
     }
-    if (cleanText.startsWith("SELECT * FROM flows WHERE id = $1")) {
-      const flow = this.flows.get(params[0]);
-      return { rows: flow ? [flow] : [] };
+    if (sql.startsWith("SELECT * FROM flows WHERE id = $1")) {
+      const row = this.flows.get(params[0]);
+      return { rows: row ? [row] : [] };
     }
-    if (cleanText.startsWith("INSERT INTO executions")) {
+    if (sql.includes("FROM flows") && sql.includes("ORDER BY created_at")) {
+      const rows = Array.from(this.flows.values()).sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+      return { rows };
+    }
+    if (sql.startsWith("INSERT INTO executions")) {
       const [id, flowId, contextJson] = params;
-      const execution = {
+      const row = {
         id,
         flow_id: flowId,
         status: "PENDING",
-        context: JSON.parse(contextJson),
+        context: parseJson(contextJson) ?? {},
         current_step: 0,
         started_at: null,
         completed_at: null,
         created_at: /* @__PURE__ */ new Date()
       };
-      this.executions.set(id, execution);
-      return { rows: [execution] };
+      this.executions.set(id, row);
+      return { rows: [row] };
     }
-    if (cleanText.startsWith("SELECT * FROM executions WHERE id = $1")) {
-      const execution = this.executions.get(params[0]);
-      return { rows: execution ? [execution] : [] };
+    if (sql.startsWith("SELECT * FROM executions WHERE id = $1")) {
+      const row = this.executions.get(params[0]);
+      return { rows: row ? [row] : [] };
     }
-    if (cleanText.startsWith("UPDATE executions SET")) {
-      const id = params[params.length - 1];
-      const execution = this.executions.get(id);
-      if (execution) {
-        if (cleanText.includes("status =")) {
-          execution.status = params[0];
-        }
-        if (cleanText.includes("context =")) {
-          const idx = cleanText.indexOf("context =") > -1 ? cleanText.includes("status =") ? 1 : 0 : -1;
-          if (idx !== -1) execution.context = JSON.parse(params[idx]);
-        }
-        if (cleanText.includes("current_step =")) {
-          const idx = params.indexOf(id) - 1;
-          execution.current_step = params[idx];
-        }
-        if (cleanText.includes("started_at =")) {
-          execution.started_at = /* @__PURE__ */ new Date();
-        }
-        if (cleanText.includes("completed_at =")) {
-          execution.completed_at = /* @__PURE__ */ new Date();
-        }
-      }
-      return { rows: execution ? [execution] : [] };
-    }
-    if (cleanText.startsWith("SELECT * FROM executions WHERE status IN")) {
+    if (sql.startsWith("SELECT * FROM executions WHERE status IN")) {
       const rows = Array.from(this.executions.values()).filter((e) => e.status === "PENDING" || e.status === "RUNNING").sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
       return { rows };
     }
-    if (cleanText.startsWith("INSERT INTO steps")) {
+    if (sql.startsWith("UPDATE executions SET")) {
+      const id = params[params.length - 1];
+      const row = this.executions.get(id);
+      if (row) {
+        const colMap = parseSetClause(sql);
+        if (colMap.has("status")) row.status = params[colMap.get("status")];
+        if (colMap.has("context")) row.context = parseJson(params[colMap.get("context")]) ?? row.context;
+        if (colMap.has("current_step")) row.current_step = params[colMap.get("current_step")];
+        if (colMap.has("started_at")) row.started_at = params[colMap.get("started_at")] ?? /* @__PURE__ */ new Date();
+        if (colMap.has("completed_at")) row.completed_at = params[colMap.get("completed_at")] ?? /* @__PURE__ */ new Date();
+      }
+      return { rows: row ? [row] : [] };
+    }
+    if (sql.startsWith("SELECT id, flow_id, status, context, created_at FROM executions") || sql.startsWith("SELECT id, flow_id, status, context, created_at, updated_at FROM executions")) {
+      const rows = Array.from(this.executions.values()).sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+      return { rows };
+    }
+    if (sql.startsWith("INSERT INTO steps")) {
       const [id, executionId, stepIndex, name, provider, status, inputJson, outputJson, error, attempts, nextRetry] = params;
-      const step = {
+      const row = {
         id,
         execution_id: executionId,
         step_index: stepIndex,
         name,
         provider,
         status,
-        input: inputJson ? JSON.parse(inputJson) : null,
-        output: outputJson ? JSON.parse(outputJson) : null,
+        input: parseJson(inputJson),
+        output: parseJson(outputJson),
         error,
         attempts,
         next_retry: nextRetry,
         created_at: /* @__PURE__ */ new Date(),
         updated_at: /* @__PURE__ */ new Date()
       };
-      this.steps.set(`${executionId}:${stepIndex}`, step);
-      return { rows: [step] };
+      this.steps.set(`${executionId}:${stepIndex}`, row);
+      this.stepById.set(id, row);
+      return { rows: [row] };
     }
-    if (cleanText.startsWith("SELECT * FROM steps WHERE execution_id = $1 AND step_index = $2")) {
-      const step = this.steps.get(`${params[0]}:${params[1]}`);
-      return { rows: step ? [step] : [] };
+    if (sql.startsWith("SELECT * FROM steps WHERE execution_id = $1 AND step_index = $2")) {
+      const row = this.steps.get(`${params[0]}:${params[1]}`);
+      return { rows: row ? [row] : [] };
     }
-    if (cleanText.startsWith("UPDATE steps SET")) {
+    if (sql.startsWith("UPDATE steps SET")) {
       const id = params[params.length - 1];
-      const step = Array.from(this.steps.values()).find((s) => s.id === id);
-      if (step) {
-        step.updated_at = /* @__PURE__ */ new Date();
-        if (cleanText.includes("status =")) {
-          step.status = params[0];
-        }
-        if (cleanText.includes("output =")) {
-          const idx = cleanText.includes("status =") ? 1 : 0;
-          step.output = params[idx] ? JSON.parse(params[idx]) : null;
-        }
-        if (cleanText.includes("error =")) {
-          step.error = params[params.indexOf(id) - 1];
-        }
-        if (cleanText.includes("attempts =")) {
-          step.attempts = params[params.indexOf(id) - 1];
-        }
+      const row = this.stepById.get(id);
+      if (row) {
+        row.updated_at = /* @__PURE__ */ new Date();
+        const colMap = parseSetClause(sql);
+        if (colMap.has("status")) row.status = params[colMap.get("status")];
+        if (colMap.has("output")) row.output = parseJson(params[colMap.get("output")]);
+        if (colMap.has("error")) row.error = params[colMap.get("error")];
+        if (colMap.has("attempts")) row.attempts = params[colMap.get("attempts")];
+        if (colMap.has("next_retry")) row.next_retry = params[colMap.get("next_retry")];
       }
-      return { rows: step ? [step] : [] };
+      return { rows: row ? [row] : [] };
     }
-    if (cleanText.startsWith("INSERT INTO events")) {
-      const [executionId, type, payloadJson] = params;
-      const event = {
-        id: this.events.length + 1,
-        execution_id: executionId,
-        type,
-        payload: payloadJson ? JSON.parse(payloadJson) : null,
-        timestamp: /* @__PURE__ */ new Date()
-      };
-      this.events.push(event);
-      return { rows: [event] };
-    }
-    if (cleanText.startsWith("SELECT * FROM events WHERE execution_id = $1")) {
-      const rows = this.events.filter((ev) => ev.execution_id === params[0]).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    if (sql.startsWith("SELECT step_index, status, output, error, attempts, created_at, updated_at FROM steps WHERE execution_id = $1") || sql.includes("FROM steps WHERE execution_id = $1 ORDER BY step_index")) {
+      const rows = Array.from(this.steps.values()).filter((s) => s.execution_id === params[0]).sort((a, b) => a.step_index - b.step_index);
       return { rows };
     }
-    if (cleanText.includes("FROM steps s JOIN executions e")) {
+    if (sql.includes("FROM steps s JOIN executions e")) {
       const key = params[0];
       const rows = Array.from(this.steps.values()).filter((s) => s.status === "SUSPENDED" && s.output?.suspensionKey === key).map((s) => {
         const exec = this.executions.get(s.execution_id);
         return {
           ...s,
-          exec_context: exec ? exec.context : {},
-          flow_id: exec ? exec.flow_id : "",
+          exec_context: exec?.context ?? {},
+          flow_id: exec?.flow_id ?? "",
           execution_id_ref: s.execution_id
         };
       });
       return { rows };
     }
-    if (cleanText.startsWith("SELECT id, flow_id, status, context, created_at, updated_at FROM executions") || cleanText.startsWith("SELECT id, flow_id, status, context, created_at FROM executions")) {
-      const rows = Array.from(this.executions.values()).sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
-      return { rows };
-    }
-    if (cleanText.startsWith("SELECT step_index, status, output, error, attempts, created_at, updated_at FROM steps WHERE execution_id = $1")) {
+    if (sql.includes("FROM steps") && sql.includes("execution_id = $1")) {
       const rows = Array.from(this.steps.values()).filter((s) => s.execution_id === params[0]).sort((a, b) => a.step_index - b.step_index);
       return { rows };
     }
-    if (cleanText.startsWith("SELECT id, name, definition, created_at, updated_at FROM flows") || cleanText.startsWith("SELECT id, name, definition, created_at FROM flows")) {
-      const rows = Array.from(this.flows.values()).sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+    if (sql.startsWith("INSERT INTO events")) {
+      const [executionId, type, payloadJson] = params;
+      const row = {
+        id: this.events.length + 1,
+        execution_id: executionId,
+        type,
+        payload: parseJson(payloadJson),
+        timestamp: /* @__PURE__ */ new Date()
+      };
+      this.events.push(row);
+      return { rows: [row] };
+    }
+    if (sql.startsWith("SELECT * FROM events WHERE execution_id = $1")) {
+      const rows = this.events.filter((ev) => ev.execution_id === params[0]).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
       return { rows };
     }
-    if (cleanText.includes("FROM steps WHERE execution_id = $1")) {
-      const rows = Array.from(this.steps.values()).filter((s) => s.execution_id === params[0]).sort((a, b) => a.step_index - b.step_index);
-      return { rows };
-    }
+    console.warn(`[InMemoryPool] Unhandled query: ${sql.substring(0, 80)}...`);
     return { rows: [] };
   }
-  // No-op methods to satisfy Pool interface
+  // No-op methods to satisfy pg Pool interface
   async connect() {
     return {
       query: this.query.bind(this),
@@ -383,6 +396,39 @@ function listProviders() {
   return Array.from(registry.keys());
 }
 
+// src/secrets.ts
+var SecretsResolver = class {
+  env;
+  constructor(env = process.env) {
+    this.env = env;
+  }
+  /**
+   * Resolves all `*Ref` suffixed fields in step params.
+   * For each key ending in "Ref", looks up the value in environment variables
+   * and adds a matching key without the "Ref" suffix.
+   *
+   * e.g. { senderSecretRef: 'MY_KEY' } → { senderSecret: process.env.MY_KEY }
+   */
+  resolve(params) {
+    const resolved = { ...params };
+    for (const [key, value] of Object.entries(params)) {
+      if (key.endsWith("Ref") && typeof value === "string") {
+        const resolvedKey = key.slice(0, -3);
+        const envValue = this.env[value];
+        if (!envValue) {
+          throw new Error(
+            `[SecretsResolver] Environment variable "${value}" (referenced by "${key}") is not set. Ensure this secret is available in the runtime environment.`
+          );
+        }
+        resolved[resolvedKey] = envValue;
+        delete resolved[key];
+      }
+    }
+    return resolved;
+  }
+};
+var secretsResolver = new SecretsResolver();
+
 // src/engine/executor.ts
 var MAX_ATTEMPTS = 5;
 var BASE_RETRY_DELAY_MS = 1e3;
@@ -426,7 +472,11 @@ async function executeStep(execution, stepDef, stepIndex) {
   };
   try {
     const provider = getProvider(stepDef.provider);
-    const result = await provider.execute(stepDef, context);
+    const resolvedStep = {
+      ...stepDef,
+      params: secretsResolver.resolve(stepDef.params)
+    };
+    const result = await provider.execute(resolvedStep, context);
     if (result.outcome === "completed") {
       if (result.output) {
         const merged = { ...execution.context, ...result.output };
@@ -490,9 +540,9 @@ var Scheduler = class {
   }
   async poll() {
     const executions = await getPendingExecutions();
-    for (const execution of executions) {
-      await this.advance(execution);
-    }
+    await Promise.all(executions.map((e) => this.advance(e).catch(
+      (err) => console.error(`[MesaRuntime] Scheduler advance error for ${e.id}:`, err)
+    )));
   }
   async advance(execution) {
     if (execution.status === "PERMANENTLY_FAILED") return;
@@ -1210,6 +1260,30 @@ var StellarProvider = class {
   // ─── Mock Mode Handlers ────────────────────────────────────────────────────
   executeMock(action, step, context) {
     console.log(`[StellarProvider] Running in MOCK mode for action: ${action}`);
+    if (action === "receive") {
+      const minAmount = step.params.minAmount || 10;
+      const toAddress = step.params.toAddress;
+      return {
+        outcome: "completed",
+        output: {
+          receivedAmount: minAmount,
+          toAddress,
+          txHash: `mock-receive-${Math.random().toString(36).substring(7)}`
+        }
+      };
+    }
+    if (action === "transfer") {
+      const amount = step.params.amount || 10;
+      const to = step.params.to;
+      return {
+        outcome: "completed",
+        output: {
+          txHash: `mock-transfer-${Math.random().toString(36).substring(7)}`,
+          amountSent: amount,
+          to
+        }
+      };
+    }
     if (action === "payment") {
       const amount = step.params.amount || 10;
       const to = step.params.to;

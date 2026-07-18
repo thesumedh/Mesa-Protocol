@@ -41,7 +41,35 @@ export class StellarProvider implements MesaProvider {
 
   private executeMock(action: string, step: StepDefinition, context: ExecutionContext): StepResult {
     console.log(`[StellarProvider] Running in MOCK mode for action: ${action}`);
-    
+
+    // SDK .receive() — simulates waiting for an incoming payment
+    if (action === 'receive') {
+      const minAmount = step.params.minAmount as number || 10;
+      const toAddress = step.params.toAddress as string;
+      return {
+        outcome: 'completed',
+        output: {
+          receivedAmount: minAmount,
+          toAddress,
+          txHash: `mock-receive-${Math.random().toString(36).substring(7)}`,
+        }
+      };
+    }
+
+    // SDK .transfer() — simulates sending a payment to a destination
+    if (action === 'transfer') {
+      const amount = step.params.amount as number || 10;
+      const to = step.params.to as string;
+      return {
+        outcome: 'completed',
+        output: {
+          txHash: `mock-transfer-${Math.random().toString(36).substring(7)}`,
+          amountSent: amount,
+          to,
+        }
+      };
+    }
+
     if (action === 'payment') {
       const amount = step.params.amount as number || 10;
       const to = step.params.to as string;
