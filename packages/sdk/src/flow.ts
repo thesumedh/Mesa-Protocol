@@ -149,6 +149,41 @@ export class FlowBuilder {
   }
 
   /**
+   * Send a real Stellar payment transaction.
+   *
+   * Use `senderSecretRef` to reference an environment variable name rather
+   * than embedding the private key directly. The runtime resolves it at
+   * execution time — the key is never stored in the workflow definition or DB.
+   *
+   * Example:
+   *   .payment({ senderSecretRef: 'SENDER_SECRET', to: 'G...', asset: 'XLM', amount: 25 })
+   *   // Set: process.env.SENDER_SECRET = 'SXXXXX...'
+   */
+  payment(params: {
+    horizonUrl?: string;
+    senderSecret?: string;
+    senderSecretRef?: string;
+    to: string;
+    asset?: string;
+    amount: number;
+  }): this {
+    validateAddress(params.to, 'payment.to');
+    if (params.amount <= 0) {
+      throw new RangeError(`Mesa SDK: payment.amount must be a positive number. Got: ${params.amount}`);
+    }
+    if (!params.senderSecret && !params.senderSecretRef) {
+      throw new TypeError('Mesa SDK: payment requires either senderSecret or senderSecretRef.');
+    }
+
+    this._steps.push({
+      name: 'stellar-payment',
+      provider: 'stellar',
+      params: { action: 'payment', ...params },
+    });
+    return this;
+  }
+
+  /**
    * Invoke a Soroban smart contract function.
    */
   invoke(params: {

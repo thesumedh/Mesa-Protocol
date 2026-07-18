@@ -25,6 +25,7 @@ services:
       DATABASE_URL: postgresql://mesa:mesa@postgres:5432/mesa
       PORT: 3001
       NODE_ENV: development
+      SENDER_SECRET: SBZ4OP2G7G3TJ3KL2K7SJP2AU55ISLQ6R72FATPQ3CQI4FUZOGBO7TVO
     ports:
       - '3001:3001'
     depends_on:
