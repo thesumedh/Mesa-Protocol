@@ -185,6 +185,43 @@ var FlowBuilder = class {
     return this;
   }
   /**
+   * Swap one asset for another using Stellar's built-in DEX path payment.
+   *
+   * Mesa submits a pathPaymentStrictSend operation — Horizon finds the best
+   * route through the DEX automatically. The workflow pauses if no path is
+   * found and retries with backoff.
+   *
+   * Use `senderSecretRef` instead of `senderSecret` to keep keys out of the DB.
+   *
+   * Example:
+   *   .swap({
+   *     senderSecretRef: 'SENDER_SECRET',
+   *     sendAsset: 'XLM',
+   *     sendAmount: 50,
+   *     destAsset: 'USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
+   *     destMin: 4.5,
+   *     to: 'G...',
+   *   })
+   */
+  swap(params) {
+    validateAddress(params.to, "swap.to");
+    if (params.sendAmount <= 0) {
+      throw new RangeError(`Mesa SDK: swap.sendAmount must be positive. Got: ${params.sendAmount}`);
+    }
+    if (params.destMin <= 0) {
+      throw new RangeError(`Mesa SDK: swap.destMin must be positive. Got: ${params.destMin}`);
+    }
+    if (!params.senderSecret && !params.senderSecretRef) {
+      throw new TypeError("Mesa SDK: swap requires either senderSecret or senderSecretRef.");
+    }
+    this._steps.push({
+      name: `swap-${params.sendAsset}-to-${params.destAsset.split(":")[0]}`,
+      provider: "stellar",
+      params: { action: "path-payment", ...params }
+    });
+    return this;
+  }
+  /**
    * Invoke a Soroban smart contract function.
    */
   invoke(params) {

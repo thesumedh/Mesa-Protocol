@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Mesa Protocol | Embedded Finance Orchestration on Stellar</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+              "on-background": "#e0e2e8",
+              "secondary-fixed": "#e9ddff",
+              "on-tertiary-fixed-variant": "#454650",
+              "background": "#000000",
+              "surface-container-lowest": "#040608",
+              "surface-container-highest": "#1c2024",
+              "surface-variant": "#101417",
+              "inverse-primary": "#006970",
+              "surface": "#0a0c10",
+              "primary": "#dbfcff",
+              "surface-container-high": "#181c20",
+              "on-error-container": "#ffdad6",
+              "secondary-container": "#7000ff",
+              "inverse-surface": "#e0e2e8",
+              "on-primary-fixed-variant": "#004f54",
+              "error-container": "#93000a",
+              "on-tertiary": "#2e3039",
+              "surface-dim": "#0a0c10",
+              "tertiary-fixed": "#e1e1ed",
+              "on-secondary-container": "#ddcdff",
+              "on-tertiary-fixed": "#191b23",
+              "primary-container": "#00f0ff",
+              "primary-fixed": "#7df4ff",
+              "outline": "#849495",
+              "error": "#ffb4ab",
+              "secondary-fixed-dim": "#d1bcff",
+              "tertiary": "#f5f4ff",
+              "on-error": "#690005",
+              "secondary": "#d1bcff",
+              "on-primary-fixed": "#002022",
+              "on-surface": "#e0e2e8",
+              "on-secondary-fixed-variant": "#5700c9",
+              "surface-tint": "#00dbe9",
+              "outline-variant": "#272a2e",
+              "surface-container": "#101417",
+              "inverse-on-surface": "#2d3135",
+              "tertiary-fixed-dim": "#c5c6d1",
+              "surface-container-low": "#0b0f12",
+              "tertiary-container": "#d8d8e4",
+              "on-primary": "#00363a",
+              "on-surface-variant": "#b9cacb",
+              "primary-fixed-dim": "#00dbe9",
+              "on-secondary": "#3c0090",
+              "on-secondary-fixed": "#23005b",
+              "surface-bright": "#323539",
+              "on-tertiary-container": "#5c5e68",
+              "on-primary-container": "#006970"
+            },
+            "borderRadius": {
+              "DEFAULT": "0.125rem",
+              "lg": "0.25rem",
+              "xl": "0.5rem",
+              "full": "0.75rem"
+            },
+            "spacing": {
+              "gutter": "24px",
+              "container-max": "1440px",
+              "unit": "4px",
+              "margin-desktop": "48px",
+              "margin-mobile": "16px"
+            },
+            "fontFamily": {
+              "headline-lg-mobile": ["Geist"],
+              "body-md": ["Inter"],
+              "headline-md": ["Geist"],
+              "label-mono": ["JetBrains Mono"],
+              "headline-lg": ["Geist"],
+              "code-sm": ["JetBrains Mono"],
+              "body-lg": ["Inter"]
+            },
+            "fontSize": {
+              "headline-lg-mobile": ["32px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+              "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+              "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+              "label-mono": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+              "headline-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+              "code-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+              "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+        body {
+            background-color: #040608;
+            color: #e0e2e8;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-panel {
+            background: rgba(10, 12, 16, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+        }
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(to bottom right, rgba(0, 219, 233, 0.15), transparent, rgba(112, 0, 255, 0.1));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        .node-pulse {
+            animation: pulse-cyan 3s infinite;
+        }
+        @keyframes pulse-cyan {
+            0% { box-shadow: 0 0 0 0 rgba(0, 219, 233, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 219, 233, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 219, 233, 0); }
+        }
+        .dot-grid {
+            background-image: radial-gradient(rgba(132, 148, 149, 0.08) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glow-hover:hover {
+            box-shadow: 0 0 25px rgba(0, 219, 233, 0.25);
+            border-color: rgba(0, 219, 233, 0.4);
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden selection:bg-primary-container/30">
+    <!-- TopNavBar -->
+    <nav class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-outline-variant/30">
+        <div class="flex justify-between items-center h-16 px-gutter max-w-container-max mx-auto">
+            <div class="flex items-center gap-8">
+                <a class="font-headline-md text-headline-md font-bold text-primary tracking-tighter flex items-center gap-2" href="index.html">
+                    <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">layers</span>
+                    Mesa
+                </a>
+                <div class="hidden md:flex gap-6 items-center">
+                    <a class="font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-colors" href="docs.html">SDK</a>
+                    <a class="font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-colors" href="studio.html">Studio</a>
+                    <a class="font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-colors" href="docs.html">Docs</a>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="https://github.com/thesumedh/Mesa-Protocol" target="_blank" class="hidden md:flex px-4 py-2 font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-all active:scale-95 duration-200">GitHub</a>
+                <a href="studio.html" class="bg-primary text-on-primary px-4 py-2 font-label-mono text-label-mono font-bold hover:bg-primary-container active:scale-95 transition-all duration-200">Launch Studio</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="relative pt-16 dot-grid min-h-screen">
+        <!-- Hero Section -->
+        <section class="relative px-gutter pt-24 pb-32 max-w-container-max mx-auto flex flex-col items-center text-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1 mb-8 rounded-full border border-primary/20 bg-primary/5 text-primary-fixed-dim font-label-mono text-code-sm">
+                <span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+                v0.2.0 is now live on npm
+            </div>
+            <h1 class="font-headline-lg text-headline-lg md:text-[64px] md:leading-[1.1] max-w-4xl mb-6 text-on-surface tracking-tight font-extrabold">
+                Build Embedded Finance on <span class="text-primary-container italic font-semibold">Stellar</span> without the Complexity.
+            </h1>
+            <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-12">
+                Mesa is a durable workflow orchestration engine for Stellar. Manage state transitions, retry loops, anchors, and payments with total reliability.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="studio.html" class="bg-primary text-on-primary font-label-mono text-label-mono px-8 py-4 flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(0,219,233,0.3)] transition-all font-bold">
+                    Launch Studio
+                    <span class="material-symbols-outlined">rocket_launch</span>
+                </a>
+                <a href="docs.html" class="border border-outline-variant text-on-surface font-label-mono text-label-mono px-8 py-4 hover:bg-surface-container-high/50 transition-all flex items-center justify-center">
+                    Read SDK Docs
+                </a>
+            </div>
+
+            <!-- Visual Graphic Canvas Mock -->
+            <div class="mt-20 w-full max-w-4xl relative aspect-[16/9] rounded-xl overflow-hidden glass-panel group p-1 flex items-center justify-center">
+                <div class="absolute inset-0 bg-gradient-to-tr from-secondary-container/5 via-transparent to-primary-container/5 pointer-events-none"></div>
+                <div class="relative w-full h-full bg-[#050709] rounded-lg overflow-hidden border border-outline-variant/20 flex flex-col p-6">
+                    <!-- Top Window bar -->
+                    <div class="flex items-center justify-between pb-4 border-b border-outline-variant/10">
+                        <div class="flex gap-2">
+                            <span class="w-3 h-3 rounded-full bg-error-container/30"></span>
+                            <span class="w-3 h-3 rounded-full bg-secondary-container/30"></span>
+                            <span class="w-3 h-3 rounded-full bg-primary-container/30"></span>
+                        </div>
+                        <span class="font-label-mono text-[10px] text-outline">Stellar Payment Pipeline Simulation</span>
+                        <div class="w-12"></div>
+                    </div>
+                    
+                    <!-- Sim Content -->
+                    <div class="flex-1 flex items-center justify-around relative px-6 md:px-12 mt-4">
+                        <!-- Node 1 -->
+                        <div class="glass-panel p-4 w-44 rounded-lg border border-outline-variant/30 flex flex-col gap-2 z-10">
+                            <span class="font-label-mono text-[10px] text-primary-fixed-dim uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="status-led w-2 h-2 rounded-full bg-emerald-400"></span> Receive
+                            </span>
+                            <div class="font-headline-md text-xs font-semibold">Incoming Deposit</div>
+                            <div class="text-[10px] font-label-mono text-outline">25.00 XLM</div>
+                        </div>
+
+                        <!-- Connector 1 -->
+                        <div class="h-0.5 bg-gradient-to-r from-primary-container to-secondary-container flex-1 mx-2 relative opacity-60">
+                            <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-primary rounded-full animate-ping"></span>
+                        </div>
+
+                        <!-- Node 2 -->
+                        <div class="glass-panel p-4 w-44 rounded-lg border border-outline-variant/30 flex flex-col gap-2 z-10 relative">
+                            <span class="font-label-mono text-[10px] text-secondary uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span> Delay
+                            </span>
+                            <div class="font-headline-md text-xs font-semibold">Compliance Delay</div>
+                            <div class="text-[10px] font-label-mono text-outline">5 Seconds</div>
+                        </div>
+
+                        <!-- Connector 2 -->
+                        <div class="h-0.5 bg-outline-variant flex-1 mx-2 relative opacity-60"></div>
+
+                        <!-- Node 3 -->
+                        <div class="glass-panel p-4 w-44 rounded-lg border border-outline-variant/30 flex flex-col gap-2 opacity-50 z-10">
+                            <span class="font-label-mono text-[10px] text-outline uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-outline"></span> Payment
+                            </span>
+                            <div class="font-headline-md text-xs font-semibold">Stellar Payout</div>
+                            <div class="text-[10px] font-label-mono text-outline">Destination Account</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Product Ecosystem Section -->
+        <section class="px-gutter py-24 bg-surface-container-lowest/50 border-t border-b border-outline-variant/10">
+            <div class="max-w-container-max mx-auto">
+                <div class="mb-16 text-center md:text-left">
+                    <h2 class="font-headline-md text-[36px] text-on-surface mb-4 font-bold">Engineered for Technical Transparency</h2>
+                    <p class="font-body-md text-body-md text-on-surface-variant max-w-xl">
+                        Mesa provides a developer-friendly SDK combined with a visual studio mapping out business logic. Choose code, visual, or both.
+                    </p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- SDK Card -->
+                    <div class="group relative p-8 glass-panel rounded-xl hover:border-primary/50 transition-all duration-300">
+                        <div class="flex justify-between items-start mb-12">
+                            <div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">terminal</span>
+                            </div>
+                            <span class="font-label-mono text-code-sm px-2 py-1 border border-outline-variant rounded">TypeScript SDK</span>
+                        </div>
+                        <h3 class="font-headline-md text-[24px] text-on-surface mb-4 font-bold">Mesa SDK</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant mb-8">
+                            Write resilient multi-hop transactions. The SDK compiles your logic to state templates execution engines can manage.
+                        </p>
+                        <div class="space-y-4 mb-8">
+                            <div class="flex items-center gap-3 text-on-surface-variant font-label-mono text-label-mono">
+                                <span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+                                Fully Type-Safe Fluent Builder
+                            </div>
+                            <div class="flex items-center gap-3 text-on-surface-variant font-label-mono text-label-mono">
+                                <span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+                                Secret Refs prevent local key leaks
+                            </div>
+                            <div class="flex items-center gap-3 text-on-surface-variant font-label-mono text-label-mono">
+                                <span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+                                Integrates natively with Horizon
+                            </div>
+                        </div>
+                        <div class="bg-black/60 rounded-lg p-4 border border-outline-variant/30 font-label-mono text-code-sm overflow-hidden">
+                            <pre class="text-[#849495]"><span class="text-secondary">const</span> flow = Mesa.flow(<span class="text-primary-container">'payout'</span>)
+  .receive({ asset: <span class="text-primary-container">'XLM'</span>, amount: <span class="text-secondary-fixed">25</span> })
+  .delay({ seconds: <span class="text-secondary-fixed">5</span> })
+  .payment({ to: <span class="text-primary-container">'G...'</span>, amount: <span class="text-secondary-fixed">25</span> });</pre>
+                        </div>
+                    </div>
+
+                    <!-- Studio Card -->
+                    <div class="group relative p-8 glass-panel rounded-xl hover:border-secondary/50 transition-all duration-300">
+                        <div class="flex justify-between items-start mb-12">
+                            <div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary">
+                                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_tree</span>
+                            </div>
+                            <span class="font-label-mono text-code-sm px-2 py-1 border border-outline-variant rounded">No-Code / Pro-Code</span>
+                        </div>
+                        <h3 class="font-headline-md text-[24px] text-on-surface mb-4 font-bold">Mesa Studio</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant mb-8">
+                            Visually graph your steps, map configuration variables, live-test execution steps, and export starter codes instantly.
+                        </p>
+                        <div class="space-y-4 mb-8">
+                            <div class="flex items-center gap-3 text-on-surface-variant font-label-mono text-label-mono">
+                                <span class="material-symbols-outlined text-secondary text-sm">check_circle</span>
+                                Drag-and-drop Visual Editor
+                            </div>
+                            <div class="flex items-center gap-3 text-on-surface-variant font-label-mono text-label-mono">
+                                <span class="material-symbols-outlined text-secondary text-sm">check_circle</span>
+                                Real-time TypeScript Generation
+                            </div>
+                            <div class="flex items-center gap-3 text-on-surface-variant font-label-mono text-label-mono">
+                                <span class="material-symbols-outlined text-secondary text-sm">check_circle</span>
+                                Production ZIP Download Template
+                            </div>
+                        </div>
+                        <div class="relative h-[116px] rounded-lg border border-outline-variant/30 overflow-hidden bg-surface-container">
+                            <div class="absolute inset-0 bg-[#0c0914]/80 flex flex-col justify-center px-6">
+                                <div class="font-label-mono text-xs text-secondary-fixed font-bold">Studio Canvas Preview</div>
+                                <div class="text-[10px] text-outline mt-1 font-label-mono">Interactive design environment for payment networks</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats / CTA Section -->
+        <section class="px-gutter py-32">
+            <div class="max-w-container-max mx-auto glass-panel rounded-2xl p-12 text-center relative overflow-hidden">
+                <div class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-primary/5 blur-[120px] rounded-full"></div>
+                <h2 class="font-headline-lg text-[36px] text-on-surface mb-6 font-bold">Ready to ship financial workflows?</h2>
+                <p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto mb-10">
+                    Use Mesa to manage the state of your transactions so you can focus entirely on building your core user experience.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-6 mb-12">
+                    <div class="flex flex-col items-center">
+                        <span class="font-headline-md text-headline-md text-primary font-bold">0ms</span>
+                        <span class="font-label-mono text-code-sm text-on-surface-variant uppercase">Manual Retries</span>
+                    </div>
+                    <div class="hidden sm:block w-px h-12 bg-outline-variant/50"></div>
+                    <div class="flex flex-col items-center">
+                        <span class="font-headline-md text-headline-md text-primary font-bold">100%</span>
+                        <span class="font-label-mono text-code-sm text-on-surface-variant uppercase">Durable Execution</span>
+                    </div>
+                    <div class="hidden sm:block w-px h-12 bg-outline-variant/50"></div>
+                    <div class="flex flex-col items-center">
+                        <span class="font-headline-md text-headline-md text-primary font-bold">Postgres</span>
+                        <span class="font-label-mono text-code-sm text-on-surface-variant uppercase">State Store</span>
+                    </div>
+                </div>
+                <div class="flex justify-center gap-4">
+                    <a href="studio.html" class="bg-primary text-on-primary px-10 py-4 font-label-mono text-label-mono font-bold hover:bg-primary-container hover:scale-105 transition-all">
+                        Launch Studio
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-12 border-t border-outline-variant/10 bg-black">
+        <div class="max-w-container-max mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex flex-col items-center md:items-start gap-4">
+                <div class="font-headline-md text-headline-md text-on-surface font-bold tracking-tighter">Mesa</div>
+                <p class="font-body-md text-body-md text-on-tertiary-fixed-variant font-label-mono text-xs">© 2026 Mesa Protocol. Built on Stellar.</p>
+            </div>
+            <div class="flex gap-8">
+                <a class="font-label-mono text-label-mono text-on-tertiary-fixed-variant hover:text-on-surface transition-colors" href="#">Terms</a>
+                <a class="font-label-mono text-label-mono text-on-tertiary-fixed-variant hover:text-on-surface transition-colors" href="#">Privacy</a>
+                <a class="font-label-mono text-label-mono text-on-tertiary-fixed-variant hover:text-on-surface transition-colors" href="#">Status</a>
+                <a class="font-label-mono text-label-mono text-on-tertiary-fixed-variant hover:text-on-surface transition-colors" href="#">Twitter</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Mesa Studio | Export Success</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        body {
+            background-color: #040608;
+            color: #e0e2e8;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        .glass-panel {
+            background: rgba(10, 12, 16, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(to bottom right, rgba(219, 252, 255, 0.2), transparent, rgba(112, 0, 255, 0.1));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        .glow-cyan {
+            box-shadow: 0 0 20px rgba(0, 219, 233, 0.15);
+        }
+        .dot-grid {
+            background-image: radial-gradient(rgba(219, 252, 255, 0.05) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .code-block {
+            background: #000000;
+            border: 1px solid #272a2e;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#e0e2e8",
+                        "secondary-fixed": "#e9ddff",
+                        "on-tertiary-fixed-variant": "#454650",
+                        "background": "#040608",
+                        "surface-container-lowest": "#000000",
+                        "surface-container-highest": "#1c2024",
+                        "surface-variant": "#101417",
+                        "inverse-primary": "#006970",
+                        "surface": "#0a0c10",
+                        "primary": "#dbfcff",
+                        "surface-container-high": "#181c20",
+                        "on-error-container": "#ffdad6",
+                        "secondary-container": "#7000ff",
+                        "inverse-surface": "#e0e2e8",
+                        "on-primary-fixed-variant": "#004f54",
+                        "error-container": "#93000a",
+                        "on-tertiary": "#2e3039",
+                        "surface-dim": "#0a0c10",
+                        "tertiary-fixed": "#e1e1ed",
+                        "on-secondary-container": "#ddcdff",
+                        "on-tertiary-fixed": "#191b23",
+                        "primary-container": "#00f0ff",
+                        "primary-fixed": "#7df4ff",
+                        "outline": "#849495",
+                        "error": "#ffb4ab",
+                        "secondary-fixed-dim": "#d1bcff",
+                        "tertiary": "#f5f4ff",
+                        "on-error": "#690005",
+                        "secondary": "#d1bcff",
+                        "on-primary-fixed": "#002022",
+                        "on-surface": "#e0e2e8",
+                        "on-secondary-fixed-variant": "#5700c9",
+                        "surface-tint": "#00dbe9",
+                        "outline-variant": "#272a2e",
+                        "surface-container": "#101417",
+                        "inverse-on-surface": "#2d3135",
+                        "tertiary-fixed-dim": "#c5c6d1",
+                        "surface-container-low": "#0b0f12",
+                        "tertiary-container": "#d8d8e4",
+                        "on-primary": "#00363a",
+                        "on-surface-variant": "#b9cacb",
+                        "primary-fixed-dim": "#00dbe9",
+                        "on-secondary": "#3c0090",
+                        "on-secondary-fixed": "#23005b",
+                        "surface-bright": "#323539",
+                        "on-tertiary-container": "#5c5e68",
+                        "on-primary-container": "#006970"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "container-max": "1440px",
+                        "unit": "4px",
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Geist"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Geist"],
+                        "label-mono": ["JetBrains Mono"],
+                        "headline-lg": ["Geist"],
+                        "code-sm": ["JetBrains Mono"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "label-mono": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "code-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="flex flex-col min-h-screen">
+    <!-- TopNavBar -->
+    <header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-outline-variant/30">
+        <div class="flex justify-between items-center h-16 px-gutter max-w-container-max mx-auto">
+            <div class="flex items-center gap-8">
+                <a class="font-headline-md text-headline-md font-bold text-primary tracking-tighter flex items-center gap-2" href="index.html">
+                    <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">layers</span>
+                    Mesa
+                </a>
+                <nav class="hidden md:flex gap-6">
+                    <a class="font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-colors" href="docs.html">SDK</a>
+                    <a class="font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-colors" href="studio.html">Studio</a>
+                    <a class="font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-colors" href="docs.html">Docs</a>
+                </nav>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="https://github.com/thesumedh/Mesa-Protocol" target="_blank" class="font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-colors">GitHub</a>
+                <a href="studio.html" class="bg-primary text-on-primary font-label-mono text-label-mono px-4 py-2 hover:bg-primary-container active:scale-95 transition-all">Launch Studio</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow dot-grid flex items-center justify-center pt-16 px-4">
+        <!-- Central Export Modal -->
+        <div class="glass-panel max-w-4xl w-full p-8 md:p-12 z-10 flex flex-col md:flex-row gap-12 overflow-hidden rounded-xl">
+            <!-- Left Side: Content -->
+            <div class="flex-1 space-y-8">
+                <header class="space-y-2">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full mb-4">
+                        <span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+                        <span class="font-label-mono text-code-sm text-primary uppercase tracking-widest font-bold">Build Successful</span>
+                    </div>
+                    <h1 class="font-headline-lg text-headline-lg text-primary font-extrabold">Your App is Ready</h1>
+                    <p class="font-body-lg text-body-lg text-on-surface-variant">This is your developer starter kit. Add your own UI, Auth, and Business Logic.</p>
+                </header>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        <span class="font-label-mono text-label-mono text-on-surface">React template</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        <span class="font-label-mono text-label-mono text-on-surface">Basic project structure</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        <span class="font-label-mono text-label-mono text-on-surface">Workflow configuration</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        <span class="font-label-mono text-label-mono text-on-surface">Wallet integration</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        <span class="font-label-mono text-label-mono text-on-surface">Example transaction flow</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        <span class="font-label-mono text-label-mono text-on-surface">Ready-to-edit source code</span>
+                    </div>
+                </div>
+                <div class="pt-4">
+                    <button onclick="triggerDownload()" class="w-full md:w-auto bg-primary text-on-primary font-label-mono text-label-mono px-8 py-4 flex items-center justify-center gap-4 hover:bg-primary-container active:scale-95 transition-all glow-cyan uppercase tracking-widest font-bold">
+                        <span class="material-symbols-outlined">download</span>
+                        Download React Starter Kit
+                    </button>
+                    <p class="mt-4 font-code-sm text-code-sm text-outline flex items-center gap-2">
+                        <span class="material-symbols-outlined text-xs">info</span>
+                        ZIP, 12.4 MB · Version 0.2.0-beta
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Side: Visual/Code Preview -->
+            <div class="hidden lg:flex flex-1 flex-col relative">
+                <div class="code-block rounded-lg p-6 font-label-mono text-code-sm text-on-surface-variant h-full border border-outline-variant/30 flex flex-col gap-4">
+                    <div class="flex items-center gap-2 pb-4 border-b border-outline-variant/20">
+                        <div class="w-3 h-3 rounded-full bg-error-container/40"></div>
+                        <div class="w-3 h-3 rounded-full bg-secondary-container/40"></div>
+                        <div class="w-3 h-3 rounded-full bg-primary-container/40"></div>
+                        <span class="ml-2 opacity-50">src/App.tsx</span>
+                    </div>
+                    <div class="space-y-1">
+                        <p><span class="text-secondary-fixed">import</span> { <span class="text-primary-fixed-dim">MesaProvider</span> } <span class="text-secondary-fixed">from</span> <span class="text-primary-container">'@mesaprotocol/sdk'</span>;</p>
+                        <p><span class="text-secondary-fixed">import</span> { <span class="text-primary-fixed-dim">Workflow</span> } <span class="text-secondary-fixed">from</span> <span class="text-primary-container">'./workflow'</span>;</p>
+                        <p>&nbsp;</p>
+                        <p><span class="text-secondary-fixed">const</span> <span class="text-primary-fixed-dim">App</span> = () =&gt; {</p>
+                        <p class="pl-4"><span class="text-secondary-fixed">return</span> (</p>
+                        <p class="pl-8">&lt;<span class="text-primary">MesaProvider</span> config={config}&gt;</p>
+                        <p class="pl-12">&lt;<span class="text-primary">Layout</span>&gt;</p>
+                        <p class="pl-16">&lt;<span class="text-primary">Workflow</span> id=<span class="text-primary-container">"stellar-payment-flow"</span> /&gt;</p>
+                        <p class="pl-12">&lt;/<span class="text-primary">Layout</span>&gt;</p>
+                        <p class="pl-8">&lt;/<span class="text-primary">MesaProvider</span>&gt;</p>
+                        <p class="pl-4">);</p>
+                        <p>};</p>
+                    </div>
+                </div>
+                <!-- Floating Card Decoration -->
+                <div class="absolute -bottom-4 -right-4 glass-panel p-4 rounded-lg flex items-center gap-4 hover:pause">
+                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                        <span class="material-symbols-outlined">rocket_launch</span>
+                    </div>
+                    <div>
+                        <p class="font-label-mono text-code-sm text-primary font-bold">Live Preview</p>
+                        <p class="font-label-mono text-xs text-on-surface-variant">mesa.studio/p/xf492</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-12 border-t border-outline-variant/10 bg-black">
+        <div class="max-w-container-max mx-auto px-gutter flex flex-col md:flex-row justify-between items-center">
+            <div class="flex flex-col md:flex-row items-center gap-8 mb-6 md:mb-0">
+                <span class="font-headline-md text-headline-md text-on-surface font-bold tracking-tighter">Mesa</span>
+                <p class="font-label-mono text-label-mono text-on-tertiary-fixed-variant font-bold text-xs">© 2026 Mesa Protocol. Built on Stellar.</p>
+            </div>
+            <div class="flex gap-6">
+                <a class="font-label-mono text-label-mono text-on-tertiary-fixed-variant hover:text-primary transition-colors text-xs" href="#">Terms</a>
+                <a class="font-label-mono text-label-mono text-on-tertiary-fixed-variant hover:text-primary transition-colors text-xs" href="#">Privacy</a>
+                <a class="font-label-mono text-label-mono text-on-tertiary-fixed-variant hover:text-primary transition-colors text-xs" href="#">Status</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-primary text-on-primary px-4 py-2 font-label-mono text-xs font-bold rounded shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">download_done</span> Download Started!
+    </div>
+
+    <!-- Micro-Interactions Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Parallax effect for the modal
+            document.addEventListener('mousemove', (e) => {
+                const modal = document.querySelector('.glass-panel');
+                const xAxis = (window.innerWidth / 2 - e.pageX) / 80;
+                const yAxis = (window.innerHeight / 2 - e.pageY) / 80;
+                modal.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+            });
+        });
+
+        function triggerDownload() {
+            // Show toast
+            const toast = document.getElementById('toast');
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+            
+            // Create a fake file download link
+            const link = document.createElement('a');
+            link.href = '#';
+            link.click();
+        }
+    </script>
+</body>
+</html>

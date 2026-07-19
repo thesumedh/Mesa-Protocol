@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Mesa Studio | Visual Workflow Builder</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Geist:wght@500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(10, 12, 16, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .node-active {
+            box-shadow: 0 0 15px rgba(0, 219, 233, 0.25);
+            border-color: #00dbe9 !important;
+        }
+        .dot-grid {
+            background-color: #040608;
+            background-image: radial-gradient(circle, #272a2e 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .node-port {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #040608;
+            border: 2px solid #00dbe9;
+            position: absolute;
+            z-index: 10;
+        }
+        .node-port:hover {
+            background: #00dbe9;
+            transform: scale(1.2);
+        }
+        @keyframes pulse-cyan {
+            0% { box-shadow: 0 0 0 0 rgba(0, 219, 233, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 219, 233, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 219, 233, 0); }
+        }
+        .status-led {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #00dbe9;
+            animation: pulse-cyan 2s infinite;
+        }
+        .code-block {
+            background: #000000;
+            border: 1px solid #272a2e;
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#e0e2e8",
+                        "secondary-fixed": "#e9ddff",
+                        "on-tertiary-fixed-variant": "#454650",
+                        "background": "#040608",
+                        "surface-container-lowest": "#000000",
+                        "surface-container-highest": "#1c2024",
+                        "surface-variant": "#101417",
+                        "inverse-primary": "#006970",
+                        "surface": "#0a0c10",
+                        "primary": "#dbfcff",
+                        "surface-container-high": "#181c20",
+                        "on-error-container": "#ffdad6",
+                        "secondary-container": "#7000ff",
+                        "inverse-surface": "#e0e2e8",
+                        "on-primary-fixed-variant": "#004f54",
+                        "error-container": "#93000a",
+                        "on-tertiary": "#2e3039",
+                        "surface-dim": "#0a0c10",
+                        "tertiary-fixed": "#e1e1ed",
+                        "on-secondary-container": "#ddcdff",
+                        "on-tertiary-fixed": "#191b23",
+                        "primary-container": "#00f0ff",
+                        "primary-fixed": "#7df4ff",
+                        "outline": "#849495",
+                        "error": "#ffb4ab",
+                        "secondary-fixed-dim": "#d1bcff",
+                        "tertiary": "#f5f4ff",
+                        "on-error": "#690005",
+                        "secondary": "#d1bcff",
+                        "on-primary-fixed": "#002022",
+                        "on-surface": "#e0e2e8",
+                        "on-secondary-fixed-variant": "#5700c9",
+                        "surface-tint": "#00dbe9",
+                        "outline-variant": "#272a2e",
+                        "surface-container": "#101417",
+                        "inverse-on-surface": "#2d3135",
+                        "tertiary-fixed-dim": "#c5c6d1",
+                        "surface-container-low": "#0b0f12",
+                        "tertiary-container": "#d8d8e4",
+                        "on-primary": "#00363a",
+                        "on-surface-variant": "#b9cacb",
+                        "primary-fixed-dim": "#00dbe9",
+                        "on-secondary": "#3c0090",
+                        "on-secondary-fixed": "#23005b",
+                        "surface-bright": "#323539",
+                        "on-tertiary-container": "#5c5e68",
+                        "on-primary-container": "#006970"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "container-max": "1440px",
+                        "unit": "4px",
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "body-md": ["Inter"],
+                        "label-mono": ["JetBrains Mono"],
+                        "code-sm": ["JetBrains Mono"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-container/30 overflow-hidden">
+    <!-- TopNavBar -->
+    <header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-outline-variant/30 flex justify-between items-center h-16 px-gutter">
+        <div class="flex items-center gap-6">
+            <a href="index.html" class="font-headline-md text-primary tracking-tighter font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">layers</span>
+                Mesa
+            </a>
+            <div class="h-6 w-px bg-outline-variant/30"></div>
+            <div class="flex items-center gap-2">
+                <span class="text-on-surface-variant font-label-mono text-sm uppercase tracking-widest">Project:</span>
+                <span class="font-headline-md text-on-surface text-lg font-bold">Stellar Payment Flow</span>
+            </div>
+        </div>
+        <div class="hidden md:flex items-center gap-8 px-8">
+            <a class="text-on-surface-variant hover:text-on-surface transition-colors font-label-mono text-label-mono" href="docs.html">SDK</a>
+            <a class="text-primary border-b-2 border-primary pb-1 font-label-mono text-label-mono" href="studio.html">Studio</a>
+            <a class="text-on-surface-variant hover:text-on-surface transition-colors font-label-mono text-label-mono" href="docs.html">Docs</a>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="https://github.com/thesumedh/Mesa-Protocol" target="_blank" class="px-4 py-2 border border-outline-variant text-on-surface hover:bg-surface-container-high transition-all font-label-mono text-label-mono active:scale-95 duration-200">
+                GitHub
+            </a>
+            <button onclick="triggerCompile()" class="px-4 py-2 bg-primary text-on-primary font-bold hover:bg-primary-container transition-all font-label-mono text-label-mono active:scale-95 duration-200 flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">build</span> Generate App
+            </button>
+        </div>
+    </header>
+
+    <!-- SideNavBar (Node Library) -->
+    <aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-[280px] z-40 bg-surface-container-lowest border-r border-outline-variant/20 flex flex-col py-6 px-4">
+        <div class="mb-6 px-2">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="font-headline-md text-primary text-xl font-bold">Mesa Studio</div>
+                <span class="text-[10px] px-1.5 py-0.5 border border-primary/30 text-primary font-label-mono font-bold">BETA</span>
+            </div>
+            <div class="text-on-surface-variant font-label-mono text-xs">v0.2.0 • Click to Add Nodes</div>
+        </div>
+        <div class="flex-1 space-y-6 overflow-y-auto">
+            <!-- Node Categories -->
+            <div>
+                <h3 class="text-xs font-label-mono text-outline uppercase tracking-tighter mb-4 px-2">Workflow Blocks</h3>
+                <div class="space-y-2">
+                    <button onclick="addNode('receive')" class="w-full text-left group flex items-center gap-3 p-3 bg-surface-container hover:bg-surface-container-high transition-colors border border-outline-variant/10 hover:border-primary/30">
+                        <span class="material-symbols-outlined text-primary">payments</span>
+                        <span class="font-label-mono text-sm">Receive Payment</span>
+                    </button>
+                    <button onclick="addNode('delay')" class="w-full text-left group flex items-center gap-3 p-3 bg-surface-container hover:bg-surface-container-high transition-colors border border-outline-variant/10 hover:border-primary/30">
+                        <span class="material-symbols-outlined text-primary">schedule</span>
+                        <span class="font-label-mono text-sm">Compliance Delay</span>
+                    </button>
+                    <button onclick="addNode('payment')" class="w-full text-left group flex items-center gap-3 p-3 bg-surface-container hover:bg-surface-container-high transition-colors border border-outline-variant/10 hover:border-primary/30">
+                        <span class="material-symbols-outlined text-primary">send</span>
+                        <span class="font-label-mono text-sm">Stellar Payout</span>
+                    </button>
+                    <button onclick="addNode('webhook')" class="w-full text-left group flex items-center gap-3 p-3 bg-surface-container hover:bg-surface-container-high transition-colors border border-outline-variant/10 hover:border-primary/30">
+                        <span class="material-symbols-outlined text-primary">link</span>
+                        <span class="font-label-mono text-sm">Webhook</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="mt-auto space-y-1">
+            <a href="docs.html" class="w-full py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors font-label-mono text-sm flex items-center gap-3 px-3">
+                <span class="material-symbols-outlined">description</span> SDK Docs
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Canvas Area -->
+    <main class="fixed left-[280px] top-16 right-0 bottom-64 dot-grid overflow-hidden">
+        <!-- SVG Connections Layer -->
+        <svg id="connections-svg" class="absolute inset-0 pointer-events-none w-full h-full">
+            <defs>
+                <linearGradient id="line-grad" x1="0%" x2="100%" y1="0%" y2="0%">
+                    <stop offset="0%" stop-color="#00dbe9"></stop>
+                    <stop offset="100%" stop-color="#7000ff"></stop>
+                </linearGradient>
+            </defs>
+        </svg>
+
+        <!-- Canvas Node Container -->
+        <div id="canvas-container" class="relative w-full h-full">
+            <!-- Nodes will be injected here dynamically -->
+        </div>
+    </main>
+
+    <!-- Bottom Properties Panel -->
+    <footer class="fixed left-[280px] bottom-0 right-0 h-64 glass-panel border-t border-outline-variant/30 z-30 flex">
+        <!-- Header/Tabs -->
+        <div class="w-64 border-r border-outline-variant/20 p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="material-symbols-outlined text-primary">tune</span>
+                    <h2 class="font-headline-md text-base text-on-surface font-bold">Node Properties</h2>
+                </div>
+                <div class="space-y-1">
+                    <div class="px-3 py-2 bg-primary/10 text-primary border-l-2 border-primary font-label-mono text-xs font-semibold">Configuration</div>
+                </div>
+            </div>
+            <button onclick="deleteSelectedNode()" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1.5 font-label-mono">
+                <span class="material-symbols-outlined text-sm">delete</span> Delete Node
+            </button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1 p-6 flex flex-col justify-between overflow-hidden">
+            <!-- Dynamic Controls -->
+            <div id="properties-content" class="grid grid-cols-3 gap-6">
+                <!-- Injected dynamically based on selected node -->
+            </div>
+
+            <!-- Code Preview -->
+            <div class="bg-black p-3 border border-outline-variant/20 rounded h-24 overflow-y-auto">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[9px] font-label-mono text-outline uppercase font-semibold">Live TypeScript Code-Gen Preview</span>
+                    <span class="text-[9px] font-label-mono text-primary font-semibold">SDK Code</span>
+                </div>
+                <pre class="text-[11px] font-mono text-[#849495] overflow-x-auto" id="sdk-code-preview"></pre>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Full-screen compilation overlay -->
+    <div id="compiler-overlay" class="fixed inset-0 z-50 bg-[#040608]/95 flex flex-col items-center justify-center hidden">
+        <div class="glass-panel p-10 max-w-md w-full flex flex-col items-center text-center gap-6">
+            <span class="material-symbols-outlined text-5xl text-primary animate-spin">sync</span>
+            <div>
+                <h3 class="font-headline-md text-xl font-bold text-white mb-2" id="compile-status">Compiling Pipeline</h3>
+                <p class="text-xs text-on-surface-variant font-label-mono" id="compile-subtitle">Bundling Mesa definitions...</p>
+            </div>
+            <div class="w-full bg-[#101417] h-1.5 rounded-full overflow-hidden border border-outline-variant/30">
+                <div id="compile-bar" class="bg-primary h-full w-0 transition-all duration-300"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let nodes = [
+            { id: 1, type: 'receive', name: 'Receive Deposit', x: 60, y: 100, params: { asset: 'XLM', minAmount: 25, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' } },
+            { id: 2, type: 'delay', name: 'Compliance Hold', x: 380, y: 100, params: { seconds: 5 } },
+            { id: 3, type: 'payment', name: 'Stellar Payout', x: 700, y: 100, params: { amount: 25, to: 'GA4UFVDQRWUZIDKB32U2TVZSXSFAPCZV522UY7OYGM27BJ66MHYIIW3P' } }
+        ];
+        let selectedNodeId = 1;
+        let nextId = 4;
+
+        // Render nodes & connections on load
+        window.addEventListener('DOMContentLoaded', () => {
+            render();
+        });
+
+        function render() {
+            renderNodes();
+            renderConnections();
+            renderProperties();
+            renderCode();
+        }
+
+        function renderNodes() {
+            const container = document.getElementById('canvas-container');
+            container.innerHTML = '';
+
+            nodes.forEach(node => {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = `absolute cursor-pointer transition-all duration-200 z-10`;
+                nodeEl.style.left = node.x + 'px';
+                nodeEl.style.top = node.y + 'px';
+                
+                const isSelected = node.id === selectedNodeId;
+                
+                nodeEl.innerHTML = `
+                    <div onclick="selectNode(${node.id})" class="w-60 glass-panel border-outline-variant/30 p-4 rounded-lg flex flex-col gap-2 ${isSelected ? 'node-active' : ''}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-primary text-base">${getIcon(node.type)}</span>
+                                <span class="font-label-mono text-[9px] text-outline uppercase tracking-wider">${node.type}</span>
+                            </div>
+                            <span class="status-led"></span>
+                        </div>
+                        <div class="font-headline-md text-xs font-bold text-white truncate">${node.name}</div>
+                        <div class="text-[10px] font-label-mono text-outline truncate">${getSummary(node)}</div>
+                        <!-- Connection ports -->
+                        <div class="node-port -left-1 top-1/2 -translate-y-1/2"></div>
+                        <div class="node-port -right-1 top-1/2 -translate-y-1/2"></div>
+                    </div>
+                `;
+                container.appendChild(nodeEl);
+            });
+        }
+
+        function renderConnections() {
+            const svg = document.getElementById('connections-svg');
+            // Keep defs
+            svg.innerHTML = `
+                <defs>
+                    <linearGradient id="line-grad" x1="0%" x2="100%" y1="0%" y2="0%">
+                        <stop offset="0%" stop-color="#00dbe9"></stop>
+                        <stop offset="100%" stop-color="#7000ff"></stop>
+                    </linearGradient>
+                </defs>
+            `;
+
+            for (let i = 0; i < nodes.length - 1; i++) {
+                const n1 = nodes[i];
+                const n2 = nodes[i+1];
+
+                // Approximate ports position:
+                // Node 1 right port is at n1.x + 240, n1.y + 40
+                // Node 2 left port is at n2.x, n2.y + 40
+                const x1 = n1.x + 240;
+                const y1 = n1.y + 50;
+                const x2 = n2.x;
+                const y2 = n2.y + 50;
+
+                const cpX1 = x1 + (x2 - x1) / 2;
+                const cpY1 = y1;
+                const cpX2 = x1 + (x2 - x1) / 2;
+                const cpY2 = y2;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M ${x1} ${y1} C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${x2} ${y2}`);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke', 'url(#line-grad)');
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('opacity', '0.6');
+                svg.appendChild(path);
+            }
+        }
+
+        function renderProperties() {
+            const container = document.getElementById('properties-content');
+            container.innerHTML = '';
+
+            const node = nodes.find(n => n.id === selectedNodeId);
+            if (!node) {
+                container.innerHTML = `<div class="text-on-surface-variant font-label-mono text-xs">No node selected</div>`;
+                return;
+            }
+
+            // Common block
+            let html = `
+                <div>
+                    <label class="block text-[10px] font-label-mono text-outline uppercase mb-1.5 font-semibold">Node Name</label>
+                    <input type="text" oninput="updateNodeName(this.value)" class="w-full bg-[#050709] border border-outline-variant/50 focus:border-primary focus:ring-0 px-3 py-1.5 text-xs font-label-mono text-on-surface outline-none transition-all rounded" value="${node.name}"/>
+                </div>
+            `;
+
+            // Specific blocks
+            if (node.type === 'receive') {
+                html += `
+                    <div>
+                        <label class="block text-[10px] font-label-mono text-outline uppercase mb-1.5 font-semibold">Asset Code</label>
+                        <input type="text" oninput="updateNodeParam('asset', this.value)" class="w-full bg-[#050709] border border-outline-variant/50 focus:border-primary focus:ring-0 px-3 py-1.5 text-xs font-label-mono text-on-surface outline-none transition-all rounded" value="${node.params.asset || 'XLM'}"/>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-label-mono text-outline uppercase mb-1.5 font-semibold">Min Amount</label>
+                        <input type="number" oninput="updateNodeParam('minAmount', parseFloat(this.value) || 0)" class="w-full bg-[#050709] border border-outline-variant/50 focus:border-primary focus:ring-0 px-3 py-1.5 text-xs font-label-mono text-on-surface outline-none transition-all rounded" value="${node.params.minAmount || 0}"/>
+                    </div>
+                `;
+            } else if (node.type === 'delay') {
+                html += `
+                    <div>
+                        <label class="block text-[10px] font-label-mono text-outline uppercase mb-1.5 font-semibold">Hold Duration (Sec)</label>
+                        <input type="number" oninput="updateNodeParam('seconds', parseInt(this.value) || 0)" class="w-full bg-[#050709] border border-outline-variant/50 focus:border-primary focus:ring-0 px-3 py-1.5 text-xs font-label-mono text-on-surface outline-none transition-all rounded" value="${node.params.seconds || 0}"/>
+                    </div>
+                `;
+            } else if (node.type === 'payment') {
+                html += `
+                    <div>
+                        <label class="block text-[10px] font-label-mono text-outline uppercase mb-1.5 font-semibold">Payout Amount</label>
+                        <input type="number" oninput="updateNodeParam('amount', parseFloat(this.value) || 0)" class="w-full bg-[#050709] border border-outline-variant/50 focus:border-primary focus:ring-0 px-3 py-1.5 text-xs font-label-mono text-on-surface outline-none transition-all rounded" value="${node.params.amount || 0}"/>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-label-mono text-outline uppercase mb-1.5 font-semibold">To Address</label>
+                        <input type="text" oninput="updateNodeParam('to', this.value)" class="w-full bg-[#050709] border border-outline-variant/50 focus:border-primary focus:ring-0 px-3 py-1.5 text-xs font-label-mono text-on-surface outline-none transition-all rounded" value="${node.params.to || ''}"/>
+                    </div>
+                `;
+            } else if (node.type === 'webhook') {
+                html += `
+                    <div>
+                        <label class="block text-[10px] font-label-mono text-outline uppercase mb-1.5 font-semibold">Webhook Endpoint</label>
+                        <input type="text" oninput="updateNodeParam('url', this.value)" class="w-full bg-[#050709] border border-outline-variant/50 focus:border-primary focus:ring-0 px-3 py-1.5 text-xs font-label-mono text-on-surface outline-none transition-all rounded" value="${node.params.url || ''}"/>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderCode() {
+            const preview = document.getElementById('sdk-code-preview');
+            let code = `import { Mesa } from '@mesaprotocol/sdk';\n\nMesa.configure({ runtimeUrl: 'http://localhost:3001' });\n\nconst flow = Mesa.flow('stellar-payment-flow')`;
+            
+            nodes.forEach(node => {
+                if (node.type === 'receive') {
+                    code += `\n  .receive({ asset: '${node.params.asset || 'XLM'}', minAmount: ${node.params.minAmount || 25}, toAddress: '${node.params.toAddress || 'SENDER_PUBLIC'}' })`;
+                } else if (node.type === 'delay') {
+                    code += `\n  .delay({ seconds: ${node.params.seconds || 5} })`;
+                } else if (node.type === 'payment') {
+                    code += `\n  .payment({ horizonUrl: 'https://horizon-testnet.stellar.org', senderSecretRef: 'SENDER_SECRET', to: '${node.params.to || 'RECEIVER_PUBLIC'}', amount: ${node.params.amount || 25} })`;
+                } else if (node.type === 'webhook') {
+                    code += `\n  .webhook({ url: '${node.params.url || 'https://api.example.com/hooks'}' })`;
+                }
+            });
+            
+            code += `\n  .build();\n\nawait Mesa.execute(flow);`;
+            preview.innerText = code;
+        }
+
+        // Helpers
+        function getIcon(type) {
+            if (type === 'receive') return 'payments';
+            if (type === 'delay') return 'schedule';
+            if (type === 'payment') return 'send';
+            if (type === 'webhook') return 'link';
+            return 'extension';
+        }
+
+        function getSummary(node) {
+            if (node.type === 'receive') return `${node.params.minAmount || 0} ${node.params.asset || 'XLM'}`;
+            if (node.type === 'delay') return `${node.params.seconds || 0} Sec Hold`;
+            if (node.type === 'payment') return `${node.params.amount || 0} XLM to ${node.params.to ? node.params.to.substring(0, 8) + '...' : '...'}`;
+            if (node.type === 'webhook') return node.params.url || 'No URL';
+            return '';
+        }
+
+        // Actions
+        window.selectNode = function(id) {
+            selectedNodeId = id;
+            render();
+        }
+
+        window.updateNodeName = function(val) {
+            const node = nodes.find(n => n.id === selectedNodeId);
+            if (node) {
+                node.name = val;
+                // Re-render nodes (just titles/summaries) & code
+                renderNodes();
+                renderCode();
+            }
+        }
+
+        window.updateNodeParam = function(key, val) {
+            const node = nodes.find(n => n.id === selectedNodeId);
+            if (node) {
+                node.params[key] = val;
+                renderNodes();
+                renderCode();
+            }
+        }
+
+        window.addNode = function(type) {
+            // Find coordinate for new node
+            const lastNode = nodes[nodes.length - 1];
+            const newX = lastNode ? lastNode.x + 280 : 60;
+            const newY = lastNode ? lastNode.y : 100;
+
+            const nameMap = {
+                receive: 'Incoming Payment',
+                delay: 'Wait Window',
+                payment: 'Stellar Payment',
+                webhook: 'Webhook Trigger'
+            };
+
+            const defaultParams = {
+                receive: { asset: 'XLM', minAmount: 10 },
+                delay: { seconds: 10 },
+                payment: { amount: 10, to: 'GA4UFVDQRWUZIDKB32U2TVZSXSFAPCZV522UY7OYGM27BJ66MHYIIW3P' },
+                webhook: { url: 'https://api.example.com/hooks' }
+            };
+
+            const newNode = {
+                id: nextId++,
+                type: type,
+                name: nameMap[type] || 'New Node',
+                x: newX,
+                y: newY,
+                params: { ...defaultParams[type] }
+            };
+
+            nodes.push(newNode);
+            selectedNodeId = newNode.id;
+            render();
+        }
+
+        window.deleteSelectedNode = function() {
+            if (nodes.length <= 1) {
+                alert("Cannot delete the last node in the pipeline.");
+                return;
+            }
+            nodes = nodes.filter(n => n.id !== selectedNodeId);
+            selectedNodeId = nodes[0].id;
+            render();
+        }
+
+        window.triggerCompile = function() {
+            const overlay = document.getElementById('compiler-overlay');
+            const status = document.getElementById('compile-status');
+            const subtitle = document.getElementById('compile-subtitle');
+            const bar = document.getElementById('compile-bar');
+
+            overlay.classList.remove('hidden');
+            
+            // Progress simulations
+            setTimeout(() => {
+                status.innerText = "Parsing Workflow Nodes";
+                subtitle.innerText = "Validating connectivity outputs...";
+                bar.style.width = "30%";
+            }, 500);
+
+            setTimeout(() => {
+                status.innerText = "Generating SDK Bindings";
+                subtitle.innerText = "Writing client code references...";
+                bar.style.width = "60%";
+            }, 1200);
+
+            setTimeout(() => {
+                status.innerText = "Compiling Starter Bundle";
+                subtitle.innerText = "Success! Launching workspace...";
+                bar.style.width = "100%";
+            }, 2000);
+
+            setTimeout(() => {
+                window.location.href = "export.html";
+            }, 2700);
+        }
+    </script>
+</body>
+</html>

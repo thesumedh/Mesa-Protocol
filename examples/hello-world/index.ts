@@ -21,16 +21,15 @@ async function main() {
   //    Step 1: Receive payment confirmation (mock — represents incoming deposit)
   //    Step 2: Wait 5 seconds (represents processing / compliance check)
   //    Step 3: Send real XLM on Stellar testnet
+  
   const flow = Mesa.flow('hello-world-testnet-flow')
-    // Step 1: Receive deposit (confirmation step — real Stellar monitoring in production)
     .receive({
       asset: 'XLM',
       minAmount: 25,
       toAddress: SENDER_PUBLIC,
     })
-    // Step 2: 5-second processing delay (compliance / FX check in production)
     .delay({ seconds: 5 })
-    // Step 3: Real Stellar testnet payment
+
     .payment({
       horizonUrl:   'https://horizon-testnet.stellar.org',
       senderSecretRef: 'SENDER_SECRET',   // resolved from environment — never stored in DB

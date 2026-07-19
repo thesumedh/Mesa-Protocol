@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Mesa SDK Documentation</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        body {
+            background-color: #040608;
+            color: #e0e2e8;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-panel {
+            background: rgba(10, 12, 16, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .code-block {
+            background: #050505;
+            border: 1px solid #272a2e;
+        }
+        .glow-cyan {
+            box-shadow: 0 0 20px rgba(0, 219, 233, 0.1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #272a2e; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00dbe9; }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#e0e2e8",
+                        "secondary-fixed": "#e9ddff",
+                        "on-tertiary-fixed-variant": "#454650",
+                        "background": "#040608",
+                        "surface-container-lowest": "#000000",
+                        "surface-container-highest": "#1c2024",
+                        "surface-variant": "#101417",
+                        "inverse-primary": "#006970",
+                        "surface": "#0a0c10",
+                        "primary": "#dbfcff",
+                        "surface-container-high": "#181c20",
+                        "on-error-container": "#ffdad6",
+                        "secondary-container": "#7000ff",
+                        "inverse-surface": "#e0e2e8",
+                        "on-primary-fixed-variant": "#004f54",
+                        "error-container": "#93000a",
+                        "on-tertiary": "#2e3039",
+                        "surface-dim": "#0a0c10",
+                        "tertiary-fixed": "#e1e1ed",
+                        "on-secondary-container": "#ddcdff",
+                        "on-tertiary-fixed": "#191b23",
+                        "primary-container": "#00f0ff",
+                        "primary-fixed": "#7df4ff",
+                        "outline": "#849495",
+                        "error": "#ffb4ab",
+                        "secondary-fixed-dim": "#d1bcff",
+                        "tertiary": "#f5f4ff",
+                        "on-error": "#690005",
+                        "secondary": "#d1bcff",
+                        "on-primary-fixed": "#002022",
+                        "on-surface": "#e0e2e8",
+                        "on-secondary-fixed-variant": "#5700c9",
+                        "surface-tint": "#00dbe9",
+                        "outline-variant": "#272a2e",
+                        "surface-container": "#101417",
+                        "inverse-on-surface": "#2d3135",
+                        "tertiary-fixed-dim": "#c5c6d1",
+                        "surface-container-low": "#0b0f12",
+                        "tertiary-container": "#d8d8e4",
+                        "on-primary": "#00363a",
+                        "on-surface-variant": "#b9cacb",
+                        "primary-fixed-dim": "#00dbe9",
+                        "on-secondary": "#3c0090",
+                        "on-secondary-fixed": "#23005b",
+                        "surface-bright": "#323539",
+                        "on-tertiary-container": "#5c5e68",
+                        "on-primary-container": "#006970"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "container-max": "1440px",
+                        "unit": "4px",
+                        "margin-desktop": "48px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Geist"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Geist"],
+                        "label-mono": ["JetBrains Mono"],
+                        "headline-lg": ["Geist"],
+                        "code-sm": ["JetBrains Mono"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "label-mono": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "code-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="selection:bg-primary-container/30">
+    <!-- TopNavBar -->
+    <header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-outline-variant/30">
+        <div class="flex justify-between items-center h-16 px-gutter max-w-container-max mx-auto">
+            <div class="flex items-center gap-8">
+                <a class="font-headline-md text-headline-md font-bold text-primary tracking-tighter flex items-center gap-2" href="index.html">
+                    <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">layers</span>
+                    Mesa
+                </a>
+                <nav class="hidden md:flex gap-6">
+                    <a class="font-label-mono text-label-mono text-primary border-b-2 border-primary pb-1" href="docs.html">SDK</a>
+                    <a class="font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-colors" href="studio.html">Studio</a>
+                    <a class="font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-colors" href="docs.html">Docs</a>
+                </nav>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="https://github.com/thesumedh/Mesa-Protocol" target="_blank" class="font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-all active:scale-95 duration-200">GitHub</a>
+                <a href="studio.html" class="bg-primary text-on-primary px-4 py-2 font-label-mono text-label-mono font-bold hover:bg-primary-container active:scale-95 transition-all duration-200">Launch Studio</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex pt-16 min-h-screen">
+        <!-- SideNavBar -->
+        <aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-[280px] z-40 bg-surface-container-lowest border-r border-outline-variant/20 hidden md:flex flex-col py-6 px-4 space-y-6">
+            <div class="px-2">
+                <h3 class="font-label-mono text-label-mono text-on-surface-variant uppercase tracking-widest text-[10px] mb-4">Documentation</h3>
+                <nav class="space-y-1" id="doc-nav">
+                    <button onclick="switchTab('intro')" id="btn-intro" class="w-full flex items-center gap-3 px-3 py-2 rounded font-body-md text-body-md text-primary bg-primary/10 border-r-2 border-primary transition-all duration-200 ease-in-out">
+                        <span class="material-symbols-outlined text-[20px]">description</span>
+                        Introduction
+                    </button>
+                    <button onclick="switchTab('install')" id="btn-install" class="w-full flex items-center gap-3 px-3 py-2 rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">download</span>
+                        Installation
+                    </button>
+                    <button onclick="switchTab('concepts')" id="btn-concepts" class="w-full flex items-center gap-3 px-3 py-2 rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">hub</span>
+                        Core Concepts
+                    </button>
+                    <button onclick="switchTab('stellar')" id="btn-stellar" class="w-full flex items-center gap-3 px-3 py-2 rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">account_balance</span>
+                        Stellar Integration
+                    </button>
+                </nav>
+            </div>
+            <div class="px-2">
+                <h3 class="font-label-mono text-label-mono text-on-surface-variant uppercase tracking-widest text-[10px] mb-4">Resources</h3>
+                <nav class="space-y-1">
+                    <a href="https://github.com/thesumedh/Mesa-Protocol" target="_blank" class="flex items-center gap-3 px-3 py-2 rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">code</span>
+                        GitHub Repository
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 md:ml-[280px] px-margin-mobile md:px-margin-desktop py-12 overflow-y-auto">
+            <div class="max-w-[900px] mx-auto">
+                <!-- Tab: Introduction -->
+                <div id="tab-intro" class="doc-tab space-y-12">
+                    <section>
+                        <div class="flex items-center gap-2 mb-4 font-label-mono text-[12px] text-on-surface-variant uppercase tracking-wider">
+                            <span>Docs</span>
+                            <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                            <span class="text-primary-fixed-dim">Introduction</span>
+                        </div>
+                        <h1 class="font-headline-lg text-headline-lg text-on-background mb-4 tracking-tight font-extrabold">Mesa Protocol</h1>
+                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+                            Mesa is an open-source orchestration layer for embedded finance workflows. It resides directly between your application logic and the Stellar ledger, managing multi-step transactions, retries, and network delays so you don't have to write custom queue workers or state recovery code.
+                        </p>
+                    </section>
+
+                    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="glass-panel p-6 rounded-xl border border-outline-variant/30">
+                            <span class="material-symbols-outlined text-primary text-3xl mb-4">replay</span>
+                            <h3 class="font-headline-md text-lg text-white mb-2 font-bold">Durable Retries</h3>
+                            <p class="text-on-surface-variant text-sm">
+                                Horizon timeouts or ledger congestion automatically trigger retries with configurable exponential backoff.
+                            </p>
+                        </div>
+                        <div class="glass-panel p-6 rounded-xl border border-outline-variant/30">
+                            <span class="material-symbols-outlined text-primary text-3xl mb-4">save</span>
+                            <h3 class="font-headline-md text-lg text-white mb-2 font-bold">Persistent State</h3>
+                            <p class="text-on-surface-variant text-sm">
+                                Every step of your workflow is checkpointed in a database, ensuring safety across server reboots.
+                            </p>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Tab: Installation -->
+                <div id="tab-install" class="doc-tab hidden space-y-12">
+                    <section>
+                        <div class="flex items-center gap-2 mb-4 font-label-mono text-[12px] text-on-surface-variant uppercase tracking-wider">
+                            <span>Docs</span>
+                            <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                            <span class="text-primary-fixed-dim">Installation</span>
+                        </div>
+                        <h1 class="font-headline-lg text-headline-lg text-on-background mb-4 tracking-tight font-extrabold">Quick Installation</h1>
+                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-8">
+                            Add the Mesa SDK package to your Node project to begin building fluent Stellar pipelines.
+                        </p>
+
+                        <div class="code-block rounded-lg p-6 relative group glow-cyan">
+                            <div class="absolute right-4 top-4">
+                                <button onclick="copyCode('install-cmd')" class="p-2 hover:bg-surface-container-high rounded transition-colors text-on-surface-variant flex items-center">
+                                    <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-4 mb-4 border-b border-outline-variant/20 pb-2">
+                                <span class="font-label-mono text-[12px] text-on-surface-variant">terminal</span>
+                            </div>
+                            <code id="install-cmd" class="font-label-mono text-label-mono text-primary-container block">npm install @mesaprotocol/sdk</code>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Tab: Concepts -->
+                <div id="tab-concepts" class="doc-tab hidden space-y-12">
+                    <section>
+                        <div class="flex items-center gap-2 mb-4 font-label-mono text-[12px] text-on-surface-variant uppercase tracking-wider">
+                            <span>Docs</span>
+                            <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                            <span class="text-primary-fixed-dim">Core Concepts</span>
+                        </div>
+                        <h1 class="font-headline-lg text-headline-lg text-on-background mb-4 tracking-tight font-extrabold">Core Architecture</h1>
+                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+                            Mesa separates the *definition* of a workflow from its *execution*.
+                        </p>
+                    </section>
+
+                    <section class="space-y-6">
+                        <h2 class="font-headline-md text-xl text-white font-bold">1. Workflow Definition</h2>
+                        <p class="text-on-surface-variant text-sm">
+                            Created using the SDK's fluent `FlowBuilder` API. Workflow definitions are saved to Postgres as JSON files. They contain steps (e.g. Receive, Delay, Payment) and their target parameters.
+                        </p>
+
+                        <h2 class="font-headline-md text-xl text-white font-bold">2. Steps & Providers</h2>
+                        <p class="text-on-surface-variant text-sm">
+                            Each step specifies a **Provider** that executes the action. For instance, the `stellar` provider handles payment validation and submissions, while the `delay` provider handles scheduler wait queues.
+                        </p>
+                    </section>
+                </div>
+
+                <!-- Tab: Stellar -->
+                <div id="tab-stellar" class="doc-tab hidden space-y-12">
+                    <section>
+                        <div class="flex items-center gap-2 mb-4 font-label-mono text-[12px] text-on-surface-variant uppercase tracking-wider">
+                            <span>Docs</span>
+                            <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+                            <span class="text-primary-fixed-dim">Stellar Integration</span>
+                        </div>
+                        <h1 class="font-headline-lg text-headline-lg text-on-background mb-4 tracking-tight font-extrabold">Connecting to Stellar</h1>
+                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+                            Mesa resolves private keys at execution time using reference tokens, ensuring maximum key security on server environments.
+                        </p>
+                    </section>
+
+                    <section class="space-y-6">
+                        <div class="code-block rounded-lg overflow-hidden border border-outline-variant/30">
+                            <div class="bg-surface-container-high px-4 py-2 border-b border-outline-variant/20 flex justify-between items-center">
+                                <span class="font-label-mono text-[12px] text-on-surface-variant">index.ts</span>
+                                <button onclick="copyCode('code-block-stellar')" class="p-1 hover:bg-surface-container-highest rounded text-on-surface-variant flex items-center">
+                                    <span class="material-symbols-outlined text-[16px]">content_copy</span>
+                                </button>
+                            </div>
+                            <div class="p-6 overflow-x-auto">
+                                <pre id="code-block-stellar" class="font-code-sm text-code-sm leading-6 text-[#849495]"><span class="text-secondary-fixed">import</span> { Mesa } <span class="text-secondary-fixed">from</span> <span class="text-primary-fixed-dim">'@mesaprotocol/sdk'</span>;
+
+<span class="text-on-surface-variant">// Initialize Mesa</span>
+Mesa.configure({ runtimeUrl: <span class="text-primary-container">'http://localhost:3001'</span> });
+
+<span class="text-secondary-fixed">const</span> flow = Mesa.flow(<span class="text-primary-container">'hello-world-flow'</span>)
+  .receive({
+    asset: <span class="text-primary-container">'XLM'</span>,
+    minAmount: <span class="text-secondary-fixed">25</span>,
+    toAddress: <span class="text-primary-container">'GD3ZJ3A4...'</span>,
+  })
+  .delay({ seconds: <span class="text-secondary-fixed">5</span> })
+  .payment({
+    horizonUrl: <span class="text-primary-container">'https://horizon-testnet.stellar.org'</span>,
+    senderSecretRef: <span class="text-primary-container">'SENDER_SECRET'</span>,
+    to: <span class="text-primary-container">'GA4UFV...'</span>,
+    amount: <span class="text-secondary-fixed">25</span>,
+  })
+  .build();
+
+<span class="text-secondary-fixed">await</span> Mesa.execute(flow);</pre>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast for Copy -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-primary text-on-primary px-4 py-2 font-label-mono text-xs font-bold rounded shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">check_circle</span> Copied to Clipboard!
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.doc-tab').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            // Show selected tab
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            // Deactivate all buttons
+            document.querySelectorAll('#doc-nav button').forEach(btn => {
+                btn.className = "w-full flex items-center gap-3 px-3 py-2 rounded font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high transition-colors";
+            });
+
+            // Activate current button
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.className = "w-full flex items-center gap-3 px-3 py-2 rounded font-body-md text-body-md text-primary bg-primary/10 border-r-2 border-primary transition-all duration-200 ease-in-out";
+        }
+
+        function copyCode(elementId) {
+            const codeText = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(codeText).then(() => {
+                // Show Toast
+                const toast = document.getElementById('toast');
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

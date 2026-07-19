@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "name": "mesa-protocol-ui",
+  "outputDirectory": "UI",
+  "buildCommand": null,
+  "installCommand": null,
+  "framework": null,
+  "routes": [
+    { "src": "^/$", "dest": "/index.html" },
+    { "src": "^/studio/?$", "dest": "/studio.html" },
+    { "src": "^/docs/?$", "dest": "/docs.html" },
+    { "src": "^/export/?$", "dest": "/export.html" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}

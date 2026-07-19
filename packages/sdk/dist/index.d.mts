@@ -105,6 +105,35 @@ declare class FlowBuilder {
         amount: number;
     }): this;
     /**
+     * Swap one asset for another using Stellar's built-in DEX path payment.
+     *
+     * Mesa submits a pathPaymentStrictSend operation — Horizon finds the best
+     * route through the DEX automatically. The workflow pauses if no path is
+     * found and retries with backoff.
+     *
+     * Use `senderSecretRef` instead of `senderSecret` to keep keys out of the DB.
+     *
+     * Example:
+     *   .swap({
+     *     senderSecretRef: 'SENDER_SECRET',
+     *     sendAsset: 'XLM',
+     *     sendAmount: 50,
+     *     destAsset: 'USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
+     *     destMin: 4.5,
+     *     to: 'G...',
+     *   })
+     */
+    swap(params: {
+        horizonUrl?: string;
+        senderSecret?: string;
+        senderSecretRef?: string;
+        sendAsset: string;
+        sendAmount: number;
+        destAsset: string;
+        destMin: number;
+        to: string;
+    }): this;
+    /**
      * Invoke a Soroban smart contract function.
      */
     invoke(params: {
