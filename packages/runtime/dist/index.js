@@ -1036,8 +1036,9 @@ function createServer() {
           const ts = Number(timestampHeader);
           if (!isNaN(ts)) {
             const now = Date.now();
-            if (Math.abs(now - ts) > 5 * 60 * 1e3) {
-              return res.status(401).json({ error: "Webhook timestamp expired or drifted beyond 5 minutes" });
+            const tsMs = ts < 1e11 ? ts * 1e3 : ts;
+            if (Math.abs(now - tsMs) > 5 * 60 * 1e3) {
+              return res.status(400).json({ error: "Webhook timestamp expired or drifted beyond 5 minutes" });
             }
           }
         }

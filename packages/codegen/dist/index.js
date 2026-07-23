@@ -91,6 +91,9 @@ function generateSDKCode(flow) {
         else if (step.provider === 'condition') {
             code += `\n  .condition({ expression: '${p.expression}' })`;
         }
+        else if (step.provider === 'compensation') {
+            code += `\n  .compensate({ refundAddress: '${p.refundAddress || ''}', refundAsset: '${p.refundAsset || 'USDC'}' })`;
+        }
     }
     code += `\n  .build();\n\n`;
     code += `export async function main() {\n`;
@@ -158,7 +161,7 @@ function parseSDKCode(code) {
                         flowId = parseAstValue(node.arguments[1]);
                     }
                 }
-                else if (['receive', 'confirm', 'convert', 'anchor', 'transfer', 'payment', 'delay', 'webhook', 'invoke'].includes(methodName)) {
+                else if (['receive', 'confirm', 'convert', 'anchor', 'transfer', 'payment', 'delay', 'webhook', 'invoke', 'sep10Auth', 'manualApproval', 'condition', 'compensate'].includes(methodName)) {
                     const firstArg = node.arguments[0];
                     const params = (firstArg && ts.isObjectLiteralExpression(firstArg)) ? parseObjectLiteral(firstArg) : {};
                     let provider = 'custom';
@@ -180,6 +183,22 @@ function parseSDKCode(code) {
                     else if (methodName === 'invoke') {
                         provider = 'soroban';
                         params.action = 'invoke';
+                    }
+                    else if (methodName === 'sep10Auth') {
+                        provider = 'sep10';
+                        params.action = 'auth';
+                    }
+                    else if (methodName === 'manualApproval') {
+                        provider = 'approval';
+                        params.action = 'manual-approval';
+                    }
+                    else if (methodName === 'condition') {
+                        provider = 'condition';
+                        params.action = 'evaluate';
+                    }
+                    else if (methodName === 'compensate') {
+                        provider = 'compensation';
+                        params.action = 'compensate';
                     }
                     steps.push({
                         name,

@@ -104,7 +104,7 @@ export declare const ExecutionStatusSchema: z.ZodEnum<["CREATED", "RUNNING", "SU
 export type ExecutionStatus = z.infer<typeof ExecutionStatusSchema>;
 export declare const CompensationStepSchema: z.ZodObject<{
     name: z.ZodString;
-    provider: z.ZodString;
+    provider: z.ZodLiteral<"compensation">;
     params: z.ZodObject<{
         action: z.ZodDefault<z.ZodOptional<z.ZodString>>;
         forStepIndex: z.ZodOptional<z.ZodNumber>;
@@ -131,7 +131,7 @@ export declare const CompensationStepSchema: z.ZodObject<{
         [k: string]: unknown;
     };
     name: string;
-    provider: string;
+    provider: "compensation";
 }, {
     params: {
         action?: string | undefined;
@@ -142,7 +142,7 @@ export declare const CompensationStepSchema: z.ZodObject<{
         [k: string]: unknown;
     };
     name: string;
-    provider: string;
+    provider: "compensation";
 }>;
 export declare const Sep10StepSchema: z.ZodObject<{
     name: z.ZodString;
@@ -184,7 +184,7 @@ export declare const ReceiveStepSchema: z.ZodObject<{
         action: z.ZodLiteral<"receive">;
         asset: z.ZodString;
         minAmount: z.ZodNumber;
-        toAddress: z.ZodString;
+        toAddress: z.ZodEffects<z.ZodString, string, string>;
     }, "strip", z.ZodTypeAny, {
         action: "receive";
         asset: string;
@@ -248,7 +248,7 @@ export declare const PaymentStepSchema: z.ZodObject<{
     provider: z.ZodLiteral<"stellar">;
     params: z.ZodObject<{
         action: z.ZodEnum<["payment", "transfer"]>;
-        to: z.ZodString;
+        to: z.ZodEffects<z.ZodString, string, string>;
         amount: z.ZodNumber;
         asset: z.ZodOptional<z.ZodString>;
         senderSecretRef: z.ZodDefault<z.ZodOptional<z.ZodString>>;
@@ -614,7 +614,7 @@ export declare const StepDefinitionSchema: z.ZodUnion<[z.ZodObject<{
         action: z.ZodLiteral<"receive">;
         asset: z.ZodString;
         minAmount: z.ZodNumber;
-        toAddress: z.ZodString;
+        toAddress: z.ZodEffects<z.ZodString, string, string>;
     }, "strip", z.ZodTypeAny, {
         action: "receive";
         asset: string;
@@ -676,7 +676,7 @@ export declare const StepDefinitionSchema: z.ZodUnion<[z.ZodObject<{
     provider: z.ZodLiteral<"stellar">;
     params: z.ZodObject<{
         action: z.ZodEnum<["payment", "transfer"]>;
-        to: z.ZodString;
+        to: z.ZodEffects<z.ZodString, string, string>;
         amount: z.ZodNumber;
         asset: z.ZodOptional<z.ZodString>;
         senderSecretRef: z.ZodDefault<z.ZodOptional<z.ZodString>>;
@@ -1039,7 +1039,7 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
             action: z.ZodLiteral<"receive">;
             asset: z.ZodString;
             minAmount: z.ZodNumber;
-            toAddress: z.ZodString;
+            toAddress: z.ZodEffects<z.ZodString, string, string>;
         }, "strip", z.ZodTypeAny, {
             action: "receive";
             asset: string;
@@ -1101,7 +1101,7 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
         provider: z.ZodLiteral<"stellar">;
         params: z.ZodObject<{
             action: z.ZodEnum<["payment", "transfer"]>;
-            to: z.ZodString;
+            to: z.ZodEffects<z.ZodString, string, string>;
             amount: z.ZodNumber;
             asset: z.ZodOptional<z.ZodString>;
             senderSecretRef: z.ZodDefault<z.ZodOptional<z.ZodString>>;
@@ -1797,7 +1797,7 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
                 action: z.ZodLiteral<"receive">;
                 asset: z.ZodString;
                 minAmount: z.ZodNumber;
-                toAddress: z.ZodString;
+                toAddress: z.ZodEffects<z.ZodString, string, string>;
             }, "strip", z.ZodTypeAny, {
                 action: "receive";
                 asset: string;
@@ -1859,7 +1859,7 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
             provider: z.ZodLiteral<"stellar">;
             params: z.ZodObject<{
                 action: z.ZodEnum<["payment", "transfer"]>;
-                to: z.ZodString;
+                to: z.ZodEffects<z.ZodString, string, string>;
                 amount: z.ZodNumber;
                 asset: z.ZodOptional<z.ZodString>;
                 senderSecretRef: z.ZodDefault<z.ZodOptional<z.ZodString>>;
@@ -2677,3 +2677,17 @@ export declare const ApproveExecutionPayloadSchema: z.ZodObject<{
     reason?: string | undefined;
 }>;
 export type ApproveExecutionPayload = z.infer<typeof ApproveExecutionPayloadSchema>;
+export declare const MesaErrorCodeSchema: z.ZodEnum<["ERR_INVALID_FLOW_DEFINITION", "ERR_FLOW_NOT_FOUND", "ERR_EXECUTION_NOT_FOUND", "ERR_STEP_FAILED", "ERR_ANCHOR_TIMEOUT", "ERR_INSUFFICIENT_BALANCE", "ERR_HMAC_INVALID", "ERR_TIMESTAMP_DRIFT_EXCEEDED", "ERR_DUPLICATE_EVENT_ID", "ERR_APPROVAL_REJECTED", "ERR_COMPENSATION_FAILED", "ERR_PROVIDER_NOT_FOUND"]>;
+export type MesaErrorCode = z.infer<typeof MesaErrorCodeSchema>;
+export declare class MesaError extends Error {
+    readonly code: MesaErrorCode;
+    readonly statusCode: number;
+    readonly details?: Record<string, unknown>;
+    constructor(code: MesaErrorCode, message: string, statusCode?: number, details?: Record<string, unknown>);
+    toJSON(): {
+        error: string;
+        code: "ERR_INVALID_FLOW_DEFINITION" | "ERR_FLOW_NOT_FOUND" | "ERR_EXECUTION_NOT_FOUND" | "ERR_STEP_FAILED" | "ERR_ANCHOR_TIMEOUT" | "ERR_INSUFFICIENT_BALANCE" | "ERR_HMAC_INVALID" | "ERR_TIMESTAMP_DRIFT_EXCEEDED" | "ERR_DUPLICATE_EVENT_ID" | "ERR_APPROVAL_REJECTED" | "ERR_COMPENSATION_FAILED" | "ERR_PROVIDER_NOT_FOUND";
+        statusCode: number;
+        details: Record<string, unknown> | undefined;
+    };
+}

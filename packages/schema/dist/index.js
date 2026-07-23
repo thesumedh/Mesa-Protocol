@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ApproveExecutionPayloadSchema = exports.WebhookResumePayloadSchema = exports.CreateExecutionPayloadSchema = exports.RegisterFlowPayloadSchema = exports.FlowGraphDefinitionSchema = exports.FlowEdgeSchema = exports.FlowNodeSchema = exports.FlowDefinitionSchema = exports.StepDefinitionSchema = exports.CustomStepSchema = exports.ConditionStepSchema = exports.ApprovalStepSchema = exports.SorobanStepSchema = exports.WebhookStepSchema = exports.DelayStepSchema = exports.ConvertStepSchema = exports.PathPaymentStepSchema = exports.PaymentStepSchema = exports.ConfirmStepSchema = exports.ReceiveStepSchema = exports.Sep10StepSchema = exports.CompensationStepSchema = exports.ExecutionStatusSchema = exports.ProviderMetadataSchema = exports.ProviderFieldSchema = void 0;
+exports.MesaError = exports.MesaErrorCodeSchema = exports.ApproveExecutionPayloadSchema = exports.WebhookResumePayloadSchema = exports.CreateExecutionPayloadSchema = exports.RegisterFlowPayloadSchema = exports.FlowGraphDefinitionSchema = exports.FlowEdgeSchema = exports.FlowNodeSchema = exports.FlowDefinitionSchema = exports.StepDefinitionSchema = exports.CustomStepSchema = exports.ConditionStepSchema = exports.ApprovalStepSchema = exports.SorobanStepSchema = exports.WebhookStepSchema = exports.DelayStepSchema = exports.ConvertStepSchema = exports.PathPaymentStepSchema = exports.PaymentStepSchema = exports.ConfirmStepSchema = exports.ReceiveStepSchema = exports.Sep10StepSchema = exports.CompensationStepSchema = exports.ExecutionStatusSchema = exports.ProviderMetadataSchema = exports.ProviderFieldSchema = void 0;
 const zod_1 = require("zod");
 // ─── Provider Field & Action Metadata ─────────────────────────────────────────
 exports.ProviderFieldSchema = zod_1.z.object({
@@ -39,7 +39,7 @@ exports.ExecutionStatusSchema = zod_1.z.enum([
 ]);
 exports.CompensationStepSchema = zod_1.z.object({
     name: zod_1.z.string().min(1),
-    provider: zod_1.z.string().min(1),
+    provider: zod_1.z.literal('compensation'),
     params: zod_1.z.object({
         action: zod_1.z.string().optional().default('compensate'),
         forStepIndex: zod_1.z.number().optional(),
@@ -64,7 +64,7 @@ exports.ReceiveStepSchema = zod_1.z.object({
         action: zod_1.z.literal('receive'),
         asset: zod_1.z.string().min(1, 'receive.asset must be a non-empty string'),
         minAmount: zod_1.z.number().positive('minAmount must be a positive number'),
-        toAddress: zod_1.z.string().min(1, 'invalid stellar address format'),
+        toAddress: zod_1.z.string().refine(val => (val.startsWith('G') || val.startsWith('C')) && val.length === 56, 'invalid stellar address format'),
     }),
 });
 exports.ConfirmStepSchema = zod_1.z.object({
@@ -80,7 +80,7 @@ exports.PaymentStepSchema = zod_1.z.object({
     provider: zod_1.z.literal('stellar'),
     params: zod_1.z.object({
         action: zod_1.z.enum(['payment', 'transfer']),
-        to: zod_1.z.string().min(1, 'invalid stellar address format'),
+        to: zod_1.z.string().refine(val => (val.startsWith('G') || val.startsWith('C')) && val.length === 56, 'invalid stellar address format'),
         amount: zod_1.z.number().positive('transfer.amount must be a positive number'),
         asset: zod_1.z.string().optional(),
         senderSecretRef: zod_1.z.string().optional().default('SENDER_SECRET'),
@@ -233,3 +233,40 @@ exports.ApproveExecutionPayloadSchema = zod_1.z.object({
     approver: zod_1.z.string().optional(),
     reason: zod_1.z.string().optional(),
 });
+// ─── Structured Error Codes & Error Classes ───────────────────────────────────
+exports.MesaErrorCodeSchema = zod_1.z.enum([
+    'ERR_INVALID_FLOW_DEFINITION',
+    'ERR_FLOW_NOT_FOUND',
+    'ERR_EXECUTION_NOT_FOUND',
+    'ERR_STEP_FAILED',
+    'ERR_ANCHOR_TIMEOUT',
+    'ERR_INSUFFICIENT_BALANCE',
+    'ERR_HMAC_INVALID',
+    'ERR_TIMESTAMP_DRIFT_EXCEEDED',
+    'ERR_DUPLICATE_EVENT_ID',
+    'ERR_APPROVAL_REJECTED',
+    'ERR_COMPENSATION_FAILED',
+    'ERR_PROVIDER_NOT_FOUND',
+]);
+class MesaError extends Error {
+    code;
+    statusCode;
+    details;
+    constructor(code, message, statusCode = 400, details) {
+        super(message);
+        this.name = 'MesaError';
+        this.code = code;
+        this.statusCode = statusCode;
+        this.details = details;
+        Object.setPrototypeOf(this, MesaError.prototype);
+    }
+    toJSON() {
+        return {
+            error: this.message,
+            code: this.code,
+            statusCode: this.statusCode,
+            details: this.details,
+        };
+    }
+}
+exports.MesaError = MesaError;

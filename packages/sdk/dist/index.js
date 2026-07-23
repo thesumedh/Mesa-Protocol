@@ -361,8 +361,8 @@ var FlowBuilder = class {
   /**
    * Add a Saga Compensation Rollback handler step.
    */
-  compensate(params) {
-    const { name = "rollback-compensation", provider, action = "compensate", ...rest } = params;
+  compensate(params = {}) {
+    const { name = "rollback-compensation", provider = "compensation", action = "compensate", ...rest } = params;
     this._steps.push(import_schema.StepDefinitionSchema.parse({
       name,
       provider,

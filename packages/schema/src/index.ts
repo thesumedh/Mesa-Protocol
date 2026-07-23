@@ -45,7 +45,7 @@ export type ExecutionStatus = z.infer<typeof ExecutionStatusSchema>;
 
 export const CompensationStepSchema = z.object({
   name: z.string().min(1),
-  provider: z.string().min(1),
+  provider: z.literal('compensation'),
   params: z.object({
     action: z.string().optional().default('compensate'),
     forStepIndex: z.number().optional(),
@@ -73,7 +73,7 @@ export const ReceiveStepSchema = z.object({
     action: z.literal('receive'),
     asset: z.string().min(1, 'receive.asset must be a non-empty string'),
     minAmount: z.number().positive('minAmount must be a positive number'),
-    toAddress: z.string().min(1, 'invalid stellar address format'),
+    toAddress: z.string().refine(val => (val.startsWith('G') || val.startsWith('C')) && val.length === 56, 'invalid stellar address format'),
   }),
 });
 
@@ -91,7 +91,7 @@ export const PaymentStepSchema = z.object({
   provider: z.literal('stellar'),
   params: z.object({
     action: z.enum(['payment', 'transfer']),
-    to: z.string().min(1, 'invalid stellar address format'),
+    to: z.string().refine(val => (val.startsWith('G') || val.startsWith('C')) && val.length === 56, 'invalid stellar address format'),
     amount: z.number().positive('transfer.amount must be a positive number'),
     asset: z.string().optional(),
     senderSecretRef: z.string().optional().default('SENDER_SECRET'),

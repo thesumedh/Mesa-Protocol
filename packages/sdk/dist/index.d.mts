@@ -183,9 +183,9 @@ declare class FlowBuilder {
     /**
      * Add a Saga Compensation Rollback handler step.
      */
-    compensate(params: {
+    compensate(params?: {
         name?: string;
-        provider: string;
+        provider?: string;
         action?: string;
         refundAddress?: string;
         refundAsset?: string;

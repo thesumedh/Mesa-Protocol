@@ -200,8 +200,9 @@ export function createServer(): express.Express {
           const ts = Number(timestampHeader);
           if (!isNaN(ts)) {
             const now = Date.now();
-            if (Math.abs(now - ts) > 5 * 60 * 1000) {
-              return res.status(401).json({ error: 'Webhook timestamp expired or drifted beyond 5 minutes' }) as any;
+            const tsMs = ts < 100000000000 ? ts * 1000 : ts;
+            if (Math.abs(now - tsMs) > 5 * 60 * 1000) {
+              return res.status(400).json({ error: 'Webhook timestamp expired or drifted beyond 5 minutes' }) as any;
             }
           }
         }
