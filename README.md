@@ -1,6 +1,6 @@
-# Mesa Protocol — Stellar Visual Workflow & App Builder
+# Mesa Protocol — Embedded Finance Engine for Stellar
 
-> **Build, visually design, and deploy production-grade financial applications on Stellar in minutes.**
+> **Mesa is the fastest way to build, visually design, and deploy reliable financial applications on Stellar.**
 
 [![npm version](https://img.shields.io/npm/v/@mesaprotocol/sdk?color=00dbe9&label=%40mesaprotocol%2Fsdk)](https://www.npmjs.com/package/@mesaprotocol/sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
@@ -178,7 +178,9 @@ npx mesa validate packages/workflows/flow.json
 ## 🏛️ Deep Technical Documentation
 
 For detailed architectural specs, crash recovery protocols, and release notes:
+- ⚡ **[5-Minute Developer Quickstart](./QUICKSTART.md)** — Step-by-step developer tutorial.
 - 📘 **[Architecture & Engine Internals](./ARCHITECTURE.md)** — State machine lifecycle, HMAC cryptographic verification, and pluggable provider interfaces.
+- 📐 **[Architecture Decision Records (ADR)](./ADR.md)** — Design trade-offs, monorepo rationale, and Saga pattern decisions.
 - 📜 **[Changelog & Releases](./CHANGELOG.md)** — Version history, API changes, and release milestones.
 - 🤝 **[Contributing Guide](./CONTRIBUTING.md)** — Contribution workflows and development setup.
 
