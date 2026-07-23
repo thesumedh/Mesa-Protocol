@@ -169,12 +169,67 @@
                         <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
                     </button>
 
-                    <button onclick="addNode('webhook')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                    <button onclick="addNode('sep10')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
                         <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-primary text-xl">link</span>
+                            <span class="material-symbols-outlined text-primary text-xl">key</span>
                             <div>
-                                <div class="text-xs font-headline-md font-semibold text-on-surface">Webhook Event</div>
-                                <div class="text-[10px] text-outline">Suspend & wait for external event</div>
+                                <div class="text-xs font-headline-md font-semibold text-on-surface">SEP-10 Auth</div>
+                                <div class="text-[10px] text-outline">Authenticate user / anchor session</div>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
+                    </button>
+
+                    <button onclick="addNode('anchor')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-xl">account_balance</span>
+                            <div>
+                                <div class="text-xs font-headline-md font-semibold text-on-surface">Anchor Deposit</div>
+                                <div class="text-[10px] text-outline">SEP-24 Interactive webview deposit</div>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
+                    </button>
+
+                    <button onclick="addNode('path-payment')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-xl">swap_horiz</span>
+                            <div>
+                                <div class="text-xs font-headline-md font-semibold text-on-surface">Path Payment / Swap</div>
+                                <div class="text-[10px] text-outline">Convert asset via Stellar DEX</div>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
+                    </button>
+
+                    <button onclick="addNode('soroban')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-xl">code</span>
+                            <div>
+                                <div class="text-xs font-headline-md font-semibold text-on-surface">Soroban Invocation</div>
+                                <div class="text-[10px] text-outline">Invoke Soroban contract method</div>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
+                    </button>
+
+                    <button onclick="addNode('approval')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-xl">gavel</span>
+                            <div>
+                                <div class="text-xs font-headline-md font-semibold text-on-surface">Manual Approval</div>
+                                <div class="text-[10px] text-outline">Pause for operator sign-off</div>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
+                    </button>
+
+                    <button onclick="addNode('condition')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-xl">alt_route</span>
+                            <div>
+                                <div class="text-xs font-headline-md font-semibold text-on-surface">Condition Branch</div>
+                                <div class="text-[10px] text-outline">Evaluate expression route</div>
                             </div>
                         </div>
                         <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>

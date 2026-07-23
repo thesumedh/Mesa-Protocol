@@ -27,7 +27,32 @@ export const ProviderMetadataSchema = z.object({
 });
 export type ProviderMetadata = z.infer<typeof ProviderMetadataSchema>;
 
+// ─── Execution Status State Machine ───────────────────────────────────────────
+
+export const ExecutionStatusSchema = z.enum([
+  'CREATED',
+  'RUNNING',
+  'SUSPENDED',
+  'WAITING_APPROVAL',
+  'WAITING_WEBHOOK',
+  'RETRYING',
+  'COMPLETED',
+  'FAILED',
+  'CANCELLED'
+]);
+export type ExecutionStatus = z.infer<typeof ExecutionStatusSchema>;
+
 // ─── Discriminated Step Schemas ───────────────────────────────────────────────
+
+export const Sep10StepSchema = z.object({
+  name: z.string().min(1),
+  provider: z.literal('sep10'),
+  params: z.object({
+    action: z.literal('auth'),
+    domain: z.string().min(1, 'sep10.domain must be a non-empty string'),
+    accountSecretRef: z.string().optional(),
+  }),
+});
 
 export const ReceiveStepSchema = z.object({
   name: z.string().min(1),
@@ -62,12 +87,29 @@ export const PaymentStepSchema = z.object({
   }),
 });
 
+export const PathPaymentStepSchema = z.object({
+  name: z.string().min(1),
+  provider: z.literal('stellar'),
+  params: z.object({
+    action: z.literal('path-payment'),
+    sendAsset: z.string().min(1),
+    destAsset: z.string().min(1),
+    sendAmount: z.number().positive(),
+    destMinAmount: z.number().positive(),
+    destination: z.string().min(1),
+    path: z.array(z.string()).optional(),
+  }),
+});
+
 export const ConvertStepSchema = z.object({
   name: z.string().min(1),
   provider: z.literal('anchor'),
   params: z.object({
     action: z.enum(['convert', 'sep24-deposit', 'sep24-withdraw', 'anchor']),
     anchor: z.string().optional().default('stellar-anchor'),
+    anchorDomain: z.string().optional(),
+    assetCode: z.string().optional(),
+    amount: z.number().optional(),
     from: z.string().optional(),
     to: z.string().optional(),
     fromAsset: z.string().optional(),
@@ -102,22 +144,47 @@ export const SorobanStepSchema = z.object({
   }),
 });
 
+export const ApprovalStepSchema = z.object({
+  name: z.string().min(1),
+  provider: z.literal('approval'),
+  params: z.object({
+    action: z.literal('manual-approval'),
+    approverRole: z.string().optional().default('operator'),
+    timeoutSeconds: z.number().optional(),
+  }),
+});
+
+export const ConditionStepSchema = z.object({
+  name: z.string().min(1),
+  provider: z.literal('condition'),
+  params: z.object({
+    action: z.literal('evaluate'),
+    expression: z.string().min(1),
+    ifTrueStep: z.number().optional(),
+    ifFalseStep: z.number().optional(),
+  }),
+});
+
 export const CustomStepSchema = z.object({
   name: z.string().min(1),
-  provider: z.string().min(1).refine(val => val.startsWith('custom') || !['stellar', 'anchor', 'delay', 'webhook', 'soroban'].includes(val), {
+  provider: z.string().min(1).refine(val => val.startsWith('custom') || !['stellar', 'anchor', 'delay', 'webhook', 'soroban', 'sep10', 'approval', 'condition'].includes(val), {
     message: "Invalid standard step parameters cannot fall back to custom step"
   }),
   params: z.record(z.string(), z.unknown()),
 });
 
 export const StepDefinitionSchema = z.union([
+  Sep10StepSchema,
   ReceiveStepSchema,
   ConfirmStepSchema,
   PaymentStepSchema,
+  PathPaymentStepSchema,
   ConvertStepSchema,
   DelayStepSchema,
   WebhookStepSchema,
   SorobanStepSchema,
+  ApprovalStepSchema,
+  ConditionStepSchema,
   CustomStepSchema,
 ]);
 export type StepDefinition = z.infer<typeof StepDefinitionSchema>;
@@ -165,12 +232,14 @@ export type FlowGraphDefinition = z.infer<typeof FlowGraphDefinitionSchema>;
 export const RegisterFlowPayloadSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1),
+  version: z.string().optional(),
   definition: FlowDefinitionSchema,
 });
 export type RegisterFlowPayload = z.infer<typeof RegisterFlowPayloadSchema>;
 
 export const CreateExecutionPayloadSchema = z.object({
   flowId: z.string().min(1),
+  flowVersion: z.string().optional(),
   context: z.record(z.string(), z.unknown()).optional(),
   idempotencyKey: z.string().optional(),
 });
@@ -184,3 +253,11 @@ export const WebhookResumePayloadSchema = z.object({
   timestamp: z.number().optional(),
 });
 export type WebhookResumePayload = z.infer<typeof WebhookResumePayloadSchema>;
+
+export const ApproveExecutionPayloadSchema = z.object({
+  executionId: z.string().min(1),
+  approved: z.boolean(),
+  approver: z.string().optional(),
+  reason: z.string().optional(),
+});
+export type ApproveExecutionPayload = z.infer<typeof ApproveExecutionPayloadSchema>;

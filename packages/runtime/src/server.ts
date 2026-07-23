@@ -311,6 +311,49 @@ export function createServer(): express.Express {
     }
   });
 
+  // ─── Manual Operator Approval Endpoint ───────────────────────────────────
+
+  app.post('/executions/:id/approve', apiKeyMiddleware, async (req: Request, res: Response) => {
+    try {
+      const executionId = req.params.id;
+      const { approved = true, approver = 'operator@mesa.local', reason = 'Operator sign-off' } = req.body || {};
+      const suspensionKey = `approval:${executionId}`;
+
+      const pool = store.getPool();
+      const step = await pool.query(
+        `SELECT s.id, s.execution_id, s.step_index
+         FROM steps s
+         WHERE s.execution_id = $1 AND s.status = 'SUSPENDED' AND s.output->>'suspensionKey' = $2
+         LIMIT 1`,
+        [executionId, suspensionKey]
+      );
+
+      if (!step.rows || step.rows.length === 0) {
+        return res.status(404).json({ error: `No suspended approval step found for execution: ${executionId}` }) as any;
+      }
+
+      if (!approved) {
+        await store.updateStep(step.rows[0].id, { status: 'FAILED', error: reason });
+        await store.updateExecution(executionId, { status: 'FAILED' });
+        await store.appendEvent(executionId, 'step.rejected', { approver, reason });
+        return res.json({ approved: false, status: 'FAILED' });
+      }
+
+      await store.updateStep(step.rows[0].id, {
+        status: 'COMPLETED',
+        output: { approved: true, approver, approvalTimestamp: new Date().toISOString() }
+      });
+      await store.updateExecution(executionId, { status: 'RUNNING' });
+      await store.appendEvent(executionId, 'step.approved', { approver, reason });
+      await store.appendEvent(executionId, 'step.completed', { stepIndex: step.rows[0].step_index });
+
+      res.json({ approved: true, status: 'RUNNING' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
+
   // ─── List executions ──────────────────────────────────────────────────────
 
   app.get('/executions', apiKeyMiddleware, async (_req: Request, res: Response) => {

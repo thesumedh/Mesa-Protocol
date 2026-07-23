@@ -140,6 +140,47 @@ declare class FlowBuilder {
         hmacSecretRef?: string;
     }): this;
     /**
+     * SEP-10 Authentication challenge & JWT token acquisition.
+     */
+    sep10Auth(params: {
+        domain: string;
+        accountSecretRef?: string;
+    }): this;
+    /**
+     * SEP-24 Interactive Anchor Deposit.
+     */
+    anchorDeposit(params: {
+        anchorDomain: string;
+        assetCode: string;
+        amount: number;
+    }): this;
+    /**
+     * Stellar Horizon DEX Path Payment.
+     */
+    pathPayment(params: {
+        sendAsset: string;
+        destAsset: string;
+        sendAmount: number;
+        destMinAmount: number;
+        destination: string;
+        path?: string[];
+    }): this;
+    /**
+     * Pause execution for Manual Operator Approval sign-off.
+     */
+    manualApproval(params?: {
+        approverRole?: string;
+        timeoutSeconds?: number;
+    }): this;
+    /**
+     * Evaluate dynamic expression for condition branching.
+     */
+    condition(params: {
+        expression: string;
+        ifTrueStep?: number;
+        ifFalseStep?: number;
+    }): this;
+    /**
      * Appends an arbitrary custom step to the flow.
      */
     step(step: StepDefinition): this;

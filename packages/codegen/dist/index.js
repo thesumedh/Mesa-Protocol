@@ -55,29 +55,41 @@ function generateSDKCode(flow) {
     code += `});\n\n`;
     code += `export const flow = Mesa.flow('${flow.name}', '${flowId}')`;
     for (const step of flow.steps) {
-        if (step.provider === 'stellar' && step.params.action === 'receive') {
-            const p = step.params;
+        const p = step.params;
+        if (step.provider === 'sep10') {
+            code += `\n  .sep10Auth({ domain: '${p.domain}' })`;
+        }
+        else if (step.provider === 'stellar' && p.action === 'receive') {
             code += `\n  .receive({ asset: '${p.asset}', minAmount: ${p.minAmount}, toAddress: '${p.toAddress}' })`;
         }
-        else if (step.provider === 'stellar' && step.params.action === 'payment') {
-            const p = step.params;
+        else if (step.provider === 'stellar' && p.action === 'payment') {
             code += `\n  .payment({ to: '${p.to}', amount: ${p.amount}, senderSecretRef: '${p.senderSecretRef || 'SENDER_SECRET'}' })`;
         }
+        else if (step.provider === 'stellar' && p.action === 'path-payment') {
+            code += `\n  .pathPayment({ sendAsset: '${p.sendAsset}', destAsset: '${p.destAsset}', sendAmount: ${p.sendAmount}, destMinAmount: ${p.destMinAmount}, destination: '${p.destination}' })`;
+        }
         else if (step.provider === 'anchor') {
-            const p = step.params;
-            code += `\n  .convert({ anchor: '${p.anchor || 'stellar-anchor'}', fromAsset: '${p.fromAsset || 'XLM'}', toAsset: '${p.toAsset || 'USDC'}' })`;
+            if (p.action === 'sep24-deposit') {
+                code += `\n  .anchorDeposit({ anchorDomain: '${p.anchorDomain || 'anchor.stellar.org'}', assetCode: '${p.assetCode || 'USDC'}', amount: ${p.amount || 100} })`;
+            }
+            else {
+                code += `\n  .convert({ anchor: '${p.anchor || 'stellar-anchor'}', fromAsset: '${p.fromAsset || 'XLM'}', toAsset: '${p.toAsset || 'USDC'}' })`;
+            }
         }
         else if (step.provider === 'delay') {
-            const p = step.params;
             code += `\n  .delay({ seconds: ${p.seconds} })`;
         }
         else if (step.provider === 'webhook') {
-            const p = step.params;
             code += `\n  .webhook({ url: '${p.url}' })`;
         }
         else if (step.provider === 'soroban') {
-            const p = step.params;
             code += `\n  .invoke({ contractId: '${p.contractId}', method: '${p.method}' })`;
+        }
+        else if (step.provider === 'approval') {
+            code += `\n  .manualApproval({ approverRole: '${p.approverRole || 'operator'}' })`;
+        }
+        else if (step.provider === 'condition') {
+            code += `\n  .condition({ expression: '${p.expression}' })`;
         }
     }
     code += `\n  .build();\n\n`;

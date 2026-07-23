@@ -13,7 +13,8 @@
   "dependencies": {
     "@mesaprotocol/codegen": "^0.2.0",
     "@mesaprotocol/schema": "^0.2.0",
-    "@mesaprotocol/sdk": "^0.2.0"
+    "@mesaprotocol/sdk": "^0.2.0",
+    "@mesaprotocol/templates": "^0.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

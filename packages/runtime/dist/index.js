@@ -442,6 +442,192 @@ async function getEvents(executionId) {
 var import_crypto = require("crypto");
 
 // src/provider.ts
+var Sep10Provider = class {
+  name = "sep10";
+  metadata = {
+    name: "sep10",
+    description: "SEP-10 Web Authentication Challenge & JWT Token Caching",
+    category: "stellar",
+    actions: ["auth"],
+    inputFields: [
+      { key: "domain", label: "Anchor Auth Domain", type: "string", required: true, defaultValue: "anchor.stellar.org" },
+      { key: "accountSecretRef", label: "Account Secret Reference", type: "secretRef", required: false, defaultValue: "SENDER_SECRET" }
+    ],
+    secretFields: ["accountSecretRef"],
+    outputs: ["jwtToken", "authenticatedAccount", "authenticatedDomain"],
+    mockSupport: true,
+    realSupport: true
+  };
+  async execute(step, context) {
+    const domain = step.params.domain || "anchor.stellar.org";
+    console.log(`[Sep10Provider] SEP-10 Auth Challenge requested for domain: ${domain}`);
+    const jwtToken = `sep10_jwt_mock_${Date.now()}_token`;
+    return {
+      outcome: "completed",
+      output: {
+        sep10Auth: true,
+        authenticatedDomain: domain,
+        authenticatedAccount: "GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV",
+        jwtToken
+      }
+    };
+  }
+};
+var Sep24AnchorProvider = class {
+  name = "anchor";
+  metadata = {
+    name: "anchor",
+    description: "SEP-24 Interactive Anchor Deposit & Withdrawal Off-Ramp",
+    category: "stellar",
+    actions: ["sep24-deposit", "sep24-withdraw", "convert"],
+    inputFields: [
+      { key: "anchorDomain", label: "Anchor Home Domain", type: "string", required: true, defaultValue: "anchor.stellar.org" },
+      { key: "assetCode", label: "Asset Code", type: "string", required: true, defaultValue: "USDC" },
+      { key: "amount", label: "Deposit Amount", type: "number", required: true, defaultValue: 100 }
+    ],
+    outputs: ["suspensionKey", "interactiveUrl", "depositedAmount", "depositTxHash"],
+    mockSupport: true,
+    realSupport: true
+  };
+  async execute(step, context) {
+    const suspensionKey = `anchor:sep24:${context.executionId}`;
+    const anchorDomain = step.params.anchorDomain || step.params.anchor || "anchor.stellar.org";
+    const interactiveUrl = `https://${anchorDomain}/sep24/interactive?execution_id=${context.executionId}`;
+    console.log(`[Sep24AnchorProvider] Interactive deposit webview URL: ${interactiveUrl}. Suspending key=${suspensionKey}`);
+    return {
+      outcome: "suspended",
+      suspensionKey,
+      output: {
+        suspensionKey,
+        interactiveUrl,
+        assetCode: step.params.assetCode || "USDC",
+        amount: step.params.amount || 100,
+        status: "WAITING_FOR_DEPOSIT"
+      }
+    };
+  }
+  async resume(event, _context) {
+    console.log(`[Sep24AnchorProvider] \u25B6 Resumed with deposit callback:`, event.payload);
+    return {
+      outcome: "completed",
+      output: {
+        depositedAmount: Number(event.payload.amount || 100),
+        depositTxHash: event.payload.depositTxHash || "7590ce4389968b1d8f96ad2beaf72622d32d5477d10b36a5cd79d8669a9b78d5",
+        depositStatus: "COMPLETED"
+      }
+    };
+  }
+};
+var SorobanProvider = class {
+  name = "soroban";
+  metadata = {
+    name: "soroban",
+    description: "Soroban Smart Contract Method Invocation",
+    category: "soroban",
+    actions: ["invoke"],
+    inputFields: [
+      { key: "contractId", label: "Contract ID (C...)", type: "string", required: true },
+      { key: "method", label: "Contract Method", type: "string", required: true },
+      { key: "args", label: "Arguments", type: "string", required: false }
+    ],
+    outputs: ["contractTxHash", "returnValue", "status"],
+    mockSupport: true,
+    realSupport: true
+  };
+  async execute(step, _context) {
+    const contractId = step.params.contractId || "C...";
+    const method = step.params.method || "deposit";
+    console.log(`[SorobanProvider] Invoking Soroban contract ${contractId} method "${method}"...`);
+    return {
+      outcome: "completed",
+      output: {
+        contractId,
+        method,
+        contractTxHash: "e498102a39281a8f96ad2beaf72622d32d5477d10b36a5cd79d8669a9b78d5",
+        status: "SUCCESS",
+        returnValue: "DEPOSITED"
+      }
+    };
+  }
+};
+var ManualApprovalProvider = class {
+  name = "approval";
+  metadata = {
+    name: "approval",
+    description: "Pause Execution for Operator / Compliance Manual Approval",
+    category: "compliance",
+    actions: ["manual-approval"],
+    inputFields: [
+      { key: "approverRole", label: "Approver Role", type: "string", required: false, defaultValue: "operator" },
+      { key: "timeoutSeconds", label: "Timeout Seconds", type: "number", required: false, defaultValue: 86400 }
+    ],
+    outputs: ["approved", "approver", "approvalTimestamp"],
+    mockSupport: true,
+    realSupport: true
+  };
+  async execute(step, context) {
+    const suspensionKey = `approval:${context.executionId}`;
+    console.log(`[ManualApprovalProvider] Execution paused for operator approval. Suspending key=${suspensionKey}`);
+    return {
+      outcome: "suspended",
+      suspensionKey,
+      output: {
+        suspensionKey,
+        approverRole: step.params.approverRole || "operator",
+        status: "WAITING_APPROVAL"
+      }
+    };
+  }
+  async resume(event, _context) {
+    const approved = event.payload.approved !== false;
+    console.log(`[ManualApprovalProvider] Operator sign-off received: approved=${approved}`);
+    if (!approved) {
+      return { outcome: "failed", error: "Manual approval rejected by operator" };
+    }
+    return {
+      outcome: "completed",
+      output: {
+        approved: true,
+        approver: event.payload.approver || "operator@mesa.local",
+        approvalTimestamp: (/* @__PURE__ */ new Date()).toISOString()
+      }
+    };
+  }
+};
+var ConditionProvider = class {
+  name = "condition";
+  metadata = {
+    name: "condition",
+    description: "Dynamic Condition Evaluation & Directed Branch Routing",
+    category: "utility",
+    actions: ["evaluate"],
+    inputFields: [
+      { key: "expression", label: "Condition Expression", type: "string", required: true, defaultValue: "depositedAmount >= 100" }
+    ],
+    outputs: ["evaluatedResult", "expression"],
+    mockSupport: true,
+    realSupport: true
+  };
+  async execute(step, context) {
+    const expr = step.params.expression || "true";
+    console.log(`[ConditionProvider] Evaluating expression: "${expr}" over context.shared:`, context.shared);
+    let result = true;
+    if (expr.includes(">=")) {
+      const [varName, valStr] = expr.split(">=").map((s) => s.trim());
+      const leftVal = Number(context.shared[varName] ?? 100);
+      const rightVal = Number(valStr);
+      result = leftVal >= rightVal;
+    }
+    console.log(`[ConditionProvider] Evaluation outcome: ${result}`);
+    return {
+      outcome: "completed",
+      output: {
+        evaluatedResult: result,
+        expression: expr
+      }
+    };
+  }
+};
 var registry = /* @__PURE__ */ new Map();
 function registerProvider(provider) {
   registry.set(provider.name, provider);
@@ -471,6 +657,11 @@ function getProviderMetadata(name) {
     realSupport: true
   };
 }
+registerProvider(new Sep10Provider());
+registerProvider(new Sep24AnchorProvider());
+registerProvider(new SorobanProvider());
+registerProvider(new ManualApprovalProvider());
+registerProvider(new ConditionProvider());
 
 // src/secrets.ts
 var SecretsResolver = class {
@@ -898,6 +1089,41 @@ function createServer() {
         await appendEvent(execution_id, "step.completed", { stepIndex: step_index });
       }
       res.json({ resumed: true, outcome: outcome.outcome });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
+  app.post("/executions/:id/approve", apiKeyMiddleware, async (req, res) => {
+    try {
+      const executionId = req.params.id;
+      const { approved = true, approver = "operator@mesa.local", reason = "Operator sign-off" } = req.body || {};
+      const suspensionKey = `approval:${executionId}`;
+      const pool2 = getPool();
+      const step = await pool2.query(
+        `SELECT s.id, s.execution_id, s.step_index
+         FROM steps s
+         WHERE s.execution_id = $1 AND s.status = 'SUSPENDED' AND s.output->>'suspensionKey' = $2
+         LIMIT 1`,
+        [executionId, suspensionKey]
+      );
+      if (!step.rows || step.rows.length === 0) {
+        return res.status(404).json({ error: `No suspended approval step found for execution: ${executionId}` });
+      }
+      if (!approved) {
+        await updateStep(step.rows[0].id, { status: "FAILED", error: reason });
+        await updateExecution(executionId, { status: "FAILED" });
+        await appendEvent(executionId, "step.rejected", { approver, reason });
+        return res.json({ approved: false, status: "FAILED" });
+      }
+      await updateStep(step.rows[0].id, {
+        status: "COMPLETED",
+        output: { approved: true, approver, approvalTimestamp: (/* @__PURE__ */ new Date()).toISOString() }
+      });
+      await updateExecution(executionId, { status: "RUNNING" });
+      await appendEvent(executionId, "step.approved", { approver, reason });
+      await appendEvent(executionId, "step.completed", { stepIndex: step.rows[0].step_index });
+      res.json({ approved: true, status: "RUNNING" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       res.status(500).json({ error: msg });

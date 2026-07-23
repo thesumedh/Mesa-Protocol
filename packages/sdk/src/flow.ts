@@ -263,6 +263,73 @@ export class FlowBuilder {
   }
 
   /**
+   * SEP-10 Authentication challenge & JWT token acquisition.
+   */
+  sep10Auth(params: { domain: string; accountSecretRef?: string }): this {
+    this._steps.push(StepDefinitionSchema.parse({
+      name: `sep10-auth-${params.domain}`,
+      provider: 'sep10',
+      params: { action: 'auth', ...params },
+    }));
+    return this;
+  }
+
+  /**
+   * SEP-24 Interactive Anchor Deposit.
+   */
+  anchorDeposit(params: { anchorDomain: string; assetCode: string; amount: number }): this {
+    this._steps.push(StepDefinitionSchema.parse({
+      name: `sep24-deposit-${params.assetCode}`,
+      provider: 'anchor',
+      params: { action: 'sep24-deposit', ...params },
+    }));
+    return this;
+  }
+
+  /**
+   * Stellar Horizon DEX Path Payment.
+   */
+  pathPayment(params: {
+    sendAsset: string;
+    destAsset: string;
+    sendAmount: number;
+    destMinAmount: number;
+    destination: string;
+    path?: string[];
+  }): this {
+    this._steps.push(StepDefinitionSchema.parse({
+      name: `path-payment-${params.sendAsset}-to-${params.destAsset}`,
+      provider: 'stellar',
+      params: { action: 'path-payment', ...params },
+    }));
+    return this;
+  }
+
+  /**
+   * Pause execution for Manual Operator Approval sign-off.
+   */
+  manualApproval(params: { approverRole?: string; timeoutSeconds?: number } = {}): this {
+    this._steps.push(StepDefinitionSchema.parse({
+      name: 'manual-approval',
+      provider: 'approval',
+      params: { action: 'manual-approval', ...params },
+    }));
+    return this;
+  }
+
+  /**
+   * Evaluate dynamic expression for condition branching.
+   */
+  condition(params: { expression: string; ifTrueStep?: number; ifFalseStep?: number }): this {
+    this._steps.push(StepDefinitionSchema.parse({
+      name: 'evaluate-condition',
+      provider: 'condition',
+      params: { action: 'evaluate', ...params },
+    }));
+    return this;
+  }
+
+  /**
    * Appends an arbitrary custom step to the flow.
    */
   step(step: StepDefinition): this {

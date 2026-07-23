@@ -39,6 +39,7 @@ const path = __importStar(require("path"));
 const child_process_1 = require("child_process");
 const schema_1 = require("@mesaprotocol/schema");
 const codegen_1 = require("@mesaprotocol/codegen");
+const templates_1 = require("@mesaprotocol/templates");
 const args = process.argv.slice(2);
 const command = args[0];
 console.log(`
@@ -69,7 +70,7 @@ switch (command) {
 function showHelp() {
     console.log(`
 Usage:
-  npx mesa create <app-name> [--template remittance|payroll|escrow|soroban]
+  npx mesa create <app-name> [--template remittance|payroll|vault|escrow|invoice|subscription]
                                 Scaffold a new 1-click runnable Stellar app workspace
   npx mesa validate <file.json> Validate a workflow flow definition against Mesa schema
   npx mesa dev                  Launch local Mesa workflow runtime & development server
@@ -78,48 +79,18 @@ Usage:
 }
 async function handleCreate(cmdArgs) {
     const appName = cmdArgs[1] && !cmdArgs[1].startsWith('--') ? cmdArgs[1] : 'remittance-corridor-app';
-    let template = 'remittance';
+    let templateKey = 'remittance';
     const templateIdx = cmdArgs.indexOf('--template');
     if (templateIdx !== -1 && cmdArgs[templateIdx + 1]) {
-        template = cmdArgs[templateIdx + 1].toLowerCase();
+        templateKey = cmdArgs[templateIdx + 1].toLowerCase();
     }
-    console.log(`🚀 Creating new Mesa Stellar Financial App: ${appName} (Template: ${template})...`);
-    let steps = [];
-    if (template === 'payroll') {
-        steps = [
-            { name: 'Receive Treasury Funding', provider: 'stellar', params: { action: 'receive', asset: 'USDC', minAmount: 1000, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' } },
-            { name: 'Compliance Sanctions Check', provider: 'delay', params: { seconds: 1 } },
-            { name: 'Batch Employee Payout 1', provider: 'stellar', params: { action: 'payment', amount: 500, to: 'GA4UFVDQRWUZIDKB32U2TVZSXSFAPCZV522UY7OYGM27BJ66MHYIIW3P', senderSecretRef: 'SENDER_SECRET' } },
-            { name: 'Batch Employee Payout 2', provider: 'stellar', params: { action: 'payment', amount: 500, to: 'GBHTYH2NLVWRAPSC3IRRFPG6CFHP5VLODBQUYVSKJ3BZ3QN6HEXZ5DXU', senderSecretRef: 'SENDER_SECRET' } },
-        ];
-    }
-    else if (template === 'escrow') {
-        steps = [
-            { name: 'Receive Member Contribution', provider: 'stellar', params: { action: 'receive', asset: 'XLM', minAmount: 50, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' } },
-            { name: 'Timelock Release Delay', provider: 'delay', params: { seconds: 5 } },
-            { name: 'Disburse Winner Prize Pool', provider: 'stellar', params: { action: 'payment', amount: 50, to: 'GA4UFVDQRWUZIDKB32U2TVZSXSFAPCZV522UY7OYGM27BJ66MHYIIW3P', senderSecretRef: 'SENDER_SECRET' } },
-        ];
-    }
-    else if (template === 'soroban') {
-        steps = [
-            { name: 'Receive Vault Deposit', provider: 'stellar', params: { action: 'receive', asset: 'USDC', minAmount: 100, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' } },
-            { name: 'Invoke Soroban Deposit Contract', provider: 'soroban', params: { action: 'invoke', contractId: 'CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZFZFPG223LLT4Z6PNEV', method: 'deposit' } },
-            { name: 'Yield Distribution Event', provider: 'webhook', params: { url: 'https://api.example.com/yield-callback' } },
-        ];
-    }
-    else {
-        // Default Remittance Corridor
-        steps = [
-            { name: 'Receive USD Deposit', provider: 'stellar', params: { action: 'receive', asset: 'USDC', minAmount: 100, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' } },
-            { name: 'Compliance Hold', provider: 'delay', params: { seconds: 2 } },
-            { name: 'Stellar XLM Path Payout', provider: 'stellar', params: { action: 'payment', amount: 95, to: 'GA4UFVDQRWUZIDKB32U2TVZSXSFAPCZV522UY7OYGM27BJ66MHYIIW3P', senderSecretRef: 'SENDER_SECRET' } },
-        ];
-    }
+    console.log(`🚀 Creating new Mesa Stellar Financial App: ${appName} (Template: ${templateKey})...`);
+    // Single Source of Truth — Import template from @mesaprotocol/templates
+    const templateInfo = (0, templates_1.getTemplate)(templateKey);
     const sampleFlow = schema_1.FlowDefinitionSchema.parse({
+        ...templateInfo.definition,
         id: appName,
         name: appName.replace(/-/g, ' ').toUpperCase(),
-        version: '1.0.0',
-        steps
     });
     const outputDir = path.join(process.cwd(), appName);
     if (fs.existsSync(outputDir)) {
@@ -175,9 +146,9 @@ async function handleCreate(cmdArgs) {
     // Write Web App Files
     fs.writeFileSync(path.join(outputDir, 'apps', 'web', 'index.html'), `<!DOCTYPE html><html><head><title>${appName}</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>`);
     fs.writeFileSync(path.join(outputDir, 'apps', 'web', 'src', 'main.tsx'), `import React from 'react';\nimport ReactDOM from 'react-dom/client';\nimport App from './App';\n\nReactDOM.createRoot(document.getElementById('root')!).render(<App />);\n`);
-    fs.writeFileSync(path.join(outputDir, 'apps', 'web', 'src', 'App.tsx'), `import React, { useState } from 'react';\n\nexport default function App() {\n  const [status, setStatus] = useState('Idle');\n  const [execId, setExecId] = useState('');\n  const [depositAmount, setDepositAmount] = useState('100');\n  const [resumeLog, setResumeLog] = useState('');\n\n  const triggerWorkflow = async () => {\n    setStatus('Triggering...');\n    try {\n      const res = await fetch('http://localhost:3001/executions', {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ flowId: '${appName}' })\n      });\n      const data = await res.json();\n      setExecId(data.executionId);\n      setStatus('SUSPENDED (Waiting for deposit/webhook)');\n    } catch (err) {\n      setStatus('Failed to connect to Mesa Runtime');\n    }\n  };\n\n  const simulateDepositWebhook = async () => {\n    if (!execId) {\n      alert('Please trigger workflow execution first!');\n      return;\n    }\n    try {\n      const suspensionKey = \`stellar:receive:\${execId}\`;\n      const res = await fetch('http://localhost:3001/webhooks/resume', {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({\n          suspensionKey,\n          payload: { amount: Number(depositAmount), depositTxHash: '7590ce4389968b1d8f96ad2beaf72622d32d5477d10b36a5cd79d8669a9b78d5' }\n        })\n      });\n      const data = await res.json();\n      setResumeLog(\`Webhook Resumed: \${JSON.stringify(data)}\`);\n      setStatus('COMPLETED (Payment Payout Sent)');\n    } catch (err) {\n      setResumeLog('Failed to send webhook');\n    }\n  };\n\n  return (\n    <div style={{ padding: '2rem', fontFamily: 'sans-serif', background: '#040608', color: '#00dbe9', minHeight: '100vh' }}>\n      <h1>${appName} (${template.toUpperCase()} Template)</h1>\n      <p>Stellar Embedded Finance App Scaffold generated by Mesa CLI</p>\n      <div style={{ background: '#0d131a', padding: '1.5rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid #1a2634' }}>\n        <h2>1. Trigger Workflow Execution</h2>\n        <p>Flow ID: <code>${appName}</code></p>\n        <button onClick={triggerWorkflow} style={{ padding: '0.75rem 1.5rem', background: '#00dbe9', color: '#040608', fontWeight: 'bold', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>\n          Launch ${appName}\n        </button>\n        {execId && <p style={{ marginTop: '1rem' }}>Active Execution ID: <code>{execId}</code></p>}\n        <p>Current Status: <strong>{status}</strong></p>\n      </div>\n\n      <div style={{ background: '#0d131a', padding: '1.5rem', borderRadius: '8px', border: '1px solid #1a2634' }}>\n        <h2>2. Webhook Deposit Simulator</h2>\n        <label>Simulated USD Deposit Amount: </label>\n        <input type="number" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #00dbe9', background: '#040608', color: '#fff', marginRight: '1rem' }} />\n        <button onClick={simulateDepositWebhook} style={{ padding: '0.75rem 1.5rem', background: '#00ff88', color: '#040608', fontWeight: 'bold', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>\n          Simulate Stellar USD Deposit Callback\n        </button>\n        {resumeLog && <p style={{ marginTop: '1rem', color: '#00ff88' }}>{resumeLog}</p>}\n      </div>\n    </div>\n  );\n}`);
+    fs.writeFileSync(path.join(outputDir, 'apps', 'web', 'src', 'App.tsx'), `import React, { useState } from 'react';\n\nexport default function App() {\n  const [status, setStatus] = useState('Idle');\n  const [execId, setExecId] = useState('');\n  const [depositAmount, setDepositAmount] = useState('100');\n  const [resumeLog, setResumeLog] = useState('');\n\n  const triggerWorkflow = async () => {\n    setStatus('Triggering...');\n    try {\n      const res = await fetch('http://localhost:3001/executions', {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({ flowId: '${appName}' })\n      });\n      const data = await res.json();\n      setExecId(data.executionId);\n      setStatus('SUSPENDED (Waiting for deposit/webhook)');\n    } catch (err) {\n      setStatus('Failed to connect to Mesa Runtime');\n    }\n  };\n\n  const simulateDepositWebhook = async () => {\n    if (!execId) {\n      alert('Please trigger workflow execution first!');\n      return;\n    }\n    try {\n      const suspensionKey = \`anchor:sep24:\${execId}\`;\n      const res = await fetch('http://localhost:3001/webhooks/resume', {\n        method: 'POST',\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify({\n          suspensionKey,\n          payload: { amount: Number(depositAmount), depositTxHash: '7590ce4389968b1d8f96ad2beaf72622d32d5477d10b36a5cd79d8669a9b78d5' }\n        })\n      });\n      const data = await res.json();\n      setResumeLog(\`Webhook Resumed: \${JSON.stringify(data)}\`);\n      setStatus('COMPLETED (Payment Payout Sent)');\n    } catch (err) {\n      setResumeLog('Failed to send webhook');\n    }\n  };\n\n  const approveOperatorExecution = async () => {\n    if (!execId) {\n      alert('Please trigger workflow execution first!');\n      return;\n    }\n    try {\n      const res = await fetch(\`http://localhost:3001/executions/\${execId}/approve\`,\n        {\n          method: 'POST',\n          headers: { 'Content-Type': 'application/json' },\n          body: JSON.stringify({ approved: true, approver: 'operator@mesa.local' })\n        }\n      );\n      const data = await res.json();\n      setResumeLog(\`Manual Approval Approved: \${JSON.stringify(data)}\`);\n      setStatus('RUNNING (Approved by Operator)');\n    } catch (err) {\n      setResumeLog('Failed to approve execution');\n    }\n  };\n\n  return (\n    <div style={{ padding: '2rem', fontFamily: 'sans-serif', background: '#040608', color: '#00dbe9', minHeight: '100vh' }}>\n      <h1>${appName} (${templateKey.toUpperCase()} Template)</h1>\n      <p>Stellar Embedded Finance App Scaffold generated by Mesa Protocol CLI</p>\n      <div style={{ background: '#0d131a', padding: '1.5rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid #1a2634' }}>\n        <h2>1. Trigger Workflow Execution</h2>\n        <p>Flow ID: <code>${appName}</code></p>\n        <button onClick={triggerWorkflow} style={{ padding: '0.75rem 1.5rem', background: '#00dbe9', color: '#040608', fontWeight: 'bold', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>\n          Launch ${appName}\n        </button>\n        {execId && <p style={{ marginTop: '1rem' }}>Active Execution ID: <code>{execId}</code></p>}\n        <p>Current Status: <strong>{status}</strong></p>\n      </div>\n\n      <div style={{ background: '#0d131a', padding: '1.5rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid #1a2634' }}>\n        <h2>2. Webhook Deposit Simulator</h2>\n        <label>Simulated USD Deposit Amount: </label>\n        <input type="number" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #00dbe9', background: '#040608', color: '#fff', marginRight: '1rem' }} />\n        <button onClick={simulateDepositWebhook} style={{ padding: '0.75rem 1.5rem', background: '#00ff88', color: '#040608', fontWeight: 'bold', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>\n          Simulate Stellar USD Deposit Callback\n        </button>\n      </div>\n\n      <div style={{ background: '#0d131a', padding: '1.5rem', borderRadius: '8px', border: '1px solid #1a2634' }}>\n        <h2>3. Operator Manual Approval Panel</h2>\n        <button onClick={approveOperatorExecution} style={{ padding: '0.75rem 1.5rem', background: '#ffaa00', color: '#040608', fontWeight: 'bold', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>\n          Approve Suspended Execution\n        </button>\n        {resumeLog && <p style={{ marginTop: '1rem', color: '#00ff88' }}>{resumeLog}</p>}\n      </div>\n    </div>\n  );\n}`);
     // Write README.md
-    fs.writeFileSync(path.join(outputDir, 'README.md'), `# ${appName}\n\nGenerated by **Mesa Protocol CLI — Stellar Visual Workflow & App Builder** (Template: ${template}).\n\n## 🚀 1-Click Execution Guide\n\n\`\`\`bash\ncd ${appName}\nnpm install\ncp .env.example .env\nnpm run dev\n\`\`\`\n`);
+    fs.writeFileSync(path.join(outputDir, 'README.md'), `# ${appName}\n\nGenerated by **Mesa Protocol CLI — Stellar Visual Workflow & App Builder** (Template: ${templateKey}).\n\n## 🚀 1-Click Execution Guide\n\n\`\`\`bash\ncd ${appName}\nnpm install\ncp .env.example .env\nnpm run dev\n\`\`\`\n`);
     console.log(`\n🎉 App scaffold successfully created in: ./${appName}`);
     console.log(`\nNext steps:\n  cd ${appName}\n  npm install\n  npm run dev\n`);
 }

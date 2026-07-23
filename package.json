@@ -4,6 +4,7 @@
   "private": true,
   "workspaces": [
     "packages/schema",
+    "packages/templates",
     "packages/sdk",
     "packages/codegen",
     "packages/runtime",
@@ -12,15 +13,16 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "npm run build --workspace=packages/schema && npm run build --workspace=packages/sdk && npm run build --workspace=packages/codegen && npm run build --workspace=packages/runtime && npm run build --workspace=packages/cli",
+    "build": "npm run build --workspace=packages/schema && npm run build --workspace=packages/templates && npm run build --workspace=packages/sdk && npm run build --workspace=packages/codegen && npm run build --workspace=packages/runtime && npm run build --workspace=packages/cli",
     "build:schema": "npm run build --workspace=packages/schema",
+    "build:templates": "npm run build --workspace=packages/templates",
     "build:sdk": "npm run build --workspace=packages/sdk",
     "build:codegen": "npm run build --workspace=packages/codegen",
     "build:runtime": "npm run build --workspace=packages/runtime",
     "build:cli": "npm run build --workspace=packages/cli",
     "runtime:dev": "npm run dev --workspace=packages/runtime",
-    "test": "npm run test --workspace=packages/schema && npm run test --workspace=packages/sdk && npm run test --workspace=packages/codegen && npm run test --workspace=packages/runtime && npm run test --workspace=packages/cli",
-    "typecheck": "npx tsc --noEmit -p packages/schema/tsconfig.json && npx tsc --noEmit -p packages/sdk/tsconfig.json && npx tsc --noEmit -p packages/runtime/tsconfig.json && npx tsc --noEmit -p packages/cli/tsconfig.json"
+    "test": "npm run test --workspace=packages/schema && npm run test --workspace=packages/templates && npm run test --workspace=packages/sdk && npm run test --workspace=packages/codegen && npm run test --workspace=packages/runtime && npm run test --workspace=packages/cli",
+    "typecheck": "npx tsc --noEmit -p packages/schema/tsconfig.json && npx tsc --noEmit -p packages/templates/tsconfig.json && npx tsc --noEmit -p packages/sdk/tsconfig.json && npx tsc --noEmit -p packages/runtime/tsconfig.json && npx tsc --noEmit -p packages/cli/tsconfig.json"
   },
   "devDependencies": {
     "vite": "^5.0.0",

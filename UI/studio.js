@@ -149,6 +149,68 @@ function renderProperties() {
                 <input type="text" value="${node.params.senderSecretRef || 'SENDER_SECRET'}" oninput="updateNodeParam('senderSecretRef', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-primary font-label-mono outline-none focus:border-primary"/>
             </div>
         `;
+    } else if (node.type === 'sep10') {
+        fieldsHtml += `
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Anchor Auth Domain</label>
+                <input type="text" value="${node.params.domain || 'anchor.stellar.org'}" oninput="updateNodeParam('domain', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface font-label-mono outline-none focus:border-primary"/>
+            </div>
+        `;
+    } else if (node.type === 'anchor') {
+        fieldsHtml += `
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Anchor Home Domain</label>
+                <input type="text" value="${node.params.anchorDomain || 'anchor.stellar.org'}" oninput="updateNodeParam('anchorDomain', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface font-label-mono outline-none focus:border-primary"/>
+            </div>
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Asset Code</label>
+                <input type="text" value="${node.params.assetCode || 'USDC'}" oninput="updateNodeParam('assetCode', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface outline-none focus:border-primary"/>
+            </div>
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Amount</label>
+                <input type="number" value="${node.params.amount || 100}" oninput="updateNodeParam('amount', Number(this.value))" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface outline-none focus:border-primary"/>
+            </div>
+        `;
+    } else if (node.type === 'path-payment') {
+        fieldsHtml += `
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Send Asset</label>
+                <input type="text" value="${node.params.sendAsset || 'USDC'}" oninput="updateNodeParam('sendAsset', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface outline-none focus:border-primary"/>
+            </div>
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Destination Asset</label>
+                <input type="text" value="${node.params.destAsset || 'XLM'}" oninput="updateNodeParam('destAsset', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface outline-none focus:border-primary"/>
+            </div>
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Destination Address</label>
+                <input type="text" value="${node.params.destination || ''}" oninput="updateNodeParam('destination', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface font-label-mono outline-none focus:border-primary"/>
+            </div>
+        `;
+    } else if (node.type === 'soroban') {
+        fieldsHtml += `
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Soroban Contract ID</label>
+                <input type="text" value="${node.params.contractId || ''}" oninput="updateNodeParam('contractId', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface font-label-mono outline-none focus:border-primary"/>
+            </div>
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Contract Method</label>
+                <input type="text" value="${node.params.method || 'deposit'}" oninput="updateNodeParam('method', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface font-label-mono outline-none focus:border-primary"/>
+            </div>
+        `;
+    } else if (node.type === 'approval') {
+        fieldsHtml += `
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Approver Role</label>
+                <input type="text" value="${node.params.approverRole || 'operator'}" oninput="updateNodeParam('approverRole', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface outline-none focus:border-primary"/>
+            </div>
+        `;
+    } else if (node.type === 'condition') {
+        fieldsHtml += `
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Condition Expression</label>
+                <input type="text" value="${node.params.expression || 'depositedAmount >= 100'}" oninput="updateNodeParam('expression', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface font-label-mono outline-none focus:border-primary"/>
+            </div>
+        `;
     } else if (node.type === 'webhook') {
         fieldsHtml += `
             <div>

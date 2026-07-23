@@ -100,6 +100,41 @@ export declare const ProviderMetadataSchema: z.ZodObject<{
     docs?: string | undefined;
 }>;
 export type ProviderMetadata = z.infer<typeof ProviderMetadataSchema>;
+export declare const ExecutionStatusSchema: z.ZodEnum<["CREATED", "RUNNING", "SUSPENDED", "WAITING_APPROVAL", "WAITING_WEBHOOK", "RETRYING", "COMPLETED", "FAILED", "CANCELLED"]>;
+export type ExecutionStatus = z.infer<typeof ExecutionStatusSchema>;
+export declare const Sep10StepSchema: z.ZodObject<{
+    name: z.ZodString;
+    provider: z.ZodLiteral<"sep10">;
+    params: z.ZodObject<{
+        action: z.ZodLiteral<"auth">;
+        domain: z.ZodString;
+        accountSecretRef: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        action: "auth";
+        domain: string;
+        accountSecretRef?: string | undefined;
+    }, {
+        action: "auth";
+        domain: string;
+        accountSecretRef?: string | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    params: {
+        action: "auth";
+        domain: string;
+        accountSecretRef?: string | undefined;
+    };
+    name: string;
+    provider: "sep10";
+}, {
+    params: {
+        action: "auth";
+        domain: string;
+        accountSecretRef?: string | undefined;
+    };
+    name: string;
+    provider: "sep10";
+}>;
 export declare const ReceiveStepSchema: z.ZodObject<{
     name: z.ZodString;
     provider: z.ZodLiteral<"stellar">;
@@ -214,12 +249,68 @@ export declare const PaymentStepSchema: z.ZodObject<{
     name: string;
     provider: "stellar";
 }>;
+export declare const PathPaymentStepSchema: z.ZodObject<{
+    name: z.ZodString;
+    provider: z.ZodLiteral<"stellar">;
+    params: z.ZodObject<{
+        action: z.ZodLiteral<"path-payment">;
+        sendAsset: z.ZodString;
+        destAsset: z.ZodString;
+        sendAmount: z.ZodNumber;
+        destMinAmount: z.ZodNumber;
+        destination: z.ZodString;
+        path: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        action: "path-payment";
+        sendAsset: string;
+        destAsset: string;
+        sendAmount: number;
+        destMinAmount: number;
+        destination: string;
+        path?: string[] | undefined;
+    }, {
+        action: "path-payment";
+        sendAsset: string;
+        destAsset: string;
+        sendAmount: number;
+        destMinAmount: number;
+        destination: string;
+        path?: string[] | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    params: {
+        action: "path-payment";
+        sendAsset: string;
+        destAsset: string;
+        sendAmount: number;
+        destMinAmount: number;
+        destination: string;
+        path?: string[] | undefined;
+    };
+    name: string;
+    provider: "stellar";
+}, {
+    params: {
+        action: "path-payment";
+        sendAsset: string;
+        destAsset: string;
+        sendAmount: number;
+        destMinAmount: number;
+        destination: string;
+        path?: string[] | undefined;
+    };
+    name: string;
+    provider: "stellar";
+}>;
 export declare const ConvertStepSchema: z.ZodObject<{
     name: z.ZodString;
     provider: z.ZodLiteral<"anchor">;
     params: z.ZodObject<{
         action: z.ZodEnum<["convert", "sep24-deposit", "sep24-withdraw", "anchor"]>;
         anchor: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        anchorDomain: z.ZodOptional<z.ZodString>;
+        assetCode: z.ZodOptional<z.ZodString>;
+        amount: z.ZodOptional<z.ZodNumber>;
         from: z.ZodOptional<z.ZodString>;
         to: z.ZodOptional<z.ZodString>;
         fromAsset: z.ZodOptional<z.ZodString>;
@@ -228,13 +319,19 @@ export declare const ConvertStepSchema: z.ZodObject<{
         action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
         anchor: string;
         to?: string | undefined;
+        amount?: number | undefined;
+        anchorDomain?: string | undefined;
+        assetCode?: string | undefined;
         from?: string | undefined;
         fromAsset?: string | undefined;
         toAsset?: string | undefined;
     }, {
         action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
         to?: string | undefined;
+        amount?: number | undefined;
         anchor?: string | undefined;
+        anchorDomain?: string | undefined;
+        assetCode?: string | undefined;
         from?: string | undefined;
         fromAsset?: string | undefined;
         toAsset?: string | undefined;
@@ -244,6 +341,9 @@ export declare const ConvertStepSchema: z.ZodObject<{
         action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
         anchor: string;
         to?: string | undefined;
+        amount?: number | undefined;
+        anchorDomain?: string | undefined;
+        assetCode?: string | undefined;
         from?: string | undefined;
         fromAsset?: string | undefined;
         toAsset?: string | undefined;
@@ -254,7 +354,10 @@ export declare const ConvertStepSchema: z.ZodObject<{
     params: {
         action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
         to?: string | undefined;
+        amount?: number | undefined;
         anchor?: string | undefined;
+        anchorDomain?: string | undefined;
+        assetCode?: string | undefined;
         from?: string | undefined;
         fromAsset?: string | undefined;
         toAsset?: string | undefined;
@@ -346,6 +449,77 @@ export declare const SorobanStepSchema: z.ZodObject<{
     name: string;
     provider: "soroban";
 }>;
+export declare const ApprovalStepSchema: z.ZodObject<{
+    name: z.ZodString;
+    provider: z.ZodLiteral<"approval">;
+    params: z.ZodObject<{
+        action: z.ZodLiteral<"manual-approval">;
+        approverRole: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        timeoutSeconds: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        action: "manual-approval";
+        approverRole: string;
+        timeoutSeconds?: number | undefined;
+    }, {
+        action: "manual-approval";
+        approverRole?: string | undefined;
+        timeoutSeconds?: number | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    params: {
+        action: "manual-approval";
+        approverRole: string;
+        timeoutSeconds?: number | undefined;
+    };
+    name: string;
+    provider: "approval";
+}, {
+    params: {
+        action: "manual-approval";
+        approverRole?: string | undefined;
+        timeoutSeconds?: number | undefined;
+    };
+    name: string;
+    provider: "approval";
+}>;
+export declare const ConditionStepSchema: z.ZodObject<{
+    name: z.ZodString;
+    provider: z.ZodLiteral<"condition">;
+    params: z.ZodObject<{
+        action: z.ZodLiteral<"evaluate">;
+        expression: z.ZodString;
+        ifTrueStep: z.ZodOptional<z.ZodNumber>;
+        ifFalseStep: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        action: "evaluate";
+        expression: string;
+        ifTrueStep?: number | undefined;
+        ifFalseStep?: number | undefined;
+    }, {
+        action: "evaluate";
+        expression: string;
+        ifTrueStep?: number | undefined;
+        ifFalseStep?: number | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    params: {
+        action: "evaluate";
+        expression: string;
+        ifTrueStep?: number | undefined;
+        ifFalseStep?: number | undefined;
+    };
+    name: string;
+    provider: "condition";
+}, {
+    params: {
+        action: "evaluate";
+        expression: string;
+        ifTrueStep?: number | undefined;
+        ifFalseStep?: number | undefined;
+    };
+    name: string;
+    provider: "condition";
+}>;
 export declare const CustomStepSchema: z.ZodObject<{
     name: z.ZodString;
     provider: z.ZodEffects<z.ZodString, string, string>;
@@ -360,6 +534,38 @@ export declare const CustomStepSchema: z.ZodObject<{
     provider: string;
 }>;
 export declare const StepDefinitionSchema: z.ZodUnion<[z.ZodObject<{
+    name: z.ZodString;
+    provider: z.ZodLiteral<"sep10">;
+    params: z.ZodObject<{
+        action: z.ZodLiteral<"auth">;
+        domain: z.ZodString;
+        accountSecretRef: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        action: "auth";
+        domain: string;
+        accountSecretRef?: string | undefined;
+    }, {
+        action: "auth";
+        domain: string;
+        accountSecretRef?: string | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    params: {
+        action: "auth";
+        domain: string;
+        accountSecretRef?: string | undefined;
+    };
+    name: string;
+    provider: "sep10";
+}, {
+    params: {
+        action: "auth";
+        domain: string;
+        accountSecretRef?: string | undefined;
+    };
+    name: string;
+    provider: "sep10";
+}>, z.ZodObject<{
     name: z.ZodString;
     provider: z.ZodLiteral<"stellar">;
     params: z.ZodObject<{
@@ -472,10 +678,65 @@ export declare const StepDefinitionSchema: z.ZodUnion<[z.ZodObject<{
     provider: "stellar";
 }>, z.ZodObject<{
     name: z.ZodString;
+    provider: z.ZodLiteral<"stellar">;
+    params: z.ZodObject<{
+        action: z.ZodLiteral<"path-payment">;
+        sendAsset: z.ZodString;
+        destAsset: z.ZodString;
+        sendAmount: z.ZodNumber;
+        destMinAmount: z.ZodNumber;
+        destination: z.ZodString;
+        path: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        action: "path-payment";
+        sendAsset: string;
+        destAsset: string;
+        sendAmount: number;
+        destMinAmount: number;
+        destination: string;
+        path?: string[] | undefined;
+    }, {
+        action: "path-payment";
+        sendAsset: string;
+        destAsset: string;
+        sendAmount: number;
+        destMinAmount: number;
+        destination: string;
+        path?: string[] | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    params: {
+        action: "path-payment";
+        sendAsset: string;
+        destAsset: string;
+        sendAmount: number;
+        destMinAmount: number;
+        destination: string;
+        path?: string[] | undefined;
+    };
+    name: string;
+    provider: "stellar";
+}, {
+    params: {
+        action: "path-payment";
+        sendAsset: string;
+        destAsset: string;
+        sendAmount: number;
+        destMinAmount: number;
+        destination: string;
+        path?: string[] | undefined;
+    };
+    name: string;
+    provider: "stellar";
+}>, z.ZodObject<{
+    name: z.ZodString;
     provider: z.ZodLiteral<"anchor">;
     params: z.ZodObject<{
         action: z.ZodEnum<["convert", "sep24-deposit", "sep24-withdraw", "anchor"]>;
         anchor: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        anchorDomain: z.ZodOptional<z.ZodString>;
+        assetCode: z.ZodOptional<z.ZodString>;
+        amount: z.ZodOptional<z.ZodNumber>;
         from: z.ZodOptional<z.ZodString>;
         to: z.ZodOptional<z.ZodString>;
         fromAsset: z.ZodOptional<z.ZodString>;
@@ -484,13 +745,19 @@ export declare const StepDefinitionSchema: z.ZodUnion<[z.ZodObject<{
         action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
         anchor: string;
         to?: string | undefined;
+        amount?: number | undefined;
+        anchorDomain?: string | undefined;
+        assetCode?: string | undefined;
         from?: string | undefined;
         fromAsset?: string | undefined;
         toAsset?: string | undefined;
     }, {
         action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
         to?: string | undefined;
+        amount?: number | undefined;
         anchor?: string | undefined;
+        anchorDomain?: string | undefined;
+        assetCode?: string | undefined;
         from?: string | undefined;
         fromAsset?: string | undefined;
         toAsset?: string | undefined;
@@ -500,6 +767,9 @@ export declare const StepDefinitionSchema: z.ZodUnion<[z.ZodObject<{
         action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
         anchor: string;
         to?: string | undefined;
+        amount?: number | undefined;
+        anchorDomain?: string | undefined;
+        assetCode?: string | undefined;
         from?: string | undefined;
         fromAsset?: string | undefined;
         toAsset?: string | undefined;
@@ -510,7 +780,10 @@ export declare const StepDefinitionSchema: z.ZodUnion<[z.ZodObject<{
     params: {
         action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
         to?: string | undefined;
+        amount?: number | undefined;
         anchor?: string | undefined;
+        anchorDomain?: string | undefined;
+        assetCode?: string | undefined;
         from?: string | undefined;
         fromAsset?: string | undefined;
         toAsset?: string | undefined;
@@ -600,6 +873,75 @@ export declare const StepDefinitionSchema: z.ZodUnion<[z.ZodObject<{
     provider: "soroban";
 }>, z.ZodObject<{
     name: z.ZodString;
+    provider: z.ZodLiteral<"approval">;
+    params: z.ZodObject<{
+        action: z.ZodLiteral<"manual-approval">;
+        approverRole: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        timeoutSeconds: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        action: "manual-approval";
+        approverRole: string;
+        timeoutSeconds?: number | undefined;
+    }, {
+        action: "manual-approval";
+        approverRole?: string | undefined;
+        timeoutSeconds?: number | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    params: {
+        action: "manual-approval";
+        approverRole: string;
+        timeoutSeconds?: number | undefined;
+    };
+    name: string;
+    provider: "approval";
+}, {
+    params: {
+        action: "manual-approval";
+        approverRole?: string | undefined;
+        timeoutSeconds?: number | undefined;
+    };
+    name: string;
+    provider: "approval";
+}>, z.ZodObject<{
+    name: z.ZodString;
+    provider: z.ZodLiteral<"condition">;
+    params: z.ZodObject<{
+        action: z.ZodLiteral<"evaluate">;
+        expression: z.ZodString;
+        ifTrueStep: z.ZodOptional<z.ZodNumber>;
+        ifFalseStep: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        action: "evaluate";
+        expression: string;
+        ifTrueStep?: number | undefined;
+        ifFalseStep?: number | undefined;
+    }, {
+        action: "evaluate";
+        expression: string;
+        ifTrueStep?: number | undefined;
+        ifFalseStep?: number | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    params: {
+        action: "evaluate";
+        expression: string;
+        ifTrueStep?: number | undefined;
+        ifFalseStep?: number | undefined;
+    };
+    name: string;
+    provider: "condition";
+}, {
+    params: {
+        action: "evaluate";
+        expression: string;
+        ifTrueStep?: number | undefined;
+        ifFalseStep?: number | undefined;
+    };
+    name: string;
+    provider: "condition";
+}>, z.ZodObject<{
+    name: z.ZodString;
     provider: z.ZodEffects<z.ZodString, string, string>;
     params: z.ZodRecord<z.ZodString, z.ZodUnknown>;
 }, "strip", z.ZodTypeAny, {
@@ -617,6 +959,38 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
     name: z.ZodString;
     version: z.ZodDefault<z.ZodString>;
     steps: z.ZodArray<z.ZodUnion<[z.ZodObject<{
+        name: z.ZodString;
+        provider: z.ZodLiteral<"sep10">;
+        params: z.ZodObject<{
+            action: z.ZodLiteral<"auth">;
+            domain: z.ZodString;
+            accountSecretRef: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            action: "auth";
+            domain: string;
+            accountSecretRef?: string | undefined;
+        }, {
+            action: "auth";
+            domain: string;
+            accountSecretRef?: string | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        params: {
+            action: "auth";
+            domain: string;
+            accountSecretRef?: string | undefined;
+        };
+        name: string;
+        provider: "sep10";
+    }, {
+        params: {
+            action: "auth";
+            domain: string;
+            accountSecretRef?: string | undefined;
+        };
+        name: string;
+        provider: "sep10";
+    }>, z.ZodObject<{
         name: z.ZodString;
         provider: z.ZodLiteral<"stellar">;
         params: z.ZodObject<{
@@ -729,10 +1103,65 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
         provider: "stellar";
     }>, z.ZodObject<{
         name: z.ZodString;
+        provider: z.ZodLiteral<"stellar">;
+        params: z.ZodObject<{
+            action: z.ZodLiteral<"path-payment">;
+            sendAsset: z.ZodString;
+            destAsset: z.ZodString;
+            sendAmount: z.ZodNumber;
+            destMinAmount: z.ZodNumber;
+            destination: z.ZodString;
+            path: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            action: "path-payment";
+            sendAsset: string;
+            destAsset: string;
+            sendAmount: number;
+            destMinAmount: number;
+            destination: string;
+            path?: string[] | undefined;
+        }, {
+            action: "path-payment";
+            sendAsset: string;
+            destAsset: string;
+            sendAmount: number;
+            destMinAmount: number;
+            destination: string;
+            path?: string[] | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        params: {
+            action: "path-payment";
+            sendAsset: string;
+            destAsset: string;
+            sendAmount: number;
+            destMinAmount: number;
+            destination: string;
+            path?: string[] | undefined;
+        };
+        name: string;
+        provider: "stellar";
+    }, {
+        params: {
+            action: "path-payment";
+            sendAsset: string;
+            destAsset: string;
+            sendAmount: number;
+            destMinAmount: number;
+            destination: string;
+            path?: string[] | undefined;
+        };
+        name: string;
+        provider: "stellar";
+    }>, z.ZodObject<{
+        name: z.ZodString;
         provider: z.ZodLiteral<"anchor">;
         params: z.ZodObject<{
             action: z.ZodEnum<["convert", "sep24-deposit", "sep24-withdraw", "anchor"]>;
             anchor: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+            anchorDomain: z.ZodOptional<z.ZodString>;
+            assetCode: z.ZodOptional<z.ZodString>;
+            amount: z.ZodOptional<z.ZodNumber>;
             from: z.ZodOptional<z.ZodString>;
             to: z.ZodOptional<z.ZodString>;
             fromAsset: z.ZodOptional<z.ZodString>;
@@ -741,13 +1170,19 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
             action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
             anchor: string;
             to?: string | undefined;
+            amount?: number | undefined;
+            anchorDomain?: string | undefined;
+            assetCode?: string | undefined;
             from?: string | undefined;
             fromAsset?: string | undefined;
             toAsset?: string | undefined;
         }, {
             action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
             to?: string | undefined;
+            amount?: number | undefined;
             anchor?: string | undefined;
+            anchorDomain?: string | undefined;
+            assetCode?: string | undefined;
             from?: string | undefined;
             fromAsset?: string | undefined;
             toAsset?: string | undefined;
@@ -757,6 +1192,9 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
             action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
             anchor: string;
             to?: string | undefined;
+            amount?: number | undefined;
+            anchorDomain?: string | undefined;
+            assetCode?: string | undefined;
             from?: string | undefined;
             fromAsset?: string | undefined;
             toAsset?: string | undefined;
@@ -767,7 +1205,10 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
         params: {
             action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
             to?: string | undefined;
+            amount?: number | undefined;
             anchor?: string | undefined;
+            anchorDomain?: string | undefined;
+            assetCode?: string | undefined;
             from?: string | undefined;
             fromAsset?: string | undefined;
             toAsset?: string | undefined;
@@ -857,6 +1298,75 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
         provider: "soroban";
     }>, z.ZodObject<{
         name: z.ZodString;
+        provider: z.ZodLiteral<"approval">;
+        params: z.ZodObject<{
+            action: z.ZodLiteral<"manual-approval">;
+            approverRole: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+            timeoutSeconds: z.ZodOptional<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            action: "manual-approval";
+            approverRole: string;
+            timeoutSeconds?: number | undefined;
+        }, {
+            action: "manual-approval";
+            approverRole?: string | undefined;
+            timeoutSeconds?: number | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        params: {
+            action: "manual-approval";
+            approverRole: string;
+            timeoutSeconds?: number | undefined;
+        };
+        name: string;
+        provider: "approval";
+    }, {
+        params: {
+            action: "manual-approval";
+            approverRole?: string | undefined;
+            timeoutSeconds?: number | undefined;
+        };
+        name: string;
+        provider: "approval";
+    }>, z.ZodObject<{
+        name: z.ZodString;
+        provider: z.ZodLiteral<"condition">;
+        params: z.ZodObject<{
+            action: z.ZodLiteral<"evaluate">;
+            expression: z.ZodString;
+            ifTrueStep: z.ZodOptional<z.ZodNumber>;
+            ifFalseStep: z.ZodOptional<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            action: "evaluate";
+            expression: string;
+            ifTrueStep?: number | undefined;
+            ifFalseStep?: number | undefined;
+        }, {
+            action: "evaluate";
+            expression: string;
+            ifTrueStep?: number | undefined;
+            ifFalseStep?: number | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        params: {
+            action: "evaluate";
+            expression: string;
+            ifTrueStep?: number | undefined;
+            ifFalseStep?: number | undefined;
+        };
+        name: string;
+        provider: "condition";
+    }, {
+        params: {
+            action: "evaluate";
+            expression: string;
+            ifTrueStep?: number | undefined;
+            ifFalseStep?: number | undefined;
+        };
+        name: string;
+        provider: "condition";
+    }>, z.ZodObject<{
+        name: z.ZodString;
         provider: z.ZodEffects<z.ZodString, string, string>;
         params: z.ZodRecord<z.ZodString, z.ZodUnknown>;
     }, "strip", z.ZodTypeAny, {
@@ -872,6 +1382,14 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
     name: string;
     version: string;
     steps: ({
+        params: {
+            action: "auth";
+            domain: string;
+            accountSecretRef?: string | undefined;
+        };
+        name: string;
+        provider: "sep10";
+    } | {
         params: {
             action: "receive";
             asset: string;
@@ -900,9 +1418,24 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
         provider: "stellar";
     } | {
         params: {
+            action: "path-payment";
+            sendAsset: string;
+            destAsset: string;
+            sendAmount: number;
+            destMinAmount: number;
+            destination: string;
+            path?: string[] | undefined;
+        };
+        name: string;
+        provider: "stellar";
+    } | {
+        params: {
             action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
             anchor: string;
             to?: string | undefined;
+            amount?: number | undefined;
+            anchorDomain?: string | undefined;
+            assetCode?: string | undefined;
             from?: string | undefined;
             fromAsset?: string | undefined;
             toAsset?: string | undefined;
@@ -931,6 +1464,23 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
         name: string;
         provider: "soroban";
     } | {
+        params: {
+            action: "manual-approval";
+            approverRole: string;
+            timeoutSeconds?: number | undefined;
+        };
+        name: string;
+        provider: "approval";
+    } | {
+        params: {
+            action: "evaluate";
+            expression: string;
+            ifTrueStep?: number | undefined;
+            ifFalseStep?: number | undefined;
+        };
+        name: string;
+        provider: "condition";
+    } | {
         params: Record<string, unknown>;
         name: string;
         provider: string;
@@ -939,6 +1489,14 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
 }, {
     name: string;
     steps: ({
+        params: {
+            action: "auth";
+            domain: string;
+            accountSecretRef?: string | undefined;
+        };
+        name: string;
+        provider: "sep10";
+    } | {
         params: {
             action: "receive";
             asset: string;
@@ -967,9 +1525,24 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
         provider: "stellar";
     } | {
         params: {
+            action: "path-payment";
+            sendAsset: string;
+            destAsset: string;
+            sendAmount: number;
+            destMinAmount: number;
+            destination: string;
+            path?: string[] | undefined;
+        };
+        name: string;
+        provider: "stellar";
+    } | {
+        params: {
             action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
             to?: string | undefined;
+            amount?: number | undefined;
             anchor?: string | undefined;
+            anchorDomain?: string | undefined;
+            assetCode?: string | undefined;
             from?: string | undefined;
             fromAsset?: string | undefined;
             toAsset?: string | undefined;
@@ -997,6 +1570,23 @@ export declare const FlowDefinitionSchema: z.ZodObject<{
         };
         name: string;
         provider: "soroban";
+    } | {
+        params: {
+            action: "manual-approval";
+            approverRole?: string | undefined;
+            timeoutSeconds?: number | undefined;
+        };
+        name: string;
+        provider: "approval";
+    } | {
+        params: {
+            action: "evaluate";
+            expression: string;
+            ifTrueStep?: number | undefined;
+            ifFalseStep?: number | undefined;
+        };
+        name: string;
+        provider: "condition";
     } | {
         params: Record<string, unknown>;
         name: string;
@@ -1121,11 +1711,44 @@ export type FlowGraphDefinition = z.infer<typeof FlowGraphDefinitionSchema>;
 export declare const RegisterFlowPayloadSchema: z.ZodObject<{
     id: z.ZodOptional<z.ZodString>;
     name: z.ZodString;
+    version: z.ZodOptional<z.ZodString>;
     definition: z.ZodObject<{
         id: z.ZodOptional<z.ZodString>;
         name: z.ZodString;
         version: z.ZodDefault<z.ZodString>;
         steps: z.ZodArray<z.ZodUnion<[z.ZodObject<{
+            name: z.ZodString;
+            provider: z.ZodLiteral<"sep10">;
+            params: z.ZodObject<{
+                action: z.ZodLiteral<"auth">;
+                domain: z.ZodString;
+                accountSecretRef: z.ZodOptional<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                action: "auth";
+                domain: string;
+                accountSecretRef?: string | undefined;
+            }, {
+                action: "auth";
+                domain: string;
+                accountSecretRef?: string | undefined;
+            }>;
+        }, "strip", z.ZodTypeAny, {
+            params: {
+                action: "auth";
+                domain: string;
+                accountSecretRef?: string | undefined;
+            };
+            name: string;
+            provider: "sep10";
+        }, {
+            params: {
+                action: "auth";
+                domain: string;
+                accountSecretRef?: string | undefined;
+            };
+            name: string;
+            provider: "sep10";
+        }>, z.ZodObject<{
             name: z.ZodString;
             provider: z.ZodLiteral<"stellar">;
             params: z.ZodObject<{
@@ -1238,10 +1861,65 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
             provider: "stellar";
         }>, z.ZodObject<{
             name: z.ZodString;
+            provider: z.ZodLiteral<"stellar">;
+            params: z.ZodObject<{
+                action: z.ZodLiteral<"path-payment">;
+                sendAsset: z.ZodString;
+                destAsset: z.ZodString;
+                sendAmount: z.ZodNumber;
+                destMinAmount: z.ZodNumber;
+                destination: z.ZodString;
+                path: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            }, "strip", z.ZodTypeAny, {
+                action: "path-payment";
+                sendAsset: string;
+                destAsset: string;
+                sendAmount: number;
+                destMinAmount: number;
+                destination: string;
+                path?: string[] | undefined;
+            }, {
+                action: "path-payment";
+                sendAsset: string;
+                destAsset: string;
+                sendAmount: number;
+                destMinAmount: number;
+                destination: string;
+                path?: string[] | undefined;
+            }>;
+        }, "strip", z.ZodTypeAny, {
+            params: {
+                action: "path-payment";
+                sendAsset: string;
+                destAsset: string;
+                sendAmount: number;
+                destMinAmount: number;
+                destination: string;
+                path?: string[] | undefined;
+            };
+            name: string;
+            provider: "stellar";
+        }, {
+            params: {
+                action: "path-payment";
+                sendAsset: string;
+                destAsset: string;
+                sendAmount: number;
+                destMinAmount: number;
+                destination: string;
+                path?: string[] | undefined;
+            };
+            name: string;
+            provider: "stellar";
+        }>, z.ZodObject<{
+            name: z.ZodString;
             provider: z.ZodLiteral<"anchor">;
             params: z.ZodObject<{
                 action: z.ZodEnum<["convert", "sep24-deposit", "sep24-withdraw", "anchor"]>;
                 anchor: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+                anchorDomain: z.ZodOptional<z.ZodString>;
+                assetCode: z.ZodOptional<z.ZodString>;
+                amount: z.ZodOptional<z.ZodNumber>;
                 from: z.ZodOptional<z.ZodString>;
                 to: z.ZodOptional<z.ZodString>;
                 fromAsset: z.ZodOptional<z.ZodString>;
@@ -1250,13 +1928,19 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
                 action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
                 anchor: string;
                 to?: string | undefined;
+                amount?: number | undefined;
+                anchorDomain?: string | undefined;
+                assetCode?: string | undefined;
                 from?: string | undefined;
                 fromAsset?: string | undefined;
                 toAsset?: string | undefined;
             }, {
                 action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
                 to?: string | undefined;
+                amount?: number | undefined;
                 anchor?: string | undefined;
+                anchorDomain?: string | undefined;
+                assetCode?: string | undefined;
                 from?: string | undefined;
                 fromAsset?: string | undefined;
                 toAsset?: string | undefined;
@@ -1266,6 +1950,9 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
                 action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
                 anchor: string;
                 to?: string | undefined;
+                amount?: number | undefined;
+                anchorDomain?: string | undefined;
+                assetCode?: string | undefined;
                 from?: string | undefined;
                 fromAsset?: string | undefined;
                 toAsset?: string | undefined;
@@ -1276,7 +1963,10 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
             params: {
                 action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
                 to?: string | undefined;
+                amount?: number | undefined;
                 anchor?: string | undefined;
+                anchorDomain?: string | undefined;
+                assetCode?: string | undefined;
                 from?: string | undefined;
                 fromAsset?: string | undefined;
                 toAsset?: string | undefined;
@@ -1366,6 +2056,75 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
             provider: "soroban";
         }>, z.ZodObject<{
             name: z.ZodString;
+            provider: z.ZodLiteral<"approval">;
+            params: z.ZodObject<{
+                action: z.ZodLiteral<"manual-approval">;
+                approverRole: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+                timeoutSeconds: z.ZodOptional<z.ZodNumber>;
+            }, "strip", z.ZodTypeAny, {
+                action: "manual-approval";
+                approverRole: string;
+                timeoutSeconds?: number | undefined;
+            }, {
+                action: "manual-approval";
+                approverRole?: string | undefined;
+                timeoutSeconds?: number | undefined;
+            }>;
+        }, "strip", z.ZodTypeAny, {
+            params: {
+                action: "manual-approval";
+                approverRole: string;
+                timeoutSeconds?: number | undefined;
+            };
+            name: string;
+            provider: "approval";
+        }, {
+            params: {
+                action: "manual-approval";
+                approverRole?: string | undefined;
+                timeoutSeconds?: number | undefined;
+            };
+            name: string;
+            provider: "approval";
+        }>, z.ZodObject<{
+            name: z.ZodString;
+            provider: z.ZodLiteral<"condition">;
+            params: z.ZodObject<{
+                action: z.ZodLiteral<"evaluate">;
+                expression: z.ZodString;
+                ifTrueStep: z.ZodOptional<z.ZodNumber>;
+                ifFalseStep: z.ZodOptional<z.ZodNumber>;
+            }, "strip", z.ZodTypeAny, {
+                action: "evaluate";
+                expression: string;
+                ifTrueStep?: number | undefined;
+                ifFalseStep?: number | undefined;
+            }, {
+                action: "evaluate";
+                expression: string;
+                ifTrueStep?: number | undefined;
+                ifFalseStep?: number | undefined;
+            }>;
+        }, "strip", z.ZodTypeAny, {
+            params: {
+                action: "evaluate";
+                expression: string;
+                ifTrueStep?: number | undefined;
+                ifFalseStep?: number | undefined;
+            };
+            name: string;
+            provider: "condition";
+        }, {
+            params: {
+                action: "evaluate";
+                expression: string;
+                ifTrueStep?: number | undefined;
+                ifFalseStep?: number | undefined;
+            };
+            name: string;
+            provider: "condition";
+        }>, z.ZodObject<{
+            name: z.ZodString;
             provider: z.ZodEffects<z.ZodString, string, string>;
             params: z.ZodRecord<z.ZodString, z.ZodUnknown>;
         }, "strip", z.ZodTypeAny, {
@@ -1382,6 +2141,14 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
         version: string;
         steps: ({
             params: {
+                action: "auth";
+                domain: string;
+                accountSecretRef?: string | undefined;
+            };
+            name: string;
+            provider: "sep10";
+        } | {
+            params: {
                 action: "receive";
                 asset: string;
                 minAmount: number;
@@ -1409,9 +2176,24 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
             provider: "stellar";
         } | {
             params: {
+                action: "path-payment";
+                sendAsset: string;
+                destAsset: string;
+                sendAmount: number;
+                destMinAmount: number;
+                destination: string;
+                path?: string[] | undefined;
+            };
+            name: string;
+            provider: "stellar";
+        } | {
+            params: {
                 action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
                 anchor: string;
                 to?: string | undefined;
+                amount?: number | undefined;
+                anchorDomain?: string | undefined;
+                assetCode?: string | undefined;
                 from?: string | undefined;
                 fromAsset?: string | undefined;
                 toAsset?: string | undefined;
@@ -1440,6 +2222,23 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
             name: string;
             provider: "soroban";
         } | {
+            params: {
+                action: "manual-approval";
+                approverRole: string;
+                timeoutSeconds?: number | undefined;
+            };
+            name: string;
+            provider: "approval";
+        } | {
+            params: {
+                action: "evaluate";
+                expression: string;
+                ifTrueStep?: number | undefined;
+                ifFalseStep?: number | undefined;
+            };
+            name: string;
+            provider: "condition";
+        } | {
             params: Record<string, unknown>;
             name: string;
             provider: string;
@@ -1448,6 +2247,14 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
     }, {
         name: string;
         steps: ({
+            params: {
+                action: "auth";
+                domain: string;
+                accountSecretRef?: string | undefined;
+            };
+            name: string;
+            provider: "sep10";
+        } | {
             params: {
                 action: "receive";
                 asset: string;
@@ -1476,9 +2283,24 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
             provider: "stellar";
         } | {
             params: {
+                action: "path-payment";
+                sendAsset: string;
+                destAsset: string;
+                sendAmount: number;
+                destMinAmount: number;
+                destination: string;
+                path?: string[] | undefined;
+            };
+            name: string;
+            provider: "stellar";
+        } | {
+            params: {
                 action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
                 to?: string | undefined;
+                amount?: number | undefined;
                 anchor?: string | undefined;
+                anchorDomain?: string | undefined;
+                assetCode?: string | undefined;
                 from?: string | undefined;
                 fromAsset?: string | undefined;
                 toAsset?: string | undefined;
@@ -1506,6 +2328,23 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
             };
             name: string;
             provider: "soroban";
+        } | {
+            params: {
+                action: "manual-approval";
+                approverRole?: string | undefined;
+                timeoutSeconds?: number | undefined;
+            };
+            name: string;
+            provider: "approval";
+        } | {
+            params: {
+                action: "evaluate";
+                expression: string;
+                ifTrueStep?: number | undefined;
+                ifFalseStep?: number | undefined;
+            };
+            name: string;
+            provider: "condition";
         } | {
             params: Record<string, unknown>;
             name: string;
@@ -1521,6 +2360,14 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
         version: string;
         steps: ({
             params: {
+                action: "auth";
+                domain: string;
+                accountSecretRef?: string | undefined;
+            };
+            name: string;
+            provider: "sep10";
+        } | {
+            params: {
                 action: "receive";
                 asset: string;
                 minAmount: number;
@@ -1548,9 +2395,24 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
             provider: "stellar";
         } | {
             params: {
+                action: "path-payment";
+                sendAsset: string;
+                destAsset: string;
+                sendAmount: number;
+                destMinAmount: number;
+                destination: string;
+                path?: string[] | undefined;
+            };
+            name: string;
+            provider: "stellar";
+        } | {
+            params: {
                 action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
                 anchor: string;
                 to?: string | undefined;
+                amount?: number | undefined;
+                anchorDomain?: string | undefined;
+                assetCode?: string | undefined;
                 from?: string | undefined;
                 fromAsset?: string | undefined;
                 toAsset?: string | undefined;
@@ -1579,6 +2441,23 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
             name: string;
             provider: "soroban";
         } | {
+            params: {
+                action: "manual-approval";
+                approverRole: string;
+                timeoutSeconds?: number | undefined;
+            };
+            name: string;
+            provider: "approval";
+        } | {
+            params: {
+                action: "evaluate";
+                expression: string;
+                ifTrueStep?: number | undefined;
+                ifFalseStep?: number | undefined;
+            };
+            name: string;
+            provider: "condition";
+        } | {
             params: Record<string, unknown>;
             name: string;
             provider: string;
@@ -1586,11 +2465,20 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
         id?: string | undefined;
     };
     id?: string | undefined;
+    version?: string | undefined;
 }, {
     name: string;
     definition: {
         name: string;
         steps: ({
+            params: {
+                action: "auth";
+                domain: string;
+                accountSecretRef?: string | undefined;
+            };
+            name: string;
+            provider: "sep10";
+        } | {
             params: {
                 action: "receive";
                 asset: string;
@@ -1619,9 +2507,24 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
             provider: "stellar";
         } | {
             params: {
+                action: "path-payment";
+                sendAsset: string;
+                destAsset: string;
+                sendAmount: number;
+                destMinAmount: number;
+                destination: string;
+                path?: string[] | undefined;
+            };
+            name: string;
+            provider: "stellar";
+        } | {
+            params: {
                 action: "anchor" | "convert" | "sep24-deposit" | "sep24-withdraw";
                 to?: string | undefined;
+                amount?: number | undefined;
                 anchor?: string | undefined;
+                anchorDomain?: string | undefined;
+                assetCode?: string | undefined;
                 from?: string | undefined;
                 fromAsset?: string | undefined;
                 toAsset?: string | undefined;
@@ -1650,6 +2553,23 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
             name: string;
             provider: "soroban";
         } | {
+            params: {
+                action: "manual-approval";
+                approverRole?: string | undefined;
+                timeoutSeconds?: number | undefined;
+            };
+            name: string;
+            provider: "approval";
+        } | {
+            params: {
+                action: "evaluate";
+                expression: string;
+                ifTrueStep?: number | undefined;
+                ifFalseStep?: number | undefined;
+            };
+            name: string;
+            provider: "condition";
+        } | {
             params: Record<string, unknown>;
             name: string;
             provider: string;
@@ -1658,18 +2578,22 @@ export declare const RegisterFlowPayloadSchema: z.ZodObject<{
         version?: string | undefined;
     };
     id?: string | undefined;
+    version?: string | undefined;
 }>;
 export type RegisterFlowPayload = z.infer<typeof RegisterFlowPayloadSchema>;
 export declare const CreateExecutionPayloadSchema: z.ZodObject<{
     flowId: z.ZodString;
+    flowVersion: z.ZodOptional<z.ZodString>;
     context: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
     idempotencyKey: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     flowId: string;
+    flowVersion?: string | undefined;
     context?: Record<string, unknown> | undefined;
     idempotencyKey?: string | undefined;
 }, {
     flowId: string;
+    flowVersion?: string | undefined;
     context?: Record<string, unknown> | undefined;
     idempotencyKey?: string | undefined;
 }>;
@@ -1694,3 +2618,20 @@ export declare const WebhookResumePayloadSchema: z.ZodObject<{
     timestamp?: number | undefined;
 }>;
 export type WebhookResumePayload = z.infer<typeof WebhookResumePayloadSchema>;
+export declare const ApproveExecutionPayloadSchema: z.ZodObject<{
+    executionId: z.ZodString;
+    approved: z.ZodBoolean;
+    approver: z.ZodOptional<z.ZodString>;
+    reason: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    executionId: string;
+    approved: boolean;
+    approver?: string | undefined;
+    reason?: string | undefined;
+}, {
+    executionId: string;
+    approved: boolean;
+    approver?: string | undefined;
+    reason?: string | undefined;
+}>;
+export type ApproveExecutionPayload = z.infer<typeof ApproveExecutionPayloadSchema>;
