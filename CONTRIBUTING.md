@@ -12,6 +12,33 @@ Thank you for your interest in contributing to Mesa! As a developer runtime for 
    - Make your changes and write automated tests where possible.
    - Submit a pull request against the `main` branch.
 
+## 🔌 How to Add a New Provider
+
+Mesa's runtime engine uses a pluggable provider architecture (`MesaProvider`). To add a custom Stellar or third-party provider (e.g. Circle, MoneyGram, Soroban contract, custom oracle):
+
+1. **Implement `MesaProvider` Interface**:
+   ```ts
+   import { MesaProvider, StepDefinition, ExecutionContext, StepResult } from '@mesaprotocol/runtime';
+
+   export class MyCustomProvider implements MesaProvider {
+     readonly name = 'my-custom';
+     
+     async execute(step: StepDefinition, context: ExecutionContext): Promise<StepResult> {
+       // Perform provider action
+       return {
+         outcome: 'completed', // 'completed' | 'suspended' | 'failed'
+         output: { status: 'SUCCESS' }
+       };
+     }
+   }
+   ```
+2. **Register the Provider**:
+   ```ts
+   import { registerProvider } from '@mesaprotocol/runtime';
+   registerProvider(new MyCustomProvider());
+   ```
+3. **Add Tests & Export**: Add a unit test verifying step execution, suspension, or resume behavior under `packages/runtime/src/test`.
+
 ## Code Style & Formatting
 
 We use standard TypeScript guidelines. Please make sure your code builds successfully and has no lint/compile errors before committing:

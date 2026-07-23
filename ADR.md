@@ -2,9 +2,20 @@
 
 > **Documenting key architectural decisions, design trade-offs, and technical rationale driving Mesa Protocol.**
 
+| Index | Title | Status | Date |
+|---|---|---|---|
+| **ADR-001** | Monorepo Workspace Architecture | `ACCEPTED` | 2026-07-20 |
+| **ADR-002** | LIFO Saga Pattern for Distributed Step Compensation | `ACCEPTED` | 2026-07-23 |
+| **ADR-003** | Dynamic Pluggable Provider Registry | `ACCEPTED` | 2026-07-23 |
+| **ADR-004** | HMAC SHA-256 Webhook Verification & Drift Tolerance | `ACCEPTED` | 2026-07-22 |
+| **ADR-005** | Single Source of Truth for Workflow Templates | `ACCEPTED` | 2026-07-23 |
+
 ---
 
 ## ADR-001: Monorepo Workspace Architecture
+
+- **Status**: `ACCEPTED`
+- **Date**: 2026-07-20
 
 ### Context
 Building financial workflow infrastructure requires coordination between canonical Zod schemas, TypeScript AST codegen, SDK builder interfaces, runtime servers, and CLI tooling. Combining them into a single monolithic package caused SDK bundle bloat (~9.5 MB due to TypeScript compiler dependencies).
@@ -26,6 +37,9 @@ Split Mesa into decoupled workspace packages:
 
 ## ADR-002: LIFO Saga Pattern for Distributed Step Compensation
 
+- **Status**: `ACCEPTED`
+- **Date**: 2026-07-23
+
 ### Context
 Multi-step payment corridors (e.g. `deposit -> DEX swap -> payout`) can fail midway due to network congestion or account balance errors. If Step 3 fails, executed steps cannot simply be abandoned without leaving user funds stranded.
 
@@ -39,6 +53,9 @@ Implement the **Saga Pattern** with LIFO (Last-In, First-Out) step compensation 
 ---
 
 ## ADR-003: Dynamic Pluggable Provider Registry
+
+- **Status**: `ACCEPTED`
+- **Date**: 2026-07-23
 
 ### Context
 Hardcoding ledger operations directly into core runtime execution loops creates tight coupling and prevents community extensions.
@@ -54,6 +71,9 @@ Define a minimal `MesaProvider` interface and maintain a dynamic `ProviderRegist
 
 ## ADR-004: HMAC SHA-256 Webhook Verification & Drift Tolerance
 
+- **Status**: `ACCEPTED`
+- **Date**: 2026-07-22
+
 ### Context
 Webhooks resuming suspended workflow executions must be protected against tampering and replay attacks.
 
@@ -67,6 +87,9 @@ Verify incoming webhooks using HMAC SHA-256 signatures (`X-Mesa-Signature`) comp
 ---
 
 ## ADR-005: Single Source of Truth for Workflow Templates
+
+- **Status**: `ACCEPTED`
+- **Date**: 2026-07-23
 
 ### Context
 Maintaining separate template definitions in CLI scaffolding scripts and visual Studio UI led to drift and inconsistent developer experiences.

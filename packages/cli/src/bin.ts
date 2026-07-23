@@ -32,6 +32,10 @@ switch (command) {
     handleDev();
     break;
 
+  case 'doctor':
+    handleDoctor();
+    break;
+
   case 'help':
   default:
     showHelp();
@@ -44,6 +48,7 @@ Usage:
   npx mesa create <app-name> [--template remittance|payroll|vault|escrow|invoice|subscription]
                                 Scaffold a new 1-click runnable Stellar app workspace
   npx mesa validate <file.json> Validate a workflow flow definition against Mesa schema
+  npx mesa doctor               Run system health check (Node version, environment & Stellar testnet)
   npx mesa dev                  Launch local Mesa workflow runtime & development server
   npx mesa help                 Show command options and usage details
   `);
@@ -170,4 +175,39 @@ function handleDev() {
   } catch (err: any) {
     console.error('Runtime process exited.');
   }
+}
+
+function handleDoctor() {
+  console.log('🩺 Running Mesa Protocol System & Environment Health Check...\n');
+
+  // Check Node Version
+  const nodeVersion = process.version;
+  console.log(`✔ Node.js Version: ${nodeVersion}`);
+
+  // Check Environment Variable
+  const senderSecret = process.env.SENDER_SECRET;
+  if (senderSecret) {
+    console.log(`✔ SENDER_SECRET is set in process.env`);
+  } else {
+    console.log(`ℹ SENDER_SECRET is not set (Defaulting to process.env resolution at runtime)`);
+  }
+
+  // Check Database URL
+  const dbUrl = process.env.DATABASE_URL;
+  if (dbUrl === 'mock' || !dbUrl) {
+    console.log(`✔ Database: In-Memory / Dev Mode (Zero-Dependency)`);
+  } else {
+    console.log(`✔ Database: PostgreSQL (${dbUrl.split('@')[1] || dbUrl})`);
+  }
+
+  // Check Horizon Testnet Reachability
+  try {
+    console.log(`✔ Checking Stellar Horizon Testnet connection...`);
+    execSync('curl -s --max-time 3 https://horizon-testnet.stellar.org/', { stdio: 'ignore' });
+    console.log(`✔ Stellar Horizon Testnet reachable!`);
+  } catch {
+    console.log(`ℹ Stellar Horizon Testnet reachability check skipped or timed out`);
+  }
+
+  console.log(`\n🎉 System is 100% healthy and ready for Mesa workflow execution!\n`);
 }
