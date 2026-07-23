@@ -24,9 +24,10 @@ Thumbs.db
 .env.test.local
 .env.production.local
 
-# Temp files
+# Temp files & scratch workspaces
 temp_clone/
 temp_dapp_clone/
+scratch/
 
 # Sandbox development folders
 dev-sandbox/

@@ -1,0 +1,17 @@
+{
+  "name": "@mesaprotocol/schema",
+  "version": "0.2.0",
+  "description": "Canonical Zod schemas, discriminated unions, and types for Mesa Protocol workflows",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

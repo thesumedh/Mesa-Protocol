@@ -3,23 +3,27 @@
   "version": "0.2.0",
   "private": true,
   "workspaces": [
+    "packages/schema",
     "packages/sdk",
+    "packages/codegen",
     "packages/runtime",
+    "packages/cli",
     "packages/providers/*"
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run build --workspace=packages/schema && npm run build --workspace=packages/sdk && npm run build --workspace=packages/codegen && npm run build --workspace=packages/runtime && npm run build --workspace=packages/cli",
+    "build:schema": "npm run build --workspace=packages/schema",
     "build:sdk": "npm run build --workspace=packages/sdk",
+    "build:codegen": "npm run build --workspace=packages/codegen",
     "build:runtime": "npm run build --workspace=packages/runtime",
+    "build:cli": "npm run build --workspace=packages/cli",
     "runtime:dev": "npm run dev --workspace=packages/runtime",
-    "test": "npm run test --workspace=packages/sdk && npm run test --workspace=packages/runtime",
-    "demo:stellar": "npm run demo:stellar --workspace=packages/runtime",
-    "demo:payroll": "npm run demo:payroll --workspace=packages/runtime"
+    "test": "npm run test --workspace=packages/schema && npm run test --workspace=packages/sdk && npm run test --workspace=packages/codegen && npm run test --workspace=packages/runtime && npm run test --workspace=packages/cli",
+    "typecheck": "npx tsc --noEmit -p packages/schema/tsconfig.json && npx tsc --noEmit -p packages/sdk/tsconfig.json && npx tsc --noEmit -p packages/runtime/tsconfig.json && npx tsc --noEmit -p packages/cli/tsconfig.json"
   },
   "devDependencies": {
     "vite": "^5.0.0",
     "typescript": "^5.3.3"
   }
 }
-

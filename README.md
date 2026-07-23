@@ -1,13 +1,13 @@
-# Mesa Protocol — Embedded Finance Runtime for Stellar
+# Mesa Protocol — Stellar Visual Workflow & App Builder
 
-> **Build resilient financial workflows on Stellar in minutes, not weeks.**
+> **Build, visually design, and deploy production-grade financial applications on Stellar in minutes.**
 
 [![npm version](https://img.shields.io/npm/v/@mesaprotocol/sdk?color=00dbe9&label=%40mesaprotocol%2Fsdk)](https://www.npmjs.com/package/@mesaprotocol/sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
 [![Built on Stellar](https://img.shields.io/badge/Built%20on-Stellar-blueviolet)](https://stellar.org)
 
 ```bash
-npm install @mesaprotocol/sdk
+npx mesa create my-stellar-app --template remittance
 ```
 
 ```ts
@@ -15,307 +15,165 @@ import { Mesa } from "@mesaprotocol/sdk";
 
 Mesa.configure({ runtimeUrl: "http://localhost:3001" });
 
-const flow = Mesa.flow("stellar-payment-flow")
+export const flow = Mesa.flow("cross-border-remittance", "remittance-corridor-v1")
   .receive({
-    asset: "XLM",
-    minAmount: 25,
-    toAddress: "GD3Z...KAOV"
+    asset: "USDC",
+    minAmount: 100,
+    toAddress: "GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV",
   })
   .delay({ seconds: 5 })
   .payment({
-    horizonUrl: "https://horizon-testnet.stellar.org",
-    senderSecretRef: "SENDER_SECRET",  // resolved from process.env — never hardcoded
-    to: "GA4U...IW3P",
-    amount: 25
+    amount: 95,
+    to: "GA4UFVDQRWUZIDKB32U2TVZSXSFAPCZV522UY7OYGM27BJ66MHYIIW3P",
+    senderSecretRef: "SENDER_SECRET", // resolved safely from process.env at runtime
   })
   .build();
 
-await Mesa.execute(flow);
+// Register flow definition & trigger execution
+await Mesa.register(flow);
+const { executionId } = await Mesa.execute(flow);
 ```
 
 ---
 
-## ⚡ What is Mesa?
+## ⚡ What is Mesa Protocol?
 
-Stellar developers spend weeks wiring together Wallet Kits, SEP-10 Authentication, SEP-24/SEP-6 anchors, Horizon operations, path payments, event persistence, retries, and webhooks.
+Building financial applications on Stellar requires coordinating SEP-24/SEP-6 anchors, Horizon path payments, Soroban smart contract invocations, compliance holds, retries, and webhook callbacks.
 
-**Mesa orchestrates all of those components into a single durable runtime.**
+**Mesa Protocol provides a complete visual builder, TypeScript SDK, CLI, and durable execution runtime for Stellar.**
 
-If a network call fails, or an interactive anchor deposit takes hours to complete, Mesa persists the execution state to PostgreSQL, schedules retries with exponential backoff, suspends execution when waiting on user interaction, and resumes instantly via webhooks.
-
----
-
-## 🏛️ System Architecture
-
-```
-  Developer App  ◄──►  Mesa Studio (Visual Builder)
-       │
-       ▼
-    Mesa SDK  (@mesaprotocol/sdk)
-       │
-       ▼
-  Mesa Runtime  (REST API + Scheduler + Executor)
-       │
-  ┌────┼────────┐
-  │    │        │
-Anchor │    Stellar
-(SEP-24)│  Provider
-   Wallet    │
-   Kit    Horizon API
-             │
-             ▼
-       Stellar Network (Testnet / Mainnet)
-```
+If a network call fails, or an interactive anchor deposit takes hours to complete, Mesa persists execution state, schedules retries with exponential backoff, suspends execution while waiting on external deposit callbacks, and resumes safely via HMAC SHA-256 verified webhooks.
 
 ---
 
-## ❓ Why Mesa?
+## 🏛️ Monorepo Architecture
 
-| Feature / Challenge | Without Mesa | With Mesa |
+Mesa is structured into modular, decoupled workspace packages:
+
+| Package | Workspace Path | Description |
+|---|---|---|
+| **`@mesaprotocol/schema`** | `packages/schema` | Canonical Zod schemas, discriminated step unions (`receive`, `payment`, `convert`, `delay`, `webhook`, `soroban`), provider metadata, & HTTP request payloads |
+| **`@mesaprotocol/sdk`** | `packages/sdk` | Ultra-lightweight (~10 KB) fluent TypeScript builder API (`Mesa.flow()`, `Mesa.register()`, `Mesa.execute()`) |
+| **`@mesaprotocol/codegen`** | `packages/codegen` | TypeScript AST parser (`ts.createSourceFile`), cURL generator, JSON exporter, & 1-click runnable app workspace packager |
+| **`@mesaprotocol/runtime`** | `packages/runtime` | State machine engine, REST API server, scheduler with exponential backoff, HMAC webhook security, & Developer Dashboard |
+| **`@mesaprotocol/cli`** | `packages/cli` | Command-line tool for scaffolding starter apps, validating flow definitions, and running local runtimes |
+
+```
+  ┌─────────────────────────────────────────────────────────┐
+  │                 Mesa Studio (Visual UI)                 │
+  └────────────────────────────┬────────────────────────────┘
+                               │
+            ┌──────────────────┴──────────────────┐
+            ▼                                     ▼
+   Mesa CLI (npx mesa)                  Mesa SDK (@mesaprotocol/sdk)
+            │                                     │
+            └──────────────────┬──────────────────┘
+                               ▼
+            @mesaprotocol/schema + @mesaprotocol/codegen
+                               │
+                               ▼
+                       Mesa Runtime API
+                  (Engine + Scheduler + Store)
+                               │
+            ┌──────────────────┼──────────────────┐
+            ▼                  ▼                  ▼
+     Stellar Horizon     SEP-24 Anchors     Soroban Contracts
+```
+
+---
+
+## 🚀 1-Minute CLI Quickstart
+
+Scaffold a complete, 100% runnable monorepo app workspace with React UI, runtime server, flow auto-registration, and interactive deposit simulator using the Mesa CLI:
+
+```bash
+# 1. Create a new app workspace using a preset template
+npx mesa create my-remittance-app --template remittance
+
+# 2. Navigate to your app directory
+cd my-remittance-app
+
+# 3. Install dependencies & copy environment template
+npm install
+cp .env.example .env
+
+# 4. Launch dev workspace (Server + React UI)
+npm run dev
+```
+
+### Supported CLI Templates (`--template`):
+- `remittance` — Cross-Border Remittance Corridor (`receive → delay → payment`)
+- `payroll` — Automated Batch Payroll Payouts (`receive → delay → multi-payment`)
+- `escrow` — Savings Circle & Timelocked Escrow (`receive → delay → disburse`)
+- `soroban` — Soroban Smart Contract Yield Vault (`receive → invoke → webhook`)
+
+---
+
+## 🎨 Mesa Studio — Visual Workflow & App Builder
+
+Open Mesa Studio locally at **[http://localhost:3000/studio](http://localhost:3000/studio)** or via Mesa Runtime at **[http://localhost:3001/studio](http://localhost:3001/studio)**.
+
+### Studio Features:
+- **Interactive Drag-and-Drop Canvas:** Connect primitives (`Receive`, `Payment`, `Delay`, `Webhook`, `Anchor`, `Soroban`) visually.
+- **Bi-directional Round-Tripping:** Code generator parses visual node graphs into TypeScript SDK syntax and vice versa in real time.
+- **Preset Financial Templates:** Load remittance corridors, payroll payout systems, or Soroban vault workflows in one click.
+- **1-Click Runnable Workspace Exporter:** Export a 100% runnable monorepo ZIP containing:
+  - React Web Frontend (`apps/web`) with interactive **Webhook Deposit Simulator**
+  - Auto-registering Runtime Server (`mesa-server.ts`)
+  - Flow Definition files (`packages/workflows`)
+  - Environment Template (`.env.example`) & Docker Compose setup (`docker-compose.yml`)
+
+---
+
+## 🔒 Security & Replay Protection
+
+Mesa implements production-grade security patterns out of the box:
+
+- **Secret Key Isolation (`secretRef`):** Secret keys are never raw strings or committed to code. Key inputs specify reference names (e.g. `"SENDER_SECRET"`), resolved dynamically at execution time from `process.env`.
+- **HMAC SHA-256 Webhook Verification:** Webhook callbacks verify signatures computed over raw body payloads: `X-Mesa-Signature`.
+- **Timestamp Drift Tolerance:** Rejects webhook calls older than 5 minutes (`X-Mesa-Timestamp`) to defeat replay attacks.
+- **Event Idempotency:** Tracks incoming event IDs (`X-Mesa-Event-Id`) in the database to prevent duplicate execution processing.
+
+---
+
+## 📊 Feature Comparison
+
+| Feature / Challenge | Without Mesa | With Mesa Protocol |
 | :--- | :--- | :--- |
-| **SEP-10 Authentication** | Manually request challenge XDR, parse, sign, manage JWT storage & refresh | `Mesa.flow()` auto-signs challenges and caches tokens |
-| **Workflow State Persistence** | Design custom DB schemas for steps, transaction IDs, statuses, retry state | Built-in Postgres store with standard execution logging |
-| **Long-Running Suspension** | Build complex event loops or polling anchors to wait for user actions | Built-in suspension keys that pause and resume via webhook |
-| **Distributed Retries** | Write custom cron jobs or worker queues with backoff logic | Built-in scheduler with exponential backoff |
-| **Provider Abstractions** | Manually wire Horizon, MoneyGram, and Soroban API interfaces | Standardized Provider adapters separating ledger calls from core logic |
-| **Key Security** | Risk of raw private keys in code or DB | `secretRef` pattern resolves keys from `process.env` at execution time |
+| **Workflow State Persistence** | Write custom DB logic for steps & statuses | Built-in PostgreSQL & In-Memory state store |
+| **Long-Running Suspension** | Build complex event polling for anchor deposits | Built-in suspension keys with HMAC webhook resume |
+| **Distributed Retries** | Write cron workers with custom backoff logic | Built-in scheduler with exponential backoff |
+| **App Builder Exporter** | Manually write frontend, backend, & configs | 1-Click runnable monorepo app exporter |
+| **Key Security** | Danger of raw private keys in source | `secretRef` environment resolution at execution time |
 
 ---
 
-## 📊 Benchmarks
-
-| Metric | Mesa |
-|---|---|
-| **Lines of integration code** | ~15 lines |
-| **Workflow state persistence** | Built-in (PostgreSQL / In-Memory) |
-| **Retry handling** | Built-in (Exponential backoff) |
-| **Suspend / Resume** | Built-in (Suspension Keys & Webhooks) |
-| **Developer Console** | Built-in (Visual timeline & event logs) |
-
----
-
-## 🚀 5-Minute Quickstart
-
-### 1. Clone & Install
-
-Ensure you have [Node.js](https://nodejs.org) and [Docker](https://www.docker.com) installed.
+## 🛠️ Monorepo Developer Commands
 
 ```bash
-git clone https://github.com/thesumedh/Mesa-Protocol.git
-cd Mesa-Protocol
-npm install
-```
+# Typecheck all workspaces (schema, sdk, codegen, runtime, cli)
+npm run typecheck
 
-### 2. Start PostgreSQL
+# Run full monorepo test suite
+npm test
 
-Mesa uses PostgreSQL to durably persist execution steps, states, and retry history.
+# Build all workspace packages
+npm run build
 
-```bash
-docker compose up -d
-```
+# Run End-to-End Demo Verification test
+npx ts-node packages/runtime/src/test/e2e-verification.ts
 
-### 3. Set Your Testnet Secret
-
-```bash
-# On Linux / macOS
-export SENDER_SECRET="S..."
-
-# On Windows PowerShell
-$env:SENDER_SECRET = "S..."
-```
-
-> ⚠️ **Never commit your secret key.** Mesa's `secretRef` pattern resolves it from `process.env` at runtime.
-
-### 4. Start the Mesa Runtime
-
-```bash
-npm run runtime:dev
-```
-
-### 5. Run the Hello World Example
-
-```bash
-cd examples/hello-world
-npm install
-npm start
-```
-
-### 6. Monitor Live Executions
-
-Open the Developer Console in your browser:
-
-👉 **[http://localhost:3001/dashboard](http://localhost:3001/dashboard)**
-
-Watch the real-time execution timeline, step logs, and transaction hashes as the workflow runs on the Stellar Testnet.
-
----
-
-## 🎬 The 5-Step Demo Flow
-
-| Step | What Happens |
-|---|---|
-| **1. Define** | Declare the financial corridor using the fluent SDK: `receive → delay → payment` |
-| **2. Start** | Run the flow. The dashboard shows `PENDING → RUNNING` in real-time |
-| **3. Suspend** | The engine halts on the SEP-24 anchor step, waiting for user deposit |
-| **4. Resume** | POST a webhook event to `/webhooks/resume`. Execution continues instantly |
-| **5. Settle** | The payment is submitted to Stellar Testnet. Console displays the real tx hash and ledger slot |
-
----
-
-## 🖼️ Mesa Studio — Visual Workflow Builder
-
-> **Mesa Studio is the logical next step to make Mesa mainstream.**
-
-Because Mesa workflows are fully declarative (JSON schemas of steps under the hood), a **visual node graph maps 1:1 to the runtime engine**. What you draw is exactly what executes.
-
-### Why Studio is a Game-Changer
-
-**Bridge between Product & Engineering:** In fintech, compliance managers and product architects design payment flows — *"Wait 24 hours for KYC, then release funds"*. Studio lets them design the flow visually while generating the exact TypeScript that developers need to ship.
-
-**Zero onboarding friction:** Instead of reading API docs to understand SDK syntax, a developer builds their corridor visually in 2 minutes, hits "Download Code", and pastes it into their project.
-
----
-
-### Feature Architecture
-
-#### A. The Visual Canvas
-
-A dot-grid infinite canvas with a palette of draggable node blocks, each mapping to a registered provider:
-
-| Node | Description |
-|---|---|
-| `Receive` | Listen for incoming XLM / USDC deposits |
-| `Delay` | Time-pause for compliance holds |
-| `Payment` | Submit a real Stellar Testnet / Mainnet transaction |
-| `Webhook` | Suspend execution waiting for an external event |
-| `Anchor.SEP24` | Interactive deposit / withdrawal flows |
-| `If / Else` *(v2)* | Conditional branch routing |
-
-**Data Flow Wiring:** Draw connections between node output ports and input fields. The system is type-aware — wiring `Receive.receivedAmount → Payment.amount` shows a live preview of the data type flowing through the connection.
-
-#### B. Live Code Generation
-
-As nodes are wired and configured, a side panel updates in real-time showing equivalent TypeScript SDK syntax:
-
-```ts
-const flow = Mesa.flow("my-visual-flow")
-  .receive({ asset: "XLM", minAmount: 25, toAddress: "G..." })
-  .delay({ seconds: 5 })
-  .payment({ senderSecretRef: "SENDER_SECRET", to: "G...", amount: 25 })
-  .build();
-```
-
-Supports three export formats:
-- **TypeScript SDK code** — paste directly into your project
-- **Raw JSON definition** — POST to `/flows` on your runtime
-- **cURL request** — test from terminal immediately
-
-#### C. Download & Deploy
-
-- **Download ZIP:** A pre-configured starter project with `package.json`, `@mesaprotocol/sdk` installed, and the generated flow code wired up and ready to run.
-- **Deploy to Runtime** *(planned)*: If Studio is connected to a live Mesa Runtime instance, "Deploy" registers the flow on the server immediately — no file download needed.
-
----
-
-### Design Principles & Security
-
-**Secrets are never raw strings.** The Studio forces key inputs to be reference tokens (e.g. `"SENDER_SECRET"`), with a clear reminder that the runtime resolves these from `process.env`. No raw `S...` private keys ever appear in generated code or the UI.
-
-**Bidirectional round-tripping.** Developers can paste existing `Mesa.flow()` code and see it parse into a visual graph instantly. Switch freely between code and visual mode without losing state.
-
-**Linear flows ship first.** The `receive → validate → payout` pattern covers ~80% of fintech corridors. Conditional branching is a v2 feature — scope discipline over feature bloat.
-
-**Flow versioning is non-negotiable.** A payment can be mid-execution for hours. Deploying a new flow version can't break in-flight transactions. Studio will publish immutable versioned snapshots (`flow@v2`) rather than overwriting live definitions.
-
----
-
-### Studio Roadmap
-
-```
-Phase 1 — Foundation (Now)
-├── WorkflowDefinition typed schema (versioned)
-├── generateSDKCode() pure function
-├── generateJSON() pure function
-└── parseSDKCode() → WorkflowDefinition (AST round-trip)
-
-Phase 2 — Studio MVP
-├── Linear node canvas (React Flow / xyflow)
-├── Per-node Properties Panel
-├── Live TypeScript + JSON side-by-side preview
-└── Download ZIP with pre-wired starter project
-
-Phase 3 — Power Features
-├── Code → Graph import (paste existing SDK code, render graph)
-├── Type-aware wired connections (output schema hints per node)
-├── Deploy to Runtime button
-└── Flow versioning UI (immutable snapshots)
-
-Phase 4 — Advanced
-├── If/Else conditional branching nodes
-├── Team workspaces & shared flow libraries
-└── Execution history replayed in Studio canvas
+# Validate a workflow definition JSON file via CLI
+npx mesa validate packages/workflows/flow.json
 ```
 
 ---
 
-## 🏛️ Project Modules
+## 🤝 Contributing & License
 
-Mesa separates execution concerns into clean, decoupled layers:
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
 
-| Module | Responsibility |
-|---|---|
-| **`packages/sdk`** | Fluent, type-safe `FlowBuilder` API for defining steps |
-| **`packages/runtime`** | REST API server, workflow registration, dashboard endpoint |
-| **`packages/providers/stellar`** | Stellar-specific `receive`, `payment`, and transfer handlers |
-| **Scheduler** | Polls Postgres for pending executions, drives the retry loop |
-| **Executor** | Manages step-level execution, event history, and retry scheduling |
-| **`UI/`** | Mesa Studio static web app (Visual Builder + Developer Portal) |
-
----
-
-## 🖥️ E2E Test Scenarios
-
-### Cross-Border Corridor Demo
-
-A complete corridor run (Anchor Deposit → DEX Swap → Ledger Payout):
-
-```bash
-npx ts-node examples/remittance/index.ts
-```
-
-### Live Stellar Testnet Test Suite
-
-Runs the automated test suite simulating interactive deposits and payouts:
-
-```bash
-npm run test --workspace=packages/runtime
-```
-
----
-
-## 🛠️ Backlog & Future Improvements
-
-See [BACKLOG.md](./BACKLOG.md) for full details:
-
-- Compensation & Distributed Saga API
-- LISTEN / NOTIFY real-time scheduling
-- Dynamic provider capability discovery
-- Event streaming log sinks
-- Studio: If/Else branching nodes
-- Studio: Team workspaces
-- Soroban smart contract provider
-
----
-
-## 🤝 Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md). All contributions, bug reports, and feature requests are welcome.
-
----
-
-## ⚖️ License
-
-Mesa is open-source software licensed under the [MIT License](./LICENSE).
+Mesa Protocol is open-source software licensed under the [MIT License](./LICENSE).
 
 ---
 

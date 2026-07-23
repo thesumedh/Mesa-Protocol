@@ -5,6 +5,7 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Mesa Studio | Export Success</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Geist:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <style>
@@ -207,7 +208,7 @@
                     </button>
                     <p class="mt-4 font-code-sm text-code-sm text-outline flex items-center gap-2">
                         <span class="material-symbols-outlined text-xs">info</span>
-                        ZIP, 12.4 MB · Version 0.2.0-beta
+                        ZIP · Version 0.2.0
                     </p>
                 </div>
             </div>
@@ -266,14 +267,13 @@
     </footer>
 
     <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-primary text-on-primary px-4 py-2 font-label-mono text-xs font-bold rounded shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2">
+    <div id="toast" class="fixed bottom-6 right-6 bg-primary text-on-primary px-4 py-2 font-label-mono text-xs font-bold rounded shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2 z-50">
         <span class="material-symbols-outlined text-sm">download_done</span> Download Started!
     </div>
 
-    <!-- Micro-Interactions Script -->
+    <!-- Script -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Parallax effect for the modal
             document.addEventListener('mousemove', (e) => {
                 const modal = document.querySelector('.glass-panel');
                 const xAxis = (window.innerWidth / 2 - e.pageX) / 80;
@@ -282,18 +282,104 @@
             });
         });
 
-        function triggerDownload() {
-            // Show toast
+        async function triggerDownload() {
             const toast = document.getElementById('toast');
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
-            }, 2500);
+            }, 3000);
             
-            // Create a fake file download link
-            const link = document.createElement('a');
-            link.href = '#';
-            link.click();
+            // Build real ZIP archive in memory
+            if (window.JSZip) {
+                const zip = new JSZip();
+
+                zip.file("package.json", JSON.stringify({
+                    name: "mesa-stellar-app",
+                    version: "0.1.0",
+                    private: true,
+                    scripts: {
+                        "dev": "vite",
+                        "build": "tsc && vite build",
+                        "start": "ts-node src/workflow.ts"
+                    },
+                    dependencies: {
+                        "@mesaprotocol/sdk": "^0.2.0",
+                        "dotenv": "^16.4.5",
+                        "react": "^18.2.0",
+                        "react-dom": "^18.2.0"
+                    },
+                    devDependencies: {
+                        "typescript": "^5.3.3",
+                        "vite": "^5.0.0"
+                    }
+                }, null, 2));
+
+                zip.file(".env.example", "SENDER_SECRET=SXXXXX...\nMESA_RUNTIME_URL=http://localhost:3001\n");
+
+                zip.file("src/workflow.ts", `import { Mesa } from '@mesaprotocol/sdk';
+
+Mesa.configure({ runtimeUrl: process.env.MESA_RUNTIME_URL || 'http://localhost:3001' });
+
+export const flow = Mesa.flow('stellar-payment-flow')
+  .receive({ asset: 'XLM', minAmount: 25, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' })
+  .delay({ seconds: 5 })
+  .payment({ horizonUrl: 'https://horizon-testnet.stellar.org', senderSecretRef: 'SENDER_SECRET', to: 'GA4UFVDQRWUZIDKB32U2TVZSXSFAPCZV522UY7OYGM27BJ66MHYIIW3P', amount: 25 })
+  .build();
+
+export async function runWorkflow() {
+  console.log('🚀 Launching Mesa Stellar Workflow...');
+  const { executionId } = await Mesa.execute(flow);
+  console.log(\`✅ Execution started: \${executionId}\`);
+}
+`);
+
+                zip.file("src/App.tsx", `import React from 'react';
+import { runWorkflow } from './workflow';
+
+export default function App() {
+  return (
+    <div style={{ background: '#040608', color: '#dbfcff', minHeight: '100vh', padding: '3rem', fontFamily: 'sans-serif' }}>
+      <h1>Mesa Stellar App</h1>
+      <p>Your workflow starter kit is ready.</p>
+      <button onClick={runWorkflow} style={{ background: '#00f0ff', color: '#00363a', padding: '0.75rem 1.5rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+        Execute Workflow
+      </button>
+    </div>
+  );
+}
+`);
+
+                zip.file("README.md", `# Mesa Stellar App Starter Kit
+
+Generated by **Mesa Studio**.
+
+## Quickstart
+
+1. Install dependencies:
+\`\`\`bash
+npm install
+\`\`\`
+
+2. Set your environment variables:
+\`\`\`bash
+cp .env.example .env
+# Edit .env and put your testnet SENDER_SECRET
+\`\`\`
+
+3. Run the workflow:
+\`\`\`bash
+npm start
+\`\`\`
+`);
+
+                const blob = await zip.generateAsync({ type: "blob" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "mesa-starter-kit.zip";
+                a.click();
+                URL.revokeObjectURL(url);
+            }
         }
     </script>
 </body>

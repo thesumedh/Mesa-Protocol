@@ -54,18 +54,21 @@ var InMemoryPool = class {
   flows = /* @__PURE__ */ new Map();
   executions = /* @__PURE__ */ new Map();
   steps = /* @__PURE__ */ new Map();
-  // key: `${executionId}:${stepIndex}`
   stepById = /* @__PURE__ */ new Map();
-  // key: step.id
   events = [];
-  async query(text, params = []) {
-    const sql = text.replace(/\s+/g, " ").trim();
+  idempotencyKeys = /* @__PURE__ */ new Map();
+  webhookEvents = /* @__PURE__ */ new Map();
+  constructor() {
+    console.log("[MesaRuntime] Initializing InMemoryPool for testing/mocking.");
+  }
+  async query(sqlText, params = []) {
+    const sql = sqlText.trim().replace(/\s+/g, " ");
     if (sql.startsWith("INSERT INTO flows")) {
-      const [id, name, definitionJson] = params;
+      const [id, name, defJson] = params;
       const row = {
         id,
         name,
-        definition: parseJson(definitionJson) ?? {},
+        definition: typeof defJson === "string" ? JSON.parse(defJson) : defJson,
         created_at: /* @__PURE__ */ new Date()
       };
       this.flows.set(id, row);
@@ -75,9 +78,23 @@ var InMemoryPool = class {
       const row = this.flows.get(params[0]);
       return { rows: row ? [row] : [] };
     }
-    if (sql.includes("FROM flows") && sql.includes("ORDER BY created_at")) {
-      const rows = Array.from(this.flows.values()).sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+    if (sql.startsWith("SELECT id, name, definition, created_at FROM flows")) {
+      const rows = Array.from(this.flows.values()).sort(
+        (a, b) => b.created_at.getTime() - a.created_at.getTime()
+      );
       return { rows };
+    }
+    if (sql.startsWith("SELECT execution_id FROM idempotency_keys")) {
+      const key = params[0];
+      const execId = this.idempotencyKeys.get(key);
+      return { rows: execId ? [{ execution_id: execId }] : [] };
+    }
+    if (sql.startsWith("INSERT INTO idempotency_keys")) {
+      const [key, execId] = params;
+      if (!this.idempotencyKeys.has(key)) {
+        this.idempotencyKeys.set(key, execId);
+      }
+      return { rows: [] };
     }
     if (sql.startsWith("INSERT INTO executions")) {
       const [id, flowId, contextJson] = params;
@@ -98,41 +115,53 @@ var InMemoryPool = class {
       const row = this.executions.get(params[0]);
       return { rows: row ? [row] : [] };
     }
-    if (sql.startsWith("SELECT * FROM executions WHERE status IN")) {
-      const rows = Array.from(this.executions.values()).filter((e) => e.status === "PENDING" || e.status === "RUNNING").sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
+    if (sql.startsWith("SELECT id, flow_id, status, current_step, started_at, completed_at, created_at FROM executions")) {
+      const rows = Array.from(this.executions.values()).sort(
+        (a, b) => b.created_at.getTime() - a.created_at.getTime()
+      );
+      return { rows };
+    }
+    if (sql.includes("SELECT * FROM executions WHERE status IN") || sql.includes("status = 'PENDING'")) {
+      const rows = Array.from(this.executions.values()).filter(
+        (e) => e.status === "PENDING" || e.status === "RUNNING"
+      );
       return { rows };
     }
     if (sql.startsWith("UPDATE executions SET")) {
-      const id = params[params.length - 1];
+      const idIdx = params.length - 1;
+      const id = params[idIdx];
       const row = this.executions.get(id);
-      if (row) {
-        const colMap = parseSetClause(sql);
-        if (colMap.has("status")) row.status = params[colMap.get("status")];
-        if (colMap.has("context")) row.context = parseJson(params[colMap.get("context")]) ?? row.context;
-        if (colMap.has("current_step")) row.current_step = params[colMap.get("current_step")];
-        if (colMap.has("started_at")) row.started_at = params[colMap.get("started_at")] ?? /* @__PURE__ */ new Date();
-        if (colMap.has("completed_at")) row.completed_at = params[colMap.get("completed_at")] ?? /* @__PURE__ */ new Date();
+      if (!row) return { rows: [] };
+      const setMap = parseSetClause(sql);
+      if (setMap.has("status")) {
+        const newStatus = params[setMap.get("status")];
+        row.status = newStatus;
+        if (newStatus === "RUNNING" && !row.started_at) row.started_at = /* @__PURE__ */ new Date();
+        if ((newStatus === "COMPLETED" || newStatus === "FAILED" || newStatus === "CANCELLED") && !row.completed_at) row.completed_at = /* @__PURE__ */ new Date();
       }
-      return { rows: row ? [row] : [] };
-    }
-    if (sql.startsWith("SELECT id, flow_id, status, context, created_at FROM executions") || sql.startsWith("SELECT id, flow_id, status, context, created_at, updated_at FROM executions")) {
-      const rows = Array.from(this.executions.values()).sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
-      return { rows };
+      if (setMap.has("context")) {
+        row.context = parseJson(params[setMap.get("context")]) ?? row.context;
+      }
+      if (setMap.has("current_step")) {
+        row.current_step = params[setMap.get("current_step")];
+      }
+      this.executions.set(id, row);
+      return { rows: [row] };
     }
     if (sql.startsWith("INSERT INTO steps")) {
       const [id, executionId, stepIndex, name, provider, status, inputJson, outputJson, error, attempts, nextRetry] = params;
       const row = {
         id,
         execution_id: executionId,
-        step_index: stepIndex,
+        step_index: Number(stepIndex),
         name,
         provider,
-        status,
+        status: status || "PENDING",
         input: parseJson(inputJson),
         output: parseJson(outputJson),
-        error,
-        attempts,
-        next_retry: nextRetry,
+        error: error ?? null,
+        attempts: attempts ? Number(attempts) : 0,
+        next_retry: nextRetry ? new Date(nextRetry) : null,
         created_at: /* @__PURE__ */ new Date(),
         updated_at: /* @__PURE__ */ new Date()
       };
@@ -141,43 +170,57 @@ var InMemoryPool = class {
       return { rows: [row] };
     }
     if (sql.startsWith("SELECT * FROM steps WHERE execution_id = $1 AND step_index = $2")) {
-      const row = this.steps.get(`${params[0]}:${params[1]}`);
+      const [executionId, stepIndex] = params;
+      const row = this.steps.get(`${executionId}:${stepIndex}`);
       return { rows: row ? [row] : [] };
     }
-    if (sql.startsWith("UPDATE steps SET")) {
-      const id = params[params.length - 1];
-      const row = this.stepById.get(id);
-      if (row) {
-        row.updated_at = /* @__PURE__ */ new Date();
-        const colMap = parseSetClause(sql);
-        if (colMap.has("status")) row.status = params[colMap.get("status")];
-        if (colMap.has("output")) row.output = parseJson(params[colMap.get("output")]);
-        if (colMap.has("error")) row.error = params[colMap.get("error")];
-        if (colMap.has("attempts")) row.attempts = params[colMap.get("attempts")];
-        if (colMap.has("next_retry")) row.next_retry = params[colMap.get("next_retry")];
-      }
-      return { rows: row ? [row] : [] };
-    }
-    if (sql.startsWith("SELECT step_index, status, output, error, attempts, created_at, updated_at FROM steps WHERE execution_id = $1") || sql.includes("FROM steps WHERE execution_id = $1 ORDER BY step_index")) {
-      const rows = Array.from(this.steps.values()).filter((s) => s.execution_id === params[0]).sort((a, b) => a.step_index - b.step_index);
-      return { rows };
-    }
-    if (sql.includes("FROM steps s JOIN executions e")) {
+    if (sql.includes("FROM steps s JOIN executions e") || sql.includes("WHERE s.status = 'SUSPENDED'")) {
       const key = params[0];
-      const rows = Array.from(this.steps.values()).filter((s) => s.status === "SUSPENDED" && s.output?.suspensionKey === key).map((s) => {
-        const exec = this.executions.get(s.execution_id);
-        return {
-          ...s,
+      const match = Array.from(this.steps.values()).find(
+        (s) => s.status === "SUSPENDED" && s.output && s.output.suspensionKey === key
+      );
+      if (!match) return { rows: [] };
+      const exec = this.executions.get(match.execution_id);
+      return {
+        rows: [{
+          ...match,
           exec_context: exec?.context ?? {},
           flow_id: exec?.flow_id ?? "",
-          execution_id_ref: s.execution_id
-        };
-      });
+          execution_id_ref: exec?.id ?? ""
+        }]
+      };
+    }
+    if (sql.includes("FROM steps") && sql.includes("WHERE execution_id = $1")) {
+      const executionId = params[0];
+      const rows = Array.from(this.steps.values()).filter((s) => s.execution_id === executionId).sort((a, b) => a.step_index - b.step_index);
       return { rows };
     }
-    if (sql.includes("FROM steps") && sql.includes("execution_id = $1")) {
-      const rows = Array.from(this.steps.values()).filter((s) => s.execution_id === params[0]).sort((a, b) => a.step_index - b.step_index);
-      return { rows };
+    if (sql.startsWith("UPDATE steps SET")) {
+      const idIdx = params.length - 1;
+      const id = params[idIdx];
+      const row = this.stepById.get(id);
+      if (!row) return { rows: [] };
+      const setMap = parseSetClause(sql);
+      if (setMap.has("status")) row.status = params[setMap.get("status")];
+      if (setMap.has("output")) row.output = parseJson(params[setMap.get("output")]) ?? row.output;
+      if (setMap.has("error")) row.error = params[setMap.get("error")];
+      if (setMap.has("attempts")) row.attempts = params[setMap.get("attempts")];
+      if (setMap.has("next_retry")) row.next_retry = params[setMap.get("next_retry")] ? new Date(params[setMap.get("next_retry")]) : null;
+      row.updated_at = /* @__PURE__ */ new Date();
+      this.stepById.set(id, row);
+      this.steps.set(`${row.execution_id}:${row.step_index}`, row);
+      return { rows: [row] };
+    }
+    if (sql.includes("FROM webhook_events WHERE id = $1")) {
+      const id = params[0];
+      const match = this.webhookEvents.get(id);
+      return { rows: match ? [match] : [] };
+    }
+    if (sql.startsWith("INSERT INTO webhook_events")) {
+      const [id, suspensionKey, payload, signature, verified] = params;
+      const row = { id, suspension_key: suspensionKey, payload, signature, verified, created_at: /* @__PURE__ */ new Date() };
+      this.webhookEvents.set(id, row);
+      return { rows: [row] };
     }
     if (sql.startsWith("INSERT INTO events")) {
       const [executionId, type, payloadJson] = params;
@@ -191,20 +234,18 @@ var InMemoryPool = class {
       this.events.push(row);
       return { rows: [row] };
     }
-    if (sql.startsWith("SELECT * FROM events WHERE execution_id = $1")) {
-      const rows = this.events.filter((ev) => ev.execution_id === params[0]).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    if (sql.includes("FROM events WHERE execution_id = $1")) {
+      const executionId = params[0];
+      const rows = this.events.filter((e) => e.execution_id === executionId).sort((a, b) => a.id - b.id);
       return { rows };
     }
-    console.warn(`[InMemoryPool] Unhandled query: ${sql.substring(0, 80)}...`);
+    console.warn("[InMemoryPool] Unhandled query:", sql);
     return { rows: [] };
   }
-  // No-op methods to satisfy pg Pool interface
   async connect() {
-    return {
-      query: this.query.bind(this),
-      release: () => {
-      }
-    };
+    return this;
+  }
+  release() {
   }
   async end() {
   }
@@ -214,21 +255,24 @@ var InMemoryPool = class {
 var fs = __toESM(require("fs"));
 var path = __toESM(require("path"));
 var pool = null;
+var isUsingInMemory = false;
 function getPool() {
   if (!pool) {
-    if (process.env.DATABASE_URL === "mock" || process.env.NODE_ENV === "test") {
+    if (process.env.DATABASE_URL === "mock" || process.env.NODE_ENV === "test" || isUsingInMemory) {
       console.log("[MesaRuntime] Initializing InMemoryPool for testing/mocking.");
+      isUsingInMemory = true;
       pool = new InMemoryPool();
     } else {
       pool = new import_pg.Pool({
-        connectionString: process.env.DATABASE_URL || "postgresql://mesa:mesa@localhost:5432/mesa"
+        connectionString: process.env.DATABASE_URL || "postgresql://mesa:mesa@localhost:5432/mesa",
+        connectionTimeoutMillis: 3e3
       });
     }
   }
   return pool;
 }
 async function initSchema() {
-  if (process.env.DATABASE_URL === "mock" || process.env.NODE_ENV === "test") {
+  if (process.env.DATABASE_URL === "mock" || process.env.NODE_ENV === "test" || isUsingInMemory) {
     console.log("[MesaRuntime] InMemoryPool schema initialization skipped.");
     return;
   }
@@ -251,8 +295,14 @@ async function initSchema() {
     throw new Error(`[MesaRuntime] Could not locate schema.sql in any of the expected paths: ${JSON.stringify(possiblePaths)}`);
   }
   const sql = fs.readFileSync(schemaPath, "utf8");
-  await getPool().query(sql);
-  console.log("[MesaRuntime] Postgres schema initialized.");
+  try {
+    await getPool().query(sql);
+    console.log("[MesaRuntime] Postgres schema initialized.");
+  } catch (err) {
+    console.log("[MesaRuntime] \u26A0\uFE0F Local PostgreSQL connection failed (5432). Falling back to InMemoryPool for dev runtime.");
+    isUsingInMemory = true;
+    pool = new InMemoryPool();
+  }
 }
 async function createFlow(id, name, definition) {
   const res = await getPool().query(
@@ -276,103 +326,113 @@ async function getExecution(id) {
   const res = await getPool().query(`SELECT * FROM executions WHERE id = $1`, [id]);
   return res.rows[0] ?? null;
 }
-async function updateExecution(id, fields) {
-  const sets = [];
-  const values = [];
-  let i = 1;
-  if (fields.status !== void 0) {
-    sets.push(`status = $${i++}`);
-    values.push(fields.status);
-  }
-  if (fields.context !== void 0) {
-    sets.push(`context = $${i++}`);
-    values.push(JSON.stringify(fields.context));
-  }
-  if (fields.current_step !== void 0) {
-    sets.push(`current_step = $${i++}`);
-    values.push(fields.current_step);
-  }
-  if (fields.started_at !== void 0) {
-    sets.push(`started_at = $${i++}`);
-    values.push(fields.started_at);
-  }
-  if (fields.completed_at !== void 0) {
-    sets.push(`completed_at = $${i++}`);
-    values.push(fields.completed_at);
-  }
-  if (sets.length === 0) return;
-  values.push(id);
-  await getPool().query(`UPDATE executions SET ${sets.join(", ")} WHERE id = $${i}`, values);
-}
 async function getPendingExecutions() {
   const res = await getPool().query(
-    `SELECT * FROM executions WHERE status IN ('PENDING', 'RUNNING') ORDER BY created_at ASC LIMIT 50`
+    `SELECT * FROM executions WHERE status = 'PENDING' ORDER BY created_at ASC`
   );
-  return res.rows;
+  return res.rows || [];
 }
-async function createStep(data) {
+async function updateExecution(id, updates) {
+  const setClauses = [];
+  const params = [];
+  let paramIndex = 1;
+  if (updates.status !== void 0) {
+    setClauses.push(`status = $${paramIndex++}`);
+    params.push(updates.status);
+    if (updates.status === "RUNNING" && !updates.started_at) {
+      setClauses.push(`started_at = NOW()`);
+    } else if ((updates.status === "COMPLETED" || updates.status === "FAILED" || updates.status === "CANCELLED") && !updates.completed_at) {
+      setClauses.push(`completed_at = NOW()`);
+    }
+  }
+  if (updates.context !== void 0) {
+    setClauses.push(`context = $${paramIndex++}`);
+    params.push(JSON.stringify(updates.context));
+  }
+  if (updates.current_step !== void 0) {
+    setClauses.push(`current_step = $${paramIndex++}`);
+    params.push(updates.current_step);
+  }
+  if (setClauses.length === 0) {
+    const existing = await getExecution(id);
+    if (!existing) throw new Error(`Execution not found: ${id}`);
+    return existing;
+  }
+  params.push(id);
+  const sql = `UPDATE executions SET ${setClauses.join(", ")} WHERE id = $${paramIndex} RETURNING *`;
+  const res = await getPool().query(sql, params);
+  return res.rows[0];
+}
+async function createStep(params) {
+  const status = params.status || "PENDING";
+  const attempts = params.attempts || 0;
   const res = await getPool().query(
     `INSERT INTO steps (id, execution_id, step_index, name, provider, status, input, output, error, attempts, next_retry)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+     RETURNING *`,
     [
-      data.id,
-      data.execution_id,
-      data.step_index,
-      data.name,
-      data.provider,
-      data.status,
-      data.input ? JSON.stringify(data.input) : null,
-      data.output ? JSON.stringify(data.output) : null,
-      data.error,
-      data.attempts,
-      data.next_retry
+      params.id,
+      params.execution_id,
+      params.step_index,
+      params.name,
+      params.provider,
+      status,
+      params.input ? JSON.stringify(params.input) : null,
+      params.output ? JSON.stringify(params.output) : null,
+      params.error || null,
+      attempts,
+      params.next_retry || null
     ]
   );
   return res.rows[0];
 }
-async function getStepForExecution(executionId, stepIndex) {
+async function getStep(executionId, stepIndex) {
   const res = await getPool().query(
     `SELECT * FROM steps WHERE execution_id = $1 AND step_index = $2`,
     [executionId, stepIndex]
   );
   return res.rows[0] ?? null;
 }
-async function updateStep(id, fields) {
-  const sets = [`updated_at = NOW()`];
-  const values = [];
-  let i = 1;
-  if (fields.status !== void 0) {
-    sets.push(`status = $${i++}`);
-    values.push(fields.status);
+var getStepForExecution = getStep;
+async function updateStep(id, updates) {
+  const setClauses = ["updated_at = NOW()"];
+  const params = [];
+  let paramIndex = 1;
+  if (updates.status !== void 0) {
+    setClauses.push(`status = $${paramIndex++}`);
+    params.push(updates.status);
   }
-  if (fields.output !== void 0) {
-    sets.push(`output = $${i++}`);
-    values.push(fields.output ? JSON.stringify(fields.output) : null);
+  if (updates.output !== void 0) {
+    setClauses.push(`output = $${paramIndex++}`);
+    params.push(JSON.stringify(updates.output));
   }
-  if (fields.error !== void 0) {
-    sets.push(`error = $${i++}`);
-    values.push(fields.error);
+  if (updates.error !== void 0) {
+    setClauses.push(`error = $${paramIndex++}`);
+    params.push(updates.error);
   }
-  if (fields.attempts !== void 0) {
-    sets.push(`attempts = $${i++}`);
-    values.push(fields.attempts);
+  if (updates.attempts !== void 0) {
+    setClauses.push(`attempts = $${paramIndex++}`);
+    params.push(updates.attempts);
   }
-  if (fields.next_retry !== void 0) {
-    sets.push(`next_retry = $${i++}`);
-    values.push(fields.next_retry);
+  if (updates.next_retry !== void 0) {
+    setClauses.push(`next_retry = $${paramIndex++}`);
+    params.push(updates.next_retry);
   }
-  values.push(id);
-  await getPool().query(`UPDATE steps SET ${sets.join(", ")} WHERE id = $${i}`, values);
+  params.push(id);
+  const sql = `UPDATE steps SET ${setClauses.join(", ")} WHERE id = $${paramIndex} RETURNING *`;
+  const res = await getPool().query(sql, params);
+  return res.rows[0];
 }
-async function appendEvent(executionId, type, payload) {
-  await getPool().query(
-    `INSERT INTO events (execution_id, type, payload) VALUES ($1, $2, $3)`,
-    [executionId, type, payload ? JSON.stringify(payload) : null]
+async function appendEvent(executionId, type, payload = {}) {
+  const res = await getPool().query(
+    `INSERT INTO events (execution_id, type, payload) VALUES ($1, $2, $3) RETURNING *`,
+    [executionId, type, JSON.stringify(payload)]
   );
+  return res.rows[0];
 }
 async function getEvents(executionId) {
   const res = await getPool().query(
-    `SELECT * FROM events WHERE execution_id = $1 ORDER BY timestamp ASC`,
+    `SELECT * FROM events WHERE execution_id = $1 ORDER BY id ASC`,
     [executionId]
   );
   return res.rows;
@@ -394,6 +454,22 @@ function getProvider(name) {
 }
 function listProviders() {
   return Array.from(registry.keys());
+}
+function getProviderMetadata(name) {
+  const provider = getProvider(name);
+  if (provider.metadata) return provider.metadata;
+  return {
+    name: provider.name,
+    description: `Mesa ${provider.name} primitive execution provider`,
+    category: ["stellar", "anchor", "soroban"].includes(provider.name) ? provider.name : "utility",
+    actions: ["execute", "resume"],
+    inputFields: [
+      { key: "action", label: "Action", type: "string", required: true }
+    ],
+    outputs: ["output"],
+    mockSupport: true,
+    realSupport: true
+  };
 }
 
 // src/secrets.ts
@@ -593,20 +669,64 @@ var import_express = __toESM(require("express"));
 var import_crypto2 = require("crypto");
 var path2 = __toESM(require("path"));
 var fs2 = __toESM(require("fs"));
+var import_schema = require("@mesaprotocol/schema");
 function createServer() {
   const app = (0, import_express.default)();
-  app.use(import_express.default.json());
+  app.use(import_express.default.json({
+    verify: (req, _res, buf) => {
+      req.rawBody = buf.toString("utf8");
+    }
+  }));
+  const uiPath = path2.join(process.cwd(), "UI");
+  if (fs2.existsSync(uiPath)) {
+    app.use("/UI", import_express.default.static(uiPath));
+  }
+  const apiKeyMiddleware = (req, res, next) => {
+    const requiredApiKey = process.env.MESA_API_KEY;
+    if (!requiredApiKey) {
+      return next();
+    }
+    const clientKey = req.headers["x-mesa-api-key"] || req.headers["authorization"]?.replace("Bearer ", "");
+    if (clientKey !== requiredApiKey) {
+      return res.status(401).json({ error: "Unauthorized: Invalid or missing X-Mesa-Api-Key" });
+    }
+    next();
+  };
   app.get("/health", (_req, res) => {
     res.json({ status: "ok", service: "mesa-runtime", timestamp: (/* @__PURE__ */ new Date()).toISOString() });
   });
-  app.post("/executions", async (req, res) => {
+  app.post("/executions", apiKeyMiddleware, async (req, res) => {
     try {
-      const { flowId, context } = req.body;
-      if (!flowId) return res.status(400).json({ error: "flowId is required" });
+      const parseResult = import_schema.CreateExecutionPayloadSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Invalid request body", details: parseResult.error.format() });
+      }
+      const { flowId, context, idempotencyKey } = parseResult.data;
+      if (idempotencyKey) {
+        const pool2 = getPool();
+        const existingKeyRes = await pool2.query(
+          `SELECT execution_id FROM idempotency_keys WHERE key = $1 LIMIT 1`,
+          [idempotencyKey]
+        );
+        if (existingKeyRes && existingKeyRes.rows && existingKeyRes.rows.length > 0) {
+          const existingExecId = existingKeyRes.rows[0].execution_id;
+          const existingExec = await getExecution(existingExecId);
+          console.log(`[MesaRuntime] Idempotent request re-using execution: ${existingExecId}`);
+          return res.status(200).json({ executionId: existingExecId, status: existingExec?.status, idempotent: true });
+        }
+      }
       const flow = await getFlow(flowId);
       if (!flow) return res.status(404).json({ error: `Flow not found: ${flowId}` });
-      const execution = await createExecution((0, import_crypto2.randomUUID)(), flowId, context ?? {});
+      const executionId = (0, import_crypto2.randomUUID)();
+      const execution = await createExecution(executionId, flowId, context ?? {});
       await appendEvent(execution.id, "execution.created", { flowId });
+      if (idempotencyKey) {
+        const pool2 = getPool();
+        await pool2.query(
+          `INSERT INTO idempotency_keys (key, execution_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+          [idempotencyKey, executionId]
+        );
+      }
       console.log(`[MesaRuntime] New execution created: ${execution.id} for flow: ${flowId}`);
       res.status(201).json({ executionId: execution.id, status: execution.status });
     } catch (err) {
@@ -614,15 +734,18 @@ function createServer() {
       res.status(500).json({ error: msg });
     }
   });
-  app.post("/flows", async (req, res) => {
+  app.post("/flows", apiKeyMiddleware, async (req, res) => {
     try {
-      const { id, name, definition } = req.body;
-      if (!name || !definition) return res.status(400).json({ error: "name and definition are required" });
-      const flowId = id ?? (0, import_crypto2.randomUUID)();
+      const parseResult = import_schema.RegisterFlowPayloadSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Invalid flow payload", details: parseResult.error.format() });
+      }
+      const { id, name, definition } = parseResult.data;
+      const flowId = id ?? definition.id ?? (0, import_crypto2.randomUUID)();
       const existingFlow = await getFlow(flowId);
       if (existingFlow) {
         console.log(`[MesaRuntime] Flow already registered: ${existingFlow.id} (${existingFlow.name}). Reusing.`);
-        return res.status(201).json({ flowId: existingFlow.id, name: existingFlow.name, reused: true });
+        return res.status(200).json({ flowId: existingFlow.id, name: existingFlow.name, reused: true });
       }
       const flow = await createFlow(flowId, name, definition);
       console.log(`[MesaRuntime] Flow registered: ${flow.id} (${flow.name})`);
@@ -632,7 +755,7 @@ function createServer() {
       res.status(500).json({ error: msg });
     }
   });
-  app.get("/executions/:id", async (req, res) => {
+  app.get("/executions/:id", apiKeyMiddleware, async (req, res) => {
     try {
       const execution = await getExecution(req.params.id);
       if (!execution) return res.status(404).json({ error: "Execution not found" });
@@ -657,87 +780,145 @@ function createServer() {
       res.status(500).json({ error: msg });
     }
   });
+  app.post("/executions/:id/cancel", apiKeyMiddleware, async (req, res) => {
+    try {
+      const execution = await getExecution(req.params.id);
+      if (!execution) return res.status(404).json({ error: "Execution not found" });
+      if (execution.status === "COMPLETED" || execution.status === "FAILED" || execution.status === "PERMANENTLY_FAILED") {
+        return res.status(400).json({ error: `Cannot cancel execution in terminal status: ${execution.status}` });
+      }
+      const updated = await updateExecution(req.params.id, { status: "CANCELLED" });
+      await appendEvent(req.params.id, "execution.cancelled", { reason: "User requested cancellation" });
+      console.log(`[MesaRuntime] Execution cancelled: ${req.params.id}`);
+      res.json({ executionId: updated.id, status: updated.status });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
   app.post("/webhooks/resume", async (req, res) => {
     try {
-      const { suspensionKey, payload } = req.body;
-      if (!suspensionKey) return res.status(400).json({ error: "suspensionKey is required" });
+      const parseResult = import_schema.WebhookResumePayloadSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Invalid webhook payload", details: parseResult.error.format() });
+      }
+      const { suspensionKey, payload } = parseResult.data;
+      const signatureHeader = req.headers["x-mesa-signature"] || parseResult.data.signature;
+      const timestampHeader = req.headers["x-mesa-timestamp"] || parseResult.data.timestamp;
+      const eventIdHeader = req.headers["x-mesa-event-id"] || parseResult.data.eventId;
+      const secret = process.env.WEBHOOK_HMAC_SECRET;
+      if (secret) {
+        if (!signatureHeader) {
+          return res.status(401).json({ error: "Missing X-Mesa-Signature header" });
+        }
+        if (timestampHeader) {
+          const ts = Number(timestampHeader);
+          if (!isNaN(ts)) {
+            const now = Date.now();
+            if (Math.abs(now - ts) > 5 * 60 * 1e3) {
+              return res.status(401).json({ error: "Webhook timestamp expired or drifted beyond 5 minutes" });
+            }
+          }
+        }
+        const rawBody = req.rawBody || JSON.stringify(req.body);
+        const signedContent = timestampHeader ? `${timestampHeader}.${rawBody}` : JSON.stringify(payload ?? {});
+        const expectedSignature = (0, import_crypto2.createHmac)("sha256", secret).update(signedContent).digest("hex");
+        if (signatureHeader !== expectedSignature && signatureHeader !== (0, import_crypto2.createHmac)("sha256", secret).update(JSON.stringify(payload ?? {})).digest("hex")) {
+          return res.status(401).json({ error: "Invalid HMAC signature" });
+        }
+      } else {
+        const requiredApiKey = process.env.MESA_API_KEY;
+        if (requiredApiKey) {
+          const clientKey = req.headers["x-mesa-api-key"] || req.headers["authorization"]?.replace("Bearer ", "");
+          if (clientKey !== requiredApiKey) {
+            return res.status(401).json({ error: "Unauthorized: Invalid or missing X-Mesa-Api-Key" });
+          }
+        }
+      }
       const pool2 = getPool();
-      const stepRes = await pool2.query(
-        `SELECT s.*, e.context as exec_context, e.flow_id, e.id as execution_id_ref
+      const eventId = eventIdHeader || (0, import_crypto2.randomUUID)();
+      const replayCheck = await pool2.query(
+        `SELECT id FROM webhook_events WHERE id = $1 LIMIT 1`,
+        [eventId]
+      );
+      if (replayCheck && replayCheck.rows && replayCheck.rows.length > 0) {
+        console.log(`[MesaRuntime] Duplicate webhook event rejected: ${eventId}`);
+        return res.status(409).json({ error: `Replay attack detected: duplicate webhook event id ${eventId}` });
+      }
+      await pool2.query(
+        `INSERT INTO webhook_events (id, suspension_key, payload, signature, verified)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [eventId, suspensionKey, JSON.stringify(payload ?? {}), signatureHeader ?? null, !!secret]
+      );
+      const parts = suspensionKey.split(":");
+      if (parts.length < 2) return res.status(400).json({ error: "Invalid suspension key format" });
+      let providerName = parts[0];
+      const allProviders = listProviders();
+      if (!allProviders.includes(providerName) && parts.length >= 2) {
+        const composite = `${parts[0]}-${parts[1]}`;
+        if (allProviders.includes(composite)) {
+          providerName = composite;
+        }
+      }
+      const provider = getProvider(providerName);
+      if (!provider) return res.status(404).json({ error: `Provider not found: ${providerName}` });
+      if (!provider.resume) return res.status(400).json({ error: `Provider ${providerName} does not support resume()` });
+      const step = await pool2.query(
+        `SELECT s.id, s.execution_id, s.step_index
          FROM steps s
          JOIN executions e ON s.execution_id = e.id
-         WHERE s.status = 'SUSPENDED'
-           AND s.output->>'suspensionKey' = $1
+         WHERE s.status = 'SUSPENDED' AND s.output->>'suspensionKey' = $1
          LIMIT 1`,
         [suspensionKey]
       );
-      if (stepRes.rows.length === 0) {
+      if (!step.rows || step.rows.length === 0) {
         return res.status(404).json({ error: `No suspended step found for key: ${suspensionKey}` });
       }
-      const step = stepRes.rows[0];
-      const execution = await getExecution(step.execution_id);
-      if (!execution) return res.status(404).json({ error: "Execution not found" });
-      const event = { suspensionKey, payload: payload ?? {} };
-      const context = {
-        executionId: execution.id,
-        flowId: execution.flow_id,
-        stepIndex: step.step_index,
-        stepId: step.id,
-        shared: execution.context
+      const { execution_id, step_index } = step.rows[0];
+      const exec = await getExecution(execution_id);
+      const execContext = {
+        executionId: execution_id,
+        flowId: exec?.flow_id ?? "",
+        stepIndex: step_index,
+        stepId: step.rows[0].id,
+        shared: exec?.context ?? {}
       };
-      const provider = getProvider(step.provider);
-      if (!provider.resume) {
-        return res.status(400).json({ error: `Provider ${step.provider} does not support resumption` });
+      const event = {
+        suspensionKey,
+        payload: payload ?? {}
+      };
+      const outcome = await provider.resume(event, execContext);
+      if (outcome.outcome === "completed") {
+        await updateStep(step.rows[0].id, {
+          status: "COMPLETED",
+          output: outcome.output ?? {}
+        });
+        await updateExecution(execution_id, { status: "RUNNING" });
+        await appendEvent(execution_id, "step.resumed", { stepIndex: step_index, suspensionKey });
+        await appendEvent(execution_id, "step.completed", { stepIndex: step_index });
       }
-      const result = await provider.resume(event, context);
-      if (result.outcome === "completed") {
-        if (result.output) {
-          const merged = { ...execution.context, ...result.output };
-          await updateExecution(execution.id, { context: merged });
-        }
-        await updateStep(step.id, { status: "COMPLETED", output: result.output ?? {} });
-        await appendEvent(execution.id, "step.resumed", { stepIndex: step.step_index, suspensionKey });
-        await appendEvent(execution.id, "step.completed", { stepIndex: step.step_index });
-        await updateExecution(execution.id, { status: "PENDING" });
-        console.log(`[MesaRuntime] \u25B6 Step ${step.step_index} resumed via webhook.`);
-      } else {
-        await updateStep(step.id, { status: "FAILED", error: result.error });
-        await appendEvent(execution.id, "step.failed", { stepIndex: step.step_index, error: result.error });
-      }
-      res.json({ resumed: true, outcome: result.outcome });
+      res.json({ resumed: true, outcome: outcome.outcome });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       res.status(500).json({ error: msg });
     }
   });
-  app.get("/executions", async (_req, res) => {
+  app.get("/executions", apiKeyMiddleware, async (_req, res) => {
     try {
       const pool2 = getPool();
       const result = await pool2.query(
-        `SELECT id, flow_id, status, context, created_at
+        `SELECT id, flow_id, status, current_step, started_at, completed_at, created_at
          FROM executions
-         ORDER BY created_at DESC`
+         ORDER BY created_at DESC
+         LIMIT 50`
       );
-      const list = await Promise.all(result.rows.map(async (exec) => {
-        const stepsRes = await pool2.query(
-          `SELECT step_index, status, output, error, attempts, created_at, updated_at
-           FROM steps
-           WHERE execution_id = $1
-           ORDER BY step_index ASC`,
-          [exec.id]
-        );
-        return {
-          ...exec,
-          steps: stepsRes.rows
-        };
-      }));
-      res.json(list);
+      res.json(result?.rows || []);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       res.status(500).json({ error: msg });
     }
   });
-  app.get("/flows", async (_req, res) => {
+  app.get("/flows", apiKeyMiddleware, async (_req, res) => {
     try {
       const pool2 = getPool();
       const result = await pool2.query(
@@ -745,17 +926,18 @@ function createServer() {
          FROM flows
          ORDER BY created_at DESC`
       );
-      res.json(result.rows);
+      res.json(result?.rows || []);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       res.status(500).json({ error: msg });
     }
   });
-  app.get("/providers", async (_req, res) => {
+  app.get("/providers", apiKeyMiddleware, async (_req, res) => {
     try {
       const names = listProviders();
       const list = await Promise.all(names.map(async (name) => {
         const p = getProvider(name);
+        const metadata = getProviderMetadata(name);
         let health = { status: "healthy" };
         if (p.health) {
           try {
@@ -764,7 +946,7 @@ function createServer() {
             health = { status: "unhealthy", details: e.message };
           }
         }
-        return { name, health };
+        return { name, metadata, health };
       }));
       res.json(list);
     } catch (err) {
@@ -772,19 +954,33 @@ function createServer() {
       res.status(500).json({ error: msg });
     }
   });
-  app.get("/dashboard", (_req, res) => {
-    const possiblePaths = [
-      path2.join(__dirname, "dashboard.html"),
-      path2.join(__dirname, "server", "dashboard.html"),
-      path2.join(__dirname, "..", "src", "server", "dashboard.html"),
-      path2.join(__dirname, "..", "..", "src", "server", "dashboard.html")
-    ];
-    for (const p of possiblePaths) {
+  const serveFileIfExists = (res, filePaths) => {
+    for (const p of filePaths) {
       if (fs2.existsSync(p)) {
         return res.sendFile(p);
       }
     }
-    res.status(404).send("Dashboard file not found");
+    res.status(404).send("File not found");
+  };
+  app.get(["/studio", "/studio.html"], (_req, res) => {
+    serveFileIfExists(res, [
+      path2.join(process.cwd(), "UI", "studio.html"),
+      path2.join(__dirname, "..", "..", "UI", "studio.html")
+    ]);
+  });
+  app.get(["/docs", "/docs.html"], (_req, res) => {
+    serveFileIfExists(res, [
+      path2.join(process.cwd(), "UI", "docs.html"),
+      path2.join(__dirname, "..", "..", "UI", "docs.html")
+    ]);
+  });
+  app.get("/dashboard", (_req, res) => {
+    serveFileIfExists(res, [
+      path2.join(__dirname, "dashboard.html"),
+      path2.join(__dirname, "server", "dashboard.html"),
+      path2.join(__dirname, "..", "src", "server", "dashboard.html"),
+      path2.join(__dirname, "..", "..", "src", "server", "dashboard.html")
+    ]);
   });
   return app;
 }

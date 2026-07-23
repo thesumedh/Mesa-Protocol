@@ -1,0 +1,19 @@
+{
+  "name": "@mesaprotocol/codegen",
+  "version": "0.2.0",
+  "description": "TypeScript AST parser, code generator, and 1-click app workspace exporter for Mesa Protocol",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "ts-node src/codegen.test.ts"
+  },
+  "dependencies": {
+    "@mesaprotocol/schema": "^0.2.0",
+    "jszip": "^3.10.1",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  }
+}

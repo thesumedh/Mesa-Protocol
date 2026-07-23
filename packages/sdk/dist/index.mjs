@@ -5,25 +5,36 @@ import { randomUUID } from "crypto";
 var DEFAULT_RUNTIME_URL = "http://localhost:3001";
 var MesaClient = class {
   runtimeUrl;
+  apiKey;
   constructor(config = {}) {
-    this.runtimeUrl = config.runtimeUrl ?? process.env.MESA_RUNTIME_URL ?? DEFAULT_RUNTIME_URL;
+    this.runtimeUrl = config.runtimeUrl ?? config.endpoint ?? process.env.MESA_RUNTIME_URL ?? DEFAULT_RUNTIME_URL;
+    this.apiKey = config.apiKey ?? process.env.MESA_API_KEY;
+  }
+  flow(name, id) {
+    return new FlowBuilder(name, id, this);
+  }
+  /**
+   * Register a flow definition directly with the runtime.
+   */
+  async register(flow) {
+    return this._post("/flows", {
+      id: flow.id,
+      name: flow.name,
+      definition: flow
+    });
   }
   /**
    * Register the flow definition, then start an execution.
    */
   async execute(flow, context = {}) {
-    await this._post("/flows", {
-      id: flow.id,
-      name: flow.name,
-      definition: flow
-    });
+    await this.register(flow);
     const result = await this._post("/executions", {
       flowId: flow.id,
       context
     });
     return {
       executionId: result.executionId,
-      flowId: flow.id,
+      flowId: flow.id || flow.name,
       status: result.status
     };
   }
@@ -34,28 +45,42 @@ var MesaClient = class {
     return this._get(`/executions/${executionId}`);
   }
   async _post(path, body) {
+    const headers = { "Content-Type": "application/json" };
+    if (this.apiKey) {
+      headers["X-Mesa-Api-Key"] = this.apiKey;
+    }
     const res = await fetch(`${this.runtimeUrl}${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(body)
     });
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Mesa Runtime error (${res.status}): ${text}`);
+      const errText = await res.text();
+      throw new Error(`MesaRuntime POST ${path} failed (${res.status}): ${errText}`);
     }
     return res.json();
   }
   async _get(path) {
-    const res = await fetch(`${this.runtimeUrl}${path}`);
+    const headers = {};
+    if (this.apiKey) {
+      headers["X-Mesa-Api-Key"] = this.apiKey;
+    }
+    const res = await fetch(`${this.runtimeUrl}${path}`, { headers });
     if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Mesa Runtime error (${res.status}): ${text}`);
+      const errText = await res.text();
+      throw new Error(`MesaRuntime GET ${path} failed (${res.status}): ${errText}`);
     }
     return res.json();
   }
 };
 
 // src/flow.ts
+import {
+  FlowDefinition as FlowDefinition2,
+  StepDefinition,
+  FlowDefinitionSchema,
+  StepDefinitionSchema
+} from "@mesaprotocol/schema";
 function validateAddress(address, fieldName) {
   if (!address) {
     throw new TypeError(`Mesa SDK: "${fieldName}" is required and must be a non-empty string.`);
@@ -81,6 +106,7 @@ function validateAsset(asset, fieldName) {
 var FlowBuilder = class {
   _id;
   _name;
+  _version = "1.0.0";
   _steps = [];
   _client;
   constructor(name, id, client) {
@@ -92,22 +118,24 @@ var FlowBuilder = class {
     this._id = flowId;
     this._client = client;
   }
+  setVersion(version) {
+    this._version = version;
+    return this;
+  }
   /**
-   * Wait for an incoming payment to an address on Stellar.
-   * The runtime suspends execution until the payment is detected
-   * (via Horizon polling or inbound webhook resume).
+   * Listen for incoming XLM / USDC payment.
    */
   receive(params) {
     validateAsset(params.asset, "receive.asset");
     validateAddress(params.toAddress, "receive.toAddress");
-    if (typeof params.minAmount !== "number" || params.minAmount <= 0) {
+    if (typeof params.minAmount === "number" && params.minAmount <= 0) {
       throw new RangeError(`Mesa SDK: minAmount must be a positive number. Got: ${params.minAmount}`);
     }
-    this._steps.push({
+    this._steps.push(StepDefinitionSchema.parse({
       name: "receive-payment",
       provider: "stellar",
       params: { action: "receive", ...params }
-    });
+    }));
     return this;
   }
   /**
@@ -118,252 +146,185 @@ var FlowBuilder = class {
     if (typeof closes !== "number" || closes <= 0 || !Number.isInteger(closes)) {
       throw new RangeError(`Mesa SDK: ledgerCloses must be a positive integer. Got: ${closes}`);
     }
-    this._steps.push({
+    this._steps.push(StepDefinitionSchema.parse({
       name: "confirm-on-chain",
       provider: "stellar",
       params: { action: "confirm", ledgerCloses: closes }
-    });
+    }));
     return this;
   }
   /**
-   * Convert one asset to another using a SEP-24 anchor.
-   * The runtime suspends execution and waits for the anchor callback.
+   * Convert / Deposit asset using SEP-24 anchor interface.
    */
   convert(params) {
-    validateAsset(params.from, "convert.from");
-    validateAsset(params.to, "convert.to");
-    if (!params.anchor || typeof params.anchor !== "string") {
-      throw new TypeError(`Mesa SDK: convert.anchor must be a non-empty string.`);
+    const anchorDomain = params.anchor ?? params.home_domain;
+    if (anchorDomain === void 0 || anchorDomain === "") {
+      throw new TypeError("Mesa SDK: convert.anchor must be a non-empty string.");
     }
-    this._steps.push({
+    const assetCode = params.asset_code || params.to || params.from || "USDC";
+    const homeDomain = anchorDomain || "testanchor.stellar.org";
+    this._steps.push(StepDefinitionSchema.parse({
       name: "convert-asset",
       provider: "anchor",
-      params: { action: "sep24-deposit", ...params }
-    });
+      params: {
+        action: "sep24-deposit",
+        asset_code: assetCode,
+        home_domain: homeDomain,
+        anchorUrl: homeDomain.startsWith("http") ? homeDomain : `https://${homeDomain}`,
+        account: params.account,
+        amount: params.amount,
+        ...params
+      }
+    }));
     return this;
   }
   /**
-   * Transfer an asset to a destination address on Stellar.
+   * General SEP-24 Anchor Deposit/Withdrawal invocation.
+   */
+  anchor(params) {
+    this._steps.push(StepDefinitionSchema.parse({
+      name: `anchor-${params.action || "sep24-deposit"}`,
+      provider: "anchor",
+      params: {
+        action: params.action || "sep24-deposit",
+        anchorUrl: params.home_domain.startsWith("http") ? params.home_domain : `https://${params.home_domain}`,
+        ...params
+      }
+    }));
+    return this;
+  }
+  /**
+   * Transfer funds to destination on Stellar.
    */
   transfer(params) {
     validateAddress(params.to, "transfer.to");
     validateAsset(params.asset, "transfer.asset");
-    if (params.amount !== void 0 && (typeof params.amount !== "number" || params.amount <= 0)) {
+    if (typeof params.amount === "number" && params.amount <= 0) {
       throw new RangeError(`Mesa SDK: transfer.amount must be a positive number. Got: ${params.amount}`);
     }
-    this._steps.push({
+    this._steps.push(StepDefinitionSchema.parse({
       name: "transfer-funds",
       provider: "stellar",
       params: { action: "transfer", ...params }
-    });
+    }));
     return this;
   }
   /**
-   * Send a real Stellar payment transaction.
-   *
-   * Use `senderSecretRef` to reference an environment variable name rather
-   * than embedding the private key directly. The runtime resolves it at
-   * execution time — the key is never stored in the workflow definition or DB.
-   *
-   * Example:
-   *   .payment({ senderSecretRef: 'SENDER_SECRET', to: 'G...', asset: 'XLM', amount: 25 })
-   *   // Set: process.env.SENDER_SECRET = 'SXXXXX...'
+   * Submit direct Stellar Horizon payment.
    */
   payment(params) {
     validateAddress(params.to, "payment.to");
-    if (params.amount <= 0) {
+    if (typeof params.amount === "number" && params.amount <= 0) {
       throw new RangeError(`Mesa SDK: payment.amount must be a positive number. Got: ${params.amount}`);
     }
-    if (!params.senderSecret && !params.senderSecretRef) {
-      throw new TypeError("Mesa SDK: payment requires either senderSecret or senderSecretRef.");
-    }
-    this._steps.push({
+    this._steps.push(StepDefinitionSchema.parse({
       name: "stellar-payment",
       provider: "stellar",
       params: { action: "payment", ...params }
-    });
+    }));
     return this;
   }
   /**
-   * Swap one asset for another using Stellar's built-in DEX path payment.
-   *
-   * Mesa submits a pathPaymentStrictSend operation — Horizon finds the best
-   * route through the DEX automatically. The workflow pauses if no path is
-   * found and retries with backoff.
-   *
-   * Use `senderSecretRef` instead of `senderSecret` to keep keys out of the DB.
-   *
-   * Example:
-   *   .swap({
-   *     senderSecretRef: 'SENDER_SECRET',
-   *     sendAsset: 'XLM',
-   *     sendAmount: 50,
-   *     destAsset: 'USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
-   *     destMin: 4.5,
-   *     to: 'G...',
-   *   })
-   */
-  swap(params) {
-    validateAddress(params.to, "swap.to");
-    if (params.sendAmount <= 0) {
-      throw new RangeError(`Mesa SDK: swap.sendAmount must be positive. Got: ${params.sendAmount}`);
-    }
-    if (params.destMin <= 0) {
-      throw new RangeError(`Mesa SDK: swap.destMin must be positive. Got: ${params.destMin}`);
-    }
-    if (!params.senderSecret && !params.senderSecretRef) {
-      throw new TypeError("Mesa SDK: swap requires either senderSecret or senderSecretRef.");
-    }
-    this._steps.push({
-      name: `swap-${params.sendAsset}-to-${params.destAsset.split(":")[0]}`,
-      provider: "stellar",
-      params: { action: "path-payment", ...params }
-    });
-    return this;
-  }
-  /**
-   * Invoke a Soroban smart contract function.
+   * Invoke a Soroban Smart Contract method.
    */
   invoke(params) {
-    if (!params.contractId || typeof params.contractId !== "string") {
-      throw new TypeError(`Mesa SDK: invoke.contractId must be a non-empty string.`);
-    }
-    if (!params.method || typeof params.method !== "string") {
-      throw new TypeError(`Mesa SDK: invoke.method must be a non-empty string.`);
-    }
-    this._steps.push({
+    this._steps.push(StepDefinitionSchema.parse({
       name: `invoke-${params.method}`,
       provider: "soroban",
-      params
-    });
+      params: { action: "invoke", ...params }
+    }));
     return this;
   }
   /**
-   * Wait for a fixed duration before proceeding.
+   * Delay execution for a specified duration in seconds.
    */
   delay(params) {
     if (typeof params.seconds !== "number" || params.seconds <= 0) {
       throw new RangeError(`Mesa SDK: delay.seconds must be a positive number. Got: ${params.seconds}`);
     }
-    this._steps.push({
+    this._steps.push(StepDefinitionSchema.parse({
       name: `delay-${params.seconds}s`,
       provider: "delay",
-      params
-    });
+      params: { seconds: params.seconds }
+    }));
     return this;
   }
   /**
-   * Send an HTTP POST notification to a URL when execution reaches this step.
-   * Use `waitForCallback: true` to suspend until the recipient responds.
+   * Send webhook / suspend execution until external callback.
    */
-  webhook(params) {
-    if (!params.url || typeof params.url !== "string") {
-      throw new TypeError(`Mesa SDK: webhook.url is required.`);
+  webhook(params = {}) {
+    if (params.url) {
+      try {
+        new URL(params.url);
+      } catch {
+        throw new Error(`Mesa SDK: Invalid URL format for webhook.url: "${params.url}". Must be a valid HTTP/HTTPS URL.`);
+      }
     }
-    try {
-      new URL(params.url);
-    } catch {
-      throw new Error(`Mesa SDK: Invalid URL format for webhook.url: "${params.url}".`);
-    }
-    this._steps.push({
+    this._steps.push(StepDefinitionSchema.parse({
       name: "send-webhook",
       provider: "webhook",
       params
-    });
+    }));
     return this;
   }
   /**
-   * Add a generic or custom step to the flow definition.
+   * Appends an arbitrary custom step to the flow.
    */
-  step(name, provider, params = {}) {
-    this._steps.push({
-      name,
-      provider: provider ?? name,
-      params
-    });
+  step(step) {
+    const parsed = StepDefinitionSchema.parse(step);
+    this._steps.push(parsed);
     return this;
   }
   /**
-   * Finalize the flow definition.
-   * Returns a serializable object the runtime can register and execute.
+   * Builds and validates the immutable FlowDefinition object.
    */
   build() {
     if (this._steps.length === 0) {
-      throw new Error(`Flow "${this._name}" has no steps. Add at least one step before calling .build().`);
+      throw new Error(`Mesa SDK: Flow "${this._name}" has no steps. At least one step is required.`);
     }
-    return {
+    const flowObj = {
       id: this._id,
       name: this._name,
-      steps: [...this._steps]
+      version: this._version,
+      steps: this._steps
     };
+    return FlowDefinitionSchema.parse(flowObj);
   }
-  /**
-   * Shortcut to build, register, and execute this flow directly.
-   */
-  async execute(context = {}) {
+  async execute(options) {
+    const flow = this.build();
     if (this._client) {
-      return this._client.execute(this.build(), context);
+      return this._client.execute(flow, options?.context);
     }
-    return Mesa.execute(this.build(), context);
+    return Mesa.execute(flow, options);
   }
 };
-var _defaultClient = null;
-var Mesa = class {
+var Mesa = class _Mesa {
+  static _defaultClient = new MesaClient();
   _client;
-  constructor(config) {
-    const url = config?.endpoint ?? config?.runtimeUrl;
-    this._client = new MesaClient({ runtimeUrl: url });
+  constructor(config = {}) {
+    this._client = new MesaClient(config);
   }
-  /**
-   * Start building a new flow definition.
-   */
   flow(name, id) {
-    if (name === "") {
-      throw new TypeError("Mesa SDK: Flow name must be a non-empty string.");
-    }
     return new FlowBuilder(name, id, this._client);
   }
-  /**
-   * Register a flow definition with the runtime, then start an execution.
-   */
-  async execute(flow, context = {}) {
-    return this._client.execute(flow, context);
+  async register(flow) {
+    return this._client.register(flow);
   }
-  /**
-   * Get the current status of a running execution.
-   */
-  async status(executionId) {
-    return this._client.status(executionId);
-  }
-  // --- Static methods (for backwards compatibility with global configure flow) ---
-  /**
-   * Configure the default client. Call once at application startup.
-   */
   static configure(config) {
-    _defaultClient = new MesaClient(config);
+    _Mesa._defaultClient = new MesaClient(config);
   }
-  /**
-   * Start building a new flow using the default configuration.
-   */
   static flow(name, id) {
-    if (name === "") {
-      throw new TypeError("Mesa SDK: Flow name must be a non-empty string.");
+    return new FlowBuilder(name, id, _Mesa._defaultClient);
+  }
+  static async register(flow) {
+    return _Mesa._defaultClient.register(flow);
+  }
+  static async execute(flow, options) {
+    if (options?.runtimeUrl) {
+      const customClient = new MesaClient({ runtimeUrl: options.runtimeUrl });
+      return customClient.execute(flow, options.context);
     }
-    return new FlowBuilder(name, id, _defaultClient ?? void 0);
-  }
-  /**
-   * Register and execute a flow definition using the default client.
-   */
-  static async execute(flow, context = {}) {
-    const client = _defaultClient ?? new MesaClient({});
-    return client.execute(flow, context);
-  }
-  /**
-   * Get execution status using the default client.
-   */
-  static async status(executionId) {
-    const client = _defaultClient ?? new MesaClient({});
-    return client.status(executionId);
+    return _Mesa._defaultClient.execute(flow, options?.context);
   }
 };
 
@@ -400,6 +361,9 @@ var FreighterSigner = class {
     throw new Error("Unexpected Freighter response");
   }
 };
+
+// src/index.ts
+export * from "@mesaprotocol/schema";
 export {
   FlowBuilder,
   FreighterSigner,

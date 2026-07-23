@@ -4,15 +4,18 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 let pool: any = null;
+let isUsingInMemory = false;
 
 export function getPool(): any {
   if (!pool) {
-    if (process.env.DATABASE_URL === 'mock' || process.env.NODE_ENV === 'test') {
+    if (process.env.DATABASE_URL === 'mock' || process.env.NODE_ENV === 'test' || isUsingInMemory) {
       console.log('[MesaRuntime] Initializing InMemoryPool for testing/mocking.');
+      isUsingInMemory = true;
       pool = new InMemoryPool();
     } else {
       pool = new Pool({
         connectionString: process.env.DATABASE_URL || 'postgresql://mesa:mesa@localhost:5432/mesa',
+        connectionTimeoutMillis: 3000,
       });
     }
   }
@@ -20,7 +23,7 @@ export function getPool(): any {
 }
 
 export async function initSchema(): Promise<void> {
-  if (process.env.DATABASE_URL === 'mock' || process.env.NODE_ENV === 'test') {
+  if (process.env.DATABASE_URL === 'mock' || process.env.NODE_ENV === 'test' || isUsingInMemory) {
     console.log('[MesaRuntime] InMemoryPool schema initialization skipped.');
     return;
   }
@@ -47,8 +50,14 @@ export async function initSchema(): Promise<void> {
   }
 
   const sql = fs.readFileSync(schemaPath, 'utf8');
-  await getPool().query(sql);
-  console.log('[MesaRuntime] Postgres schema initialized.');
+  try {
+    await getPool().query(sql);
+    console.log('[MesaRuntime] Postgres schema initialized.');
+  } catch (err: any) {
+    console.log('[MesaRuntime] ⚠️ Local PostgreSQL connection failed (5432). Falling back to InMemoryPool for dev runtime.');
+    isUsingInMemory = true;
+    pool = new InMemoryPool();
+  }
 }
 
 // ─── Flow Store ───────────────────────────────────────────────────────────────
@@ -75,7 +84,7 @@ export async function getFlow(id: string): Promise<FlowRecord | null> {
 
 // ─── Execution Store ──────────────────────────────────────────────────────────
 
-export type ExecutionStatus = 'PENDING' | 'RUNNING' | 'SUSPENDED' | 'COMPLETED' | 'FAILED' | 'PERMANENTLY_FAILED';
+export type ExecutionStatus = 'PENDING' | 'RUNNING' | 'SUSPENDED' | 'COMPLETED' | 'FAILED' | 'PERMANENTLY_FAILED' | 'CANCELLED';
 
 export interface ExecutionRecord {
   id: string;
@@ -101,25 +110,48 @@ export async function getExecution(id: string): Promise<ExecutionRecord | null> 
   return res.rows[0] ?? null;
 }
 
-export async function updateExecution(id: string, fields: Partial<Pick<ExecutionRecord, 'status' | 'context' | 'current_step' | 'started_at' | 'completed_at'>>): Promise<void> {
-  const sets: string[] = [];
-  const values: unknown[] = [];
-  let i = 1;
-  if (fields.status !== undefined)        { sets.push(`status = $${i++}`);        values.push(fields.status); }
-  if (fields.context !== undefined)       { sets.push(`context = $${i++}`);       values.push(JSON.stringify(fields.context)); }
-  if (fields.current_step !== undefined)  { sets.push(`current_step = $${i++}`);  values.push(fields.current_step); }
-  if (fields.started_at !== undefined)    { sets.push(`started_at = $${i++}`);    values.push(fields.started_at); }
-  if (fields.completed_at !== undefined)  { sets.push(`completed_at = $${i++}`);  values.push(fields.completed_at); }
-  if (sets.length === 0) return;
-  values.push(id);
-  await getPool().query(`UPDATE executions SET ${sets.join(', ')} WHERE id = $${i}`, values);
-}
-
 export async function getPendingExecutions(): Promise<ExecutionRecord[]> {
   const res = await getPool().query(
-    `SELECT * FROM executions WHERE status IN ('PENDING', 'RUNNING') ORDER BY created_at ASC LIMIT 50`
+    `SELECT * FROM executions WHERE status = 'PENDING' ORDER BY created_at ASC`
   );
-  return res.rows;
+  return res.rows || [];
+}
+
+export async function updateExecution(id: string, updates: Partial<ExecutionRecord>): Promise<ExecutionRecord> {
+  const setClauses: string[] = [];
+  const params: any[] = [];
+  let paramIndex = 1;
+
+  if (updates.status !== undefined) {
+    setClauses.push(`status = $${paramIndex++}`);
+    params.push(updates.status);
+    if (updates.status === 'RUNNING' && !updates.started_at) {
+      setClauses.push(`started_at = NOW()`);
+    } else if ((updates.status === 'COMPLETED' || updates.status === 'FAILED' || updates.status === 'CANCELLED') && !updates.completed_at) {
+      setClauses.push(`completed_at = NOW()`);
+    }
+  }
+
+  if (updates.context !== undefined) {
+    setClauses.push(`context = $${paramIndex++}`);
+    params.push(JSON.stringify(updates.context));
+  }
+
+  if (updates.current_step !== undefined) {
+    setClauses.push(`current_step = $${paramIndex++}`);
+    params.push(updates.current_step);
+  }
+
+  if (setClauses.length === 0) {
+    const existing = await getExecution(id);
+    if (!existing) throw new Error(`Execution not found: ${id}`);
+    return existing;
+  }
+
+  params.push(id);
+  const sql = `UPDATE executions SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
+  const res = await getPool().query(sql, params);
+  return res.rows[0];
 }
 
 // ─── Step Store ───────────────────────────────────────────────────────────────
@@ -142,24 +174,43 @@ export interface StepRecord {
   updated_at: Date;
 }
 
-export async function createStep(data: Omit<StepRecord, 'created_at' | 'updated_at'>): Promise<StepRecord> {
+export async function createStep(params: {
+  id: string;
+  execution_id: string;
+  step_index: number;
+  name: string;
+  provider: string;
+  status?: StepStatus;
+  input?: Record<string, unknown> | null;
+  output?: Record<string, unknown> | null;
+  error?: string | null;
+  attempts?: number;
+  next_retry?: Date | null;
+}): Promise<StepRecord> {
+  const status = params.status || 'PENDING';
+  const attempts = params.attempts || 0;
   const res = await getPool().query(
     `INSERT INTO steps (id, execution_id, step_index, name, provider, status, input, output, error, attempts, next_retry)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
-    [data.id, data.execution_id, data.step_index, data.name, data.provider, data.status,
-     data.input ? JSON.stringify(data.input) : null,
-     data.output ? JSON.stringify(data.output) : null,
-     data.error, data.attempts, data.next_retry]
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+     RETURNING *`,
+    [
+      params.id,
+      params.execution_id,
+      params.step_index,
+      params.name,
+      params.provider,
+      status,
+      params.input ? JSON.stringify(params.input) : null,
+      params.output ? JSON.stringify(params.output) : null,
+      params.error || null,
+      attempts,
+      params.next_retry || null,
+    ]
   );
   return res.rows[0];
 }
 
-export async function getStep(id: string): Promise<StepRecord | null> {
-  const res = await getPool().query(`SELECT * FROM steps WHERE id = $1`, [id]);
-  return res.rows[0] ?? null;
-}
-
-export async function getStepForExecution(executionId: string, stepIndex: number): Promise<StepRecord | null> {
+export async function getStep(executionId: string, stepIndex: number): Promise<StepRecord | null> {
   const res = await getPool().query(
     `SELECT * FROM steps WHERE execution_id = $1 AND step_index = $2`,
     [executionId, stepIndex]
@@ -167,17 +218,42 @@ export async function getStepForExecution(executionId: string, stepIndex: number
   return res.rows[0] ?? null;
 }
 
-export async function updateStep(id: string, fields: Partial<Pick<StepRecord, 'status' | 'output' | 'error' | 'attempts' | 'next_retry'>>): Promise<void> {
-  const sets: string[] = [`updated_at = NOW()`];
-  const values: unknown[] = [];
-  let i = 1;
-  if (fields.status !== undefined)     { sets.push(`status = $${i++}`);     values.push(fields.status); }
-  if (fields.output !== undefined)     { sets.push(`output = $${i++}`);     values.push(fields.output ? JSON.stringify(fields.output) : null); }
-  if (fields.error !== undefined)      { sets.push(`error = $${i++}`);      values.push(fields.error); }
-  if (fields.attempts !== undefined)   { sets.push(`attempts = $${i++}`);   values.push(fields.attempts); }
-  if (fields.next_retry !== undefined) { sets.push(`next_retry = $${i++}`); values.push(fields.next_retry); }
-  values.push(id);
-  await getPool().query(`UPDATE steps SET ${sets.join(', ')} WHERE id = $${i}`, values);
+export const getStepForExecution = getStep;
+
+export async function updateStep(id: string, updates: Partial<StepRecord>): Promise<StepRecord> {
+  const setClauses: string[] = ['updated_at = NOW()'];
+  const params: any[] = [];
+  let paramIndex = 1;
+
+  if (updates.status !== undefined) {
+    setClauses.push(`status = $${paramIndex++}`);
+    params.push(updates.status);
+  }
+
+  if (updates.output !== undefined) {
+    setClauses.push(`output = $${paramIndex++}`);
+    params.push(JSON.stringify(updates.output));
+  }
+
+  if (updates.error !== undefined) {
+    setClauses.push(`error = $${paramIndex++}`);
+    params.push(updates.error);
+  }
+
+  if (updates.attempts !== undefined) {
+    setClauses.push(`attempts = $${paramIndex++}`);
+    params.push(updates.attempts);
+  }
+
+  if (updates.next_retry !== undefined) {
+    setClauses.push(`next_retry = $${paramIndex++}`);
+    params.push(updates.next_retry);
+  }
+
+  params.push(id);
+  const sql = `UPDATE steps SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
+  const res = await getPool().query(sql, params);
+  return res.rows[0];
 }
 
 // ─── Event Store ──────────────────────────────────────────────────────────────
@@ -190,16 +266,21 @@ export interface EventRecord {
   timestamp: Date;
 }
 
-export async function appendEvent(executionId: string, type: string, payload?: Record<string, unknown>): Promise<void> {
-  await getPool().query(
-    `INSERT INTO events (execution_id, type, payload) VALUES ($1, $2, $3)`,
-    [executionId, type, payload ? JSON.stringify(payload) : null]
+export async function appendEvent(
+  executionId: string,
+  type: string,
+  payload: Record<string, unknown> = {}
+): Promise<EventRecord> {
+  const res = await getPool().query(
+    `INSERT INTO events (execution_id, type, payload) VALUES ($1, $2, $3) RETURNING *`,
+    [executionId, type, JSON.stringify(payload)]
   );
+  return res.rows[0];
 }
 
 export async function getEvents(executionId: string): Promise<EventRecord[]> {
   const res = await getPool().query(
-    `SELECT * FROM events WHERE execution_id = $1 ORDER BY timestamp ASC`,
+    `SELECT * FROM events WHERE execution_id = $1 ORDER BY id ASC`,
     [executionId]
   );
   return res.rows;

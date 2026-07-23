@@ -1,3 +1,5 @@
+import { ProviderMetadata } from '@mesaprotocol/schema';
+
 /**
  * Provider Interface
  *
@@ -41,6 +43,7 @@ export interface ExternalEvent {
 
 export interface MesaProvider {
   readonly name: string;
+  metadata?: ProviderMetadata;
   execute(step: StepDefinition, context: ExecutionContext): Promise<StepResult>;
   resume?(event: ExternalEvent, context: ExecutionContext): Promise<StepResult>;
   cancel?(context: ExecutionContext): Promise<void>;
@@ -64,4 +67,23 @@ export function getProvider(name: string): MesaProvider {
 
 export function listProviders(): string[] {
   return Array.from(registry.keys());
+}
+
+export function getProviderMetadata(name: string): ProviderMetadata {
+  const provider = getProvider(name);
+  if (provider.metadata) return provider.metadata;
+
+  // Default fallback metadata
+  return {
+    name: provider.name,
+    description: `Mesa ${provider.name} primitive execution provider`,
+    category: (['stellar', 'anchor', 'soroban'].includes(provider.name) ? provider.name : 'utility') as any,
+    actions: ['execute', 'resume'],
+    inputFields: [
+      { key: 'action', label: 'Action', type: 'string', required: true }
+    ],
+    outputs: ['output'],
+    mockSupport: true,
+    realSupport: true
+  };
 }

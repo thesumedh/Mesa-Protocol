@@ -1,5 +1,11 @@
+import { FlowDefinition, StepDefinition } from '@mesaprotocol/schema';
+export * from '@mesaprotocol/schema';
+export { FlowDefinition, StepDefinition } from '@mesaprotocol/schema';
+
 interface MesaConfig {
     runtimeUrl?: string;
+    endpoint?: string;
+    apiKey?: string;
 }
 interface ExecutionResult {
     executionId: string;
@@ -10,12 +16,20 @@ interface ExecutionResult {
  * MesaClient
  *
  * Sends flow definitions and execution requests to the Mesa Runtime.
- * For use in server-side code (Node.js). Browser usage goes through
- * the Mesa Runtime directly (never expose runtime to browser clients).
+ * Supports API Key authentication and custom runtime endpoints.
  */
 declare class MesaClient {
     private runtimeUrl;
+    private apiKey?;
     constructor(config?: MesaConfig);
+    flow(name?: string, id?: string): FlowBuilder;
+    /**
+     * Register a flow definition directly with the runtime.
+     */
+    register(flow: FlowDefinition): Promise<{
+        flowId: string;
+        name: string;
+    }>;
     /**
      * Register the flow definition, then start an execution.
      */
@@ -31,35 +45,24 @@ declare class MesaClient {
     private _get;
 }
 
-interface StepDefinition {
-    name: string;
-    provider: string;
-    params: Record<string, unknown>;
-}
-interface FlowDefinition {
-    id: string;
-    name: string;
-    steps: StepDefinition[];
-}
 /**
  * Fluent builder that describes a Mesa workflow.
- * Does NOT contain business logic — only data.
- * The runtime executes; the SDK describes.
+ * Validates steps against canonical Zod schemas.
  */
 declare class FlowBuilder {
     private readonly _id;
     private readonly _name;
+    private _version;
     private _steps;
     private readonly _client?;
     constructor(name?: string, id?: string, client?: MesaClient);
+    setVersion(version: string): this;
     /**
-     * Wait for an incoming payment to an address on Stellar.
-     * The runtime suspends execution until the payment is detected
-     * (via Horizon polling or inbound webhook resume).
+     * Listen for incoming XLM / USDC payment.
      */
     receive(params: {
         asset: string;
-        minAmount: number;
+        minAmount: number | string;
         toAddress: string;
     }): this;
     /**
@@ -69,154 +72,113 @@ declare class FlowBuilder {
         ledgerCloses?: number;
     }): this;
     /**
-     * Convert one asset to another using a SEP-24 anchor.
-     * The runtime suspends execution and waits for the anchor callback.
+     * Convert / Deposit asset using SEP-24 anchor interface.
      */
     convert(params: {
-        from: string;
-        to: string;
-        anchor: string;
+        from?: string;
+        to?: string;
+        anchor?: string;
+        asset_code?: string;
+        home_domain?: string;
+        account?: string;
+        amount?: number | string;
     }): this;
     /**
-     * Transfer an asset to a destination address on Stellar.
+     * General SEP-24 Anchor Deposit/Withdrawal invocation.
+     */
+    anchor(params: {
+        action?: 'sep24-deposit' | 'sep24-withdraw';
+        asset_code: string;
+        home_domain: string;
+        account?: string;
+        memo?: string;
+        amount?: number | string;
+    }): this;
+    /**
+     * Transfer funds to destination on Stellar.
      */
     transfer(params: {
         to: string;
         asset: string;
-        amount?: number;
+        amount?: number | string;
+        senderSecretRef?: string;
     }): this;
     /**
-     * Send a real Stellar payment transaction.
-     *
-     * Use `senderSecretRef` to reference an environment variable name rather
-     * than embedding the private key directly. The runtime resolves it at
-     * execution time — the key is never stored in the workflow definition or DB.
-     *
-     * Example:
-     *   .payment({ senderSecretRef: 'SENDER_SECRET', to: 'G...', asset: 'XLM', amount: 25 })
-     *   // Set: process.env.SENDER_SECRET = 'SXXXXX...'
+     * Submit direct Stellar Horizon payment.
      */
     payment(params: {
         horizonUrl?: string;
-        senderSecret?: string;
         senderSecretRef?: string;
         to: string;
+        amount: number | string;
         asset?: string;
-        amount: number;
     }): this;
     /**
-     * Swap one asset for another using Stellar's built-in DEX path payment.
-     *
-     * Mesa submits a pathPaymentStrictSend operation — Horizon finds the best
-     * route through the DEX automatically. The workflow pauses if no path is
-     * found and retries with backoff.
-     *
-     * Use `senderSecretRef` instead of `senderSecret` to keep keys out of the DB.
-     *
-     * Example:
-     *   .swap({
-     *     senderSecretRef: 'SENDER_SECRET',
-     *     sendAsset: 'XLM',
-     *     sendAmount: 50,
-     *     destAsset: 'USDC:GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
-     *     destMin: 4.5,
-     *     to: 'G...',
-     *   })
-     */
-    swap(params: {
-        horizonUrl?: string;
-        senderSecret?: string;
-        senderSecretRef?: string;
-        sendAsset: string;
-        sendAmount: number;
-        destAsset: string;
-        destMin: number;
-        to: string;
-    }): this;
-    /**
-     * Invoke a Soroban smart contract function.
+     * Invoke a Soroban Smart Contract method.
      */
     invoke(params: {
         contractId: string;
         method: string;
-        args?: Record<string, unknown>;
+        args?: any;
+        secretRef?: string;
+        rpcUrl?: string;
     }): this;
     /**
-     * Wait for a fixed duration before proceeding.
+     * Delay execution for a specified duration in seconds.
      */
     delay(params: {
         seconds: number;
     }): this;
     /**
-     * Send an HTTP POST notification to a URL when execution reaches this step.
-     * Use `waitForCallback: true` to suspend until the recipient responds.
+     * Send webhook / suspend execution until external callback.
      */
-    webhook(params: {
-        url: string;
-        events?: string[];
-        waitForCallback?: boolean;
+    webhook(params?: {
+        url?: string;
+        method?: string;
+        payload?: Record<string, unknown>;
+        suspensionKey?: string;
+        hmacSecretRef?: string;
     }): this;
     /**
-     * Add a generic or custom step to the flow definition.
+     * Appends an arbitrary custom step to the flow.
      */
-    step(name: string, provider?: string, params?: Record<string, unknown>): this;
+    step(step: StepDefinition): this;
     /**
-     * Finalize the flow definition.
-     * Returns a serializable object the runtime can register and execute.
+     * Builds and validates the immutable FlowDefinition object.
      */
     build(): FlowDefinition;
-    /**
-     * Shortcut to build, register, and execute this flow directly.
-     */
-    execute(context?: Record<string, unknown>): Promise<{
+    execute(options?: {
+        runtimeUrl?: string;
+        context?: Record<string, unknown>;
+    }): Promise<{
         executionId: string;
+        status: string;
     }>;
 }
+/**
+ * Entry point for creating Mesa workflows.
+ */
 declare class Mesa {
+    private static _defaultClient;
     private _client;
-    constructor(config?: {
-        endpoint?: string;
-        runtimeUrl?: string;
-    });
-    /**
-     * Start building a new flow definition.
-     */
+    constructor(config?: MesaConfig);
     flow(name?: string, id?: string): FlowBuilder;
-    /**
-     * Register a flow definition with the runtime, then start an execution.
-     */
-    execute(flow: FlowDefinition, context?: Record<string, unknown>): Promise<{
-        executionId: string;
+    register(flow: FlowDefinition): Promise<{
+        flowId: string;
+        name: string;
     }>;
-    /**
-     * Get the current status of a running execution.
-     */
-    status(executionId: string): Promise<{
-        execution: unknown;
-        events: unknown[];
-    }>;
-    /**
-     * Configure the default client. Call once at application startup.
-     */
-    static configure(config: {
-        runtimeUrl?: string;
-    }): void;
-    /**
-     * Start building a new flow using the default configuration.
-     */
+    static configure(config: MesaConfig): void;
     static flow(name?: string, id?: string): FlowBuilder;
-    /**
-     * Register and execute a flow definition using the default client.
-     */
-    static execute(flow: FlowDefinition, context?: Record<string, unknown>): Promise<{
-        executionId: string;
+    static register(flow: FlowDefinition): Promise<{
+        flowId: string;
+        name: string;
     }>;
-    /**
-     * Get execution status using the default client.
-     */
-    static status(executionId: string): Promise<{
-        execution: unknown;
-        events: unknown[];
+    static execute(flow: FlowDefinition, options?: {
+        runtimeUrl?: string;
+        context?: Record<string, unknown>;
+    }): Promise<{
+        executionId: string;
+        status: string;
     }>;
 }
 
@@ -237,4 +199,4 @@ declare class FreighterSigner implements MesaSigner {
     signTransaction(txXdr: string, networkPassphrase: string): Promise<string>;
 }
 
-export { type ExecutionResult, FlowBuilder, type FlowDefinition, FreighterSigner, Mesa, MesaClient, type MesaConfig, type MesaSigner, SecretKeySigner, type StepDefinition };
+export { type ExecutionResult, FlowBuilder, FreighterSigner, Mesa, MesaClient, type MesaConfig, type MesaSigner, SecretKeySigner };
