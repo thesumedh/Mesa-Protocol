@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ApproveExecutionPayloadSchema = exports.WebhookResumePayloadSchema = exports.CreateExecutionPayloadSchema = exports.RegisterFlowPayloadSchema = exports.FlowGraphDefinitionSchema = exports.FlowEdgeSchema = exports.FlowNodeSchema = exports.FlowDefinitionSchema = exports.StepDefinitionSchema = exports.CustomStepSchema = exports.ConditionStepSchema = exports.ApprovalStepSchema = exports.SorobanStepSchema = exports.WebhookStepSchema = exports.DelayStepSchema = exports.ConvertStepSchema = exports.PathPaymentStepSchema = exports.PaymentStepSchema = exports.ConfirmStepSchema = exports.ReceiveStepSchema = exports.Sep10StepSchema = exports.ExecutionStatusSchema = exports.ProviderMetadataSchema = exports.ProviderFieldSchema = void 0;
+exports.ApproveExecutionPayloadSchema = exports.WebhookResumePayloadSchema = exports.CreateExecutionPayloadSchema = exports.RegisterFlowPayloadSchema = exports.FlowGraphDefinitionSchema = exports.FlowEdgeSchema = exports.FlowNodeSchema = exports.FlowDefinitionSchema = exports.StepDefinitionSchema = exports.CustomStepSchema = exports.ConditionStepSchema = exports.ApprovalStepSchema = exports.SorobanStepSchema = exports.WebhookStepSchema = exports.DelayStepSchema = exports.ConvertStepSchema = exports.PathPaymentStepSchema = exports.PaymentStepSchema = exports.ConfirmStepSchema = exports.ReceiveStepSchema = exports.Sep10StepSchema = exports.CompensationStepSchema = exports.ExecutionStatusSchema = exports.ProviderMetadataSchema = exports.ProviderFieldSchema = void 0;
 const zod_1 = require("zod");
 // ─── Provider Field & Action Metadata ─────────────────────────────────────────
 exports.ProviderFieldSchema = zod_1.z.object({
@@ -34,8 +34,19 @@ exports.ExecutionStatusSchema = zod_1.z.enum([
     'RETRYING',
     'COMPLETED',
     'FAILED',
-    'CANCELLED'
+    'CANCELLED',
+    'COMPENSATED'
 ]);
+exports.CompensationStepSchema = zod_1.z.object({
+    name: zod_1.z.string().min(1),
+    provider: zod_1.z.string().min(1),
+    params: zod_1.z.object({
+        action: zod_1.z.string().optional().default('compensate'),
+        forStepIndex: zod_1.z.number().optional(),
+        refundAddress: zod_1.z.string().optional(),
+        refundAsset: zod_1.z.string().optional(),
+    }).passthrough(),
+});
 // ─── Discriminated Step Schemas ───────────────────────────────────────────────
 exports.Sep10StepSchema = zod_1.z.object({
     name: zod_1.z.string().min(1),

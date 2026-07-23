@@ -100,8 +100,50 @@ export declare const ProviderMetadataSchema: z.ZodObject<{
     docs?: string | undefined;
 }>;
 export type ProviderMetadata = z.infer<typeof ProviderMetadataSchema>;
-export declare const ExecutionStatusSchema: z.ZodEnum<["CREATED", "RUNNING", "SUSPENDED", "WAITING_APPROVAL", "WAITING_WEBHOOK", "RETRYING", "COMPLETED", "FAILED", "CANCELLED"]>;
+export declare const ExecutionStatusSchema: z.ZodEnum<["CREATED", "RUNNING", "SUSPENDED", "WAITING_APPROVAL", "WAITING_WEBHOOK", "RETRYING", "COMPLETED", "FAILED", "CANCELLED", "COMPENSATED"]>;
 export type ExecutionStatus = z.infer<typeof ExecutionStatusSchema>;
+export declare const CompensationStepSchema: z.ZodObject<{
+    name: z.ZodString;
+    provider: z.ZodString;
+    params: z.ZodObject<{
+        action: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        forStepIndex: z.ZodOptional<z.ZodNumber>;
+        refundAddress: z.ZodOptional<z.ZodString>;
+        refundAsset: z.ZodOptional<z.ZodString>;
+    }, "passthrough", z.ZodTypeAny, z.objectOutputType<{
+        action: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        forStepIndex: z.ZodOptional<z.ZodNumber>;
+        refundAddress: z.ZodOptional<z.ZodString>;
+        refundAsset: z.ZodOptional<z.ZodString>;
+    }, z.ZodTypeAny, "passthrough">, z.objectInputType<{
+        action: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+        forStepIndex: z.ZodOptional<z.ZodNumber>;
+        refundAddress: z.ZodOptional<z.ZodString>;
+        refundAsset: z.ZodOptional<z.ZodString>;
+    }, z.ZodTypeAny, "passthrough">>;
+}, "strip", z.ZodTypeAny, {
+    params: {
+        action: string;
+        forStepIndex?: number | undefined;
+        refundAddress?: string | undefined;
+        refundAsset?: string | undefined;
+    } & {
+        [k: string]: unknown;
+    };
+    name: string;
+    provider: string;
+}, {
+    params: {
+        action?: string | undefined;
+        forStepIndex?: number | undefined;
+        refundAddress?: string | undefined;
+        refundAsset?: string | undefined;
+    } & {
+        [k: string]: unknown;
+    };
+    name: string;
+    provider: string;
+}>;
 export declare const Sep10StepSchema: z.ZodObject<{
     name: z.ZodString;
     provider: z.ZodLiteral<"sep10">;

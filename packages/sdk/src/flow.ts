@@ -330,6 +330,19 @@ export class FlowBuilder {
   }
 
   /**
+   * Add a Saga Compensation Rollback handler step.
+   */
+  compensate(params: { name?: string; provider: string; action?: string; refundAddress?: string; refundAsset?: string; [key: string]: unknown }): this {
+    const { name = 'rollback-compensation', provider, action = 'compensate', ...rest } = params;
+    this._steps.push(StepDefinitionSchema.parse({
+      name,
+      provider,
+      params: { action, ...rest },
+    }));
+    return this;
+  }
+
+  /**
    * Appends an arbitrary custom step to the flow.
    */
   step(step: StepDefinition): this {

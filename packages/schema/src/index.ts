@@ -38,9 +38,21 @@ export const ExecutionStatusSchema = z.enum([
   'RETRYING',
   'COMPLETED',
   'FAILED',
-  'CANCELLED'
+  'CANCELLED',
+  'COMPENSATED'
 ]);
 export type ExecutionStatus = z.infer<typeof ExecutionStatusSchema>;
+
+export const CompensationStepSchema = z.object({
+  name: z.string().min(1),
+  provider: z.string().min(1),
+  params: z.object({
+    action: z.string().optional().default('compensate'),
+    forStepIndex: z.number().optional(),
+    refundAddress: z.string().optional(),
+    refundAsset: z.string().optional(),
+  }).passthrough(),
+});
 
 // ─── Discriminated Step Schemas ───────────────────────────────────────────────
 

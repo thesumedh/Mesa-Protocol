@@ -22,7 +22,8 @@
     "build:cli": "npm run build --workspace=packages/cli",
     "runtime:dev": "npm run dev --workspace=packages/runtime",
     "test": "npm run test --workspace=packages/schema && npm run test --workspace=packages/templates && npm run test --workspace=packages/sdk && npm run test --workspace=packages/codegen && npm run test --workspace=packages/runtime && npm run test --workspace=packages/cli",
-    "typecheck": "npx tsc --noEmit -p packages/schema/tsconfig.json && npx tsc --noEmit -p packages/templates/tsconfig.json && npx tsc --noEmit -p packages/sdk/tsconfig.json && npx tsc --noEmit -p packages/runtime/tsconfig.json && npx tsc --noEmit -p packages/cli/tsconfig.json"
+    "typecheck": "npx tsc --noEmit -p packages/schema/tsconfig.json && npx tsc --noEmit -p packages/templates/tsconfig.json && npx tsc --noEmit -p packages/sdk/tsconfig.json && npx tsc --noEmit -p packages/runtime/tsconfig.json && npx tsc --noEmit -p packages/cli/tsconfig.json",
+    "publish:packages": "npm publish --workspace=packages/schema --access public && npm publish --workspace=packages/templates --access public && npm publish --workspace=packages/sdk --access public && npm publish --workspace=packages/codegen --access public && npm publish --workspace=packages/runtime --access public && npm publish --workspace=packages/cli --access public"
   },
   "devDependencies": {
     "vite": "^5.0.0",

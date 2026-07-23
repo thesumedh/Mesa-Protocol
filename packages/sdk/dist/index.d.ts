@@ -181,6 +181,17 @@ declare class FlowBuilder {
         ifFalseStep?: number;
     }): this;
     /**
+     * Add a Saga Compensation Rollback handler step.
+     */
+    compensate(params: {
+        name?: string;
+        provider: string;
+        action?: string;
+        refundAddress?: string;
+        refundAsset?: string;
+        [key: string]: unknown;
+    }): this;
+    /**
      * Appends an arbitrary custom step to the flow.
      */
     step(step: StepDefinition): this;
