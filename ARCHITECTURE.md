@@ -129,3 +129,14 @@ registerProvider(new SorobanProvider());
 ```
 
 This design allows third-party developers to package and publish custom providers without modifying Mesa runtime internals.
+
+---
+
+## 6. Distributed Saga Pattern & Compensation Atomicity
+
+Fintech corridors involving multi-step payments (e.g., `deposit -> swap -> payout`) require strict failure atomicity. If Step 3 (Payout) fails permanently, Mesa guarantees that prior steps are safely reverted:
+
+1. **LIFO Compensation Execution**: Upon unrecoverable step failure, the Mesa engine scans prior executed steps in reverse order ($N-1 \dots 0$).
+2. **Compensation Handlers**: For each step registered with a `.compensate()` block, Mesa executes the corresponding compensation provider handler (e.g. issuing an asset refund payment back to the sender address).
+3. **State Settlement**: Once all compensation steps finish, the execution transitions to terminal status `COMPENSATED`, emitting an audit trail event `execution.compensated`.
+4. **Partial Rollback Failure Isolation**: If a compensation step itself fails, the engine logs a high-priority operator alert `compensation.failed` and transitions execution to `FAILED_NEEDS_OPERATOR` for manual intervention, preventing silent funds leakage.

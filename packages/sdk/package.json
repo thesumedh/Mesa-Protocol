@@ -1,6 +1,6 @@
 {
   "name": "@mesaprotocol/sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Lightweight Mesa financial workflow SDK for Stellar",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

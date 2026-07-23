@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2026-07-23
+
+### 🔄 Distributed Saga Pattern, Multi-Package Publishing & Engine Hardening
+
+#### Added
+- **Saga Pattern Rollback Hooks (`.compensate()`)**: Multi-step payment failure resilience. In the event of an unrecoverable step error, Mesa automatically executes registered compensation steps in LIFO reverse order ($N-1 \dots 0$), setting execution state to `COMPENSATED`.
+- **`CompensationProvider`**: Native provider for handling asset refunds and saga state rollbacks.
+- **`COMPENSATED` State Machine Status**: Added `COMPENSATED` state to `ExecutionStatusSchema` and engine state transitions.
+- **NPM Package Publishing Script (`npm run publish:packages`)**: Single-command script to publish all 6 workspace packages (`schema`, `templates`, `sdk`, `codegen`, `runtime`, `cli`) to npm.
+- **Saga Compensation Documentation**: Added distributed saga rollback atomicity and partial failure isolation details to `ARCHITECTURE.md` and `README.md`.
+
+---
+
 ## [0.2.0] - 2026-07-23
 
 ### 🚀 Production Overhaul & Monorepo Architecture

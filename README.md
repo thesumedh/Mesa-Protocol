@@ -27,6 +27,12 @@ export const flow = Mesa.flow("cross-border-remittance", "remittance-corridor-v1
     to: "GA4UFVDQRWUZIDKB32U2TVZSXSFAPCZV522UY7OYGM27BJ66MHYIIW3P",
     senderSecretRef: "SENDER_SECRET", // resolved safely from process.env at runtime
   })
+  // Saga Compensation Rollback hook — executed automatically if downstream steps fail
+  .compensate({
+    provider: "stellar",
+    refundAddress: "GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV",
+    refundAsset: "USDC"
+  })
   .build();
 
 // Register flow definition & trigger execution

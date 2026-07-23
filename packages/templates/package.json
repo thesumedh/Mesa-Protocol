@@ -1,6 +1,6 @@
 {
   "name": "@mesaprotocol/templates",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Canonical workflow templates for Mesa Protocol Studio and CLI",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
