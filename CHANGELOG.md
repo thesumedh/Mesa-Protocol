@@ -1,14 +1,33 @@
-# Changelog
+# 📜 Mesa Protocol — Changelog
 
-All notable changes to the Mesa Protocol project will be documented in this file.
+All notable changes to Mesa Protocol will be documented in this file.
 
-## [0.2.0] - 2026-07-17
-### Added
-- **Developer Console Dashboard**: Premium user interface with execution trace statistics, real-time updates, and an architecture blueprint modal.
-- **Provider Infrastructure**: Live testing support for SEP-10 authentication, SEP-24 deposits, and Stellar Testnet Horizon payments.
-- **Durable Scheduling**: Background polling worker executing stateful steps against local PostgreSQL.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2026-06-25
-### Added
-- **Initial Core Implementation**: Fluent JavaScript/TypeScript SDK interface.
-- **Workflow State persistence**: Basic PostgreSQL database schema.
+---
+
+## [0.2.0] - 2026-07-23
+
+### 🚀 Production Overhaul & Monorepo Architecture
+
+#### Added
+- **`@mesaprotocol/templates` Package (`packages/templates`)**: Canonical workflow template library (`remittance`, `payroll`, `vault`, `escrow`, `invoice`, `subscription`) consumed as the single source of truth by both CLI and Mesa Studio.
+- **Pluggable Provider Architecture (`registerProvider`)**: Decoupled primitive execution providers (`Sep10Provider`, `Sep24AnchorProvider`, `StellarPathPaymentProvider`, `SorobanProvider`, `ManualApprovalProvider`, `ConditionProvider`).
+- **Native Operator Manual Approval Engine**: Execution state suspension waiting for operator sign-offs (`WAITING_APPROVAL`), resumed natively via `POST /executions/:id/approve`.
+- **DAG Graph Routing & Condition Primitives**: Dynamic expression evaluation (`ConditionProvider`) over execution shared state (`context.shared`).
+- **Mesa Studio Template Marketplace**: Single-click template gallery in Studio UI (`UI/studio.html`) and expanded node palette for all Stellar primitives.
+- **CLI Multi-Template Support**: `npx mesa create <app-name> --template <template>` supporting 6 preset financial workflow scaffolds.
+- **Zero-Friction Dev Fallback**: Automatic Postgres failure detection falling back to `InMemoryPool` so developers can run `npx mesa dev` out of the box with zero external dependencies.
+
+#### Hardened
+- **Flow Versioning Preservation**: Registered flow IDs and explicit creation-time versions (`flow.version`) are preserved through codegen and frontend requests.
+- **HMAC Webhook Security & Replay Defense**: `X-Mesa-Signature` verification, 5-minute `X-Mesa-Timestamp` drift tolerance, and `X-Mesa-Event-Id` idempotency checks.
+- **TypeScript AST Generator & Parser**: Bi-directional round-tripping between visual node graphs and `@mesaprotocol/sdk` code.
+
+---
+
+## [0.1.0] - 2026-07-15
+
+### Initial Release
+- Initial core engine proof-of-concept, `@mesaprotocol/sdk` fluent builder, and basic runtime execution loop.

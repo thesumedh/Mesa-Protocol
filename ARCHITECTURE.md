@@ -1,110 +1,131 @@
-# Mesa — System Architecture Specification
+# 🏛️ Mesa Protocol — Engine Architecture & Internals
 
-Mesa is an **embedded finance runtime for Stellar**. It allows developers to compose complex, multi-step financial workflows (such as fiat on-ramps, path payments across the DEX, direct transfers, and webhooks) into resilient, durable, and observable pipelines.
-
----
-
-## 🏛️ Core Design Decisions (Frozen Scope)
-
-The following architectural choices define the core scope of the Mesa MVP:
-
-1. **Self-Hosted Runtime Engine:**
-   Mesa is designed to be hosted locally next to the developer's application using Docker Compose. There is no central Mesa server, custody of keys, or dependency on proprietary cloud services.
-   
-2. **Postgres-Backed Durable State:**
-   The control flow, step status, and event logs are stored in a Postgres database. This guarantees that if the server crashes or restarts mid-workflow, execution resumes from the exact last persisted step. On-chain consensus is reserved for settlements (e.g. transfers), not state machine coordination.
-
-3. **Client-Side SEP-10 Auth (JWT Extraction):**
-   Mesa's runtime does *not* custody users' private keys or perform interactive SEP-10 challenge signing. Instead, the user authenticates with their wallet (e.g. Freighter, Ledger) in the frontend application. The resulting JWT authentication token is passed to the SDK and runtime as part of the execution context parameters.
-
-4. **HMAC Webhook Verification:**
-   All inbound callbacks (e.g. anchor status updates or external app responses) that target `/webhooks/resume` verify authenticity using HMAC-SHA256 signatures to prevent malicious payload injection.
-
-5. **Durable Retries without Invariant Rollbacks:**
-   The runtime supports automatic exponential backoff (e.g., 1s, 2s, 4s, 8s, 16s) for transient network or RPC failures. Compensation workflows (reverting already completed transactions on downstream failure) are out of scope for the core engine and deferred as a future client-side extension.
+> **Technical documentation on Mesa Protocol's durable state machine, scheduler, cryptographic security, and provider architecture.**
 
 ---
 
-## 🏗️ High-Level System Architecture
+## 1. High-Level System Architecture
+
+Mesa Protocol separates execution concerns into five decoupled layers:
 
 ```
-Developer App
-    │
-    │  npm install @mesa/sdk
-    │
-    ▼
-Mesa SDK              ← Describes the workflow (pure data)
-    │
-    │  HTTP POST /flows  +  POST /executions
-    │
-    ▼
-Mesa Runtime          ← Executes durably (self-hosted Docker)
-    │
-    ├── Scheduler     ← Polls Postgres, advances executions
-    ├── Executor      ← Runs steps, handles retries/suspension
-    └── Store         ← Postgres: flows, executions, steps, events
-    │
-    ▼
-Providers (Stellar primitives)
-    ├── anchor        ← SEP-24 deposit/withdraw + webhook resume
-    ├── stellar       ← transfers, path payments, Horizon monitoring
-    └── webhook       ← HTTP notifications + callback suspension
-```
-
----
-
-## 📁 Repository Layout
-
-```
-packages/
-├── sdk/                      # @mesa/sdk (fluent FlowBuilder, client, types)
-├── runtime/                  # @mesa/runtime (durable execution engine, Postgres schema)
-└── providers/                # Primitive adapters (anchor, stellar, webhook, delay)
-
-examples/
-└── cross-border-payment/     # MVP end-to-end demo (receive → pathPayment → offRamp)
-```
-
-*(Note: Advanced community saving contracts, vaults, and CLI add-on scripts are deferred to [BACKLOG.md](file:///f:/Stellar/stitch_mesa_protocol/BACKLOG.md).)*
-
----
-
-## 🔄 Execution State Machine
-
-Workflows advance step-by-step through a state machine managed by the Scheduler:
-
-```
-PENDING → RUNNING → COMPLETED
-              │
-              ├── SUSPENDED (waiting for external callback, e.g. SEP-24 user deposit)
-              │       └── RUNNING (resumed via HMAC-verified webhook)
-              │
-              └── FAILED → RETRYING (exponential backoff) → RUNNING
+  ┌─────────────────────────────────────────────────────────┐
+  │                 Mesa Studio (Visual UI)                 │
+  └────────────────────────────┬────────────────────────────┘
                                │
-                               └── PERMANENTLY_FAILED (after max attempts)
+            ┌──────────────────┴──────────────────┐
+            ▼                                     ▼
+   Mesa CLI (npx mesa)                  Mesa SDK (@mesaprotocol/sdk)
+            │                                     │
+            └──────────────────┬──────────────────┘
+                               ▼
+            @mesaprotocol/schema + @mesaprotocol/codegen
+                               │
+                               ▼
+                       Mesa Runtime API
+                  (Engine + Scheduler + Store)
+                               │
+            ┌──────────────────┼──────────────────┐
+            ▼                  ▼                  ▼
+     Stellar Horizon     SEP-24 Anchors     Soroban Contracts
 ```
 
 ---
 
-## 🔌 Provider Interface
+## 2. Execution State Machine Lifecycle
 
-Every adapter (primitive bridge) implements a unified interface:
+Mesa models workflow executions as durable, crash-resilient state machines. Every execution transition is written atomically to the database store before proceeding.
 
-```typescript
+```
+       ┌───────────┐
+       │  CREATED  │
+       └─────┬─────┘
+             │ (scheduler pick up)
+             ▼
+       ┌───────────┐
+ ┌────►│  RUNNING  │◄─────────────────────────────┐
+ │     └─────┬─────┘                              │
+ │           │                                    │
+ │           ├──────────────────────┬─────────────┴────────┐
+ │           ▼                      ▼                      │
+ │     ┌───────────┐          ┌───────────┐          ┌─────┴─────┐
+ │     │ SUSPENDED │          │ SUSPENDED │          │ RETRYING  │
+ │     │(APPROVAL) │          │ (WEBHOOK) │          └─────┬─────┘
+ │     └─────┬─────┘          └─────┬─────┘                │
+ │           │                      │                      │
+ │           │ (approve endpoint)   │ (webhook resume)     │ (max attempts)
+ │           └──────────┬───────────┘                      │
+ │                      ▼                                  ▼
+ │                ┌───────────┐                      ┌───────────┐
+ └────────────────┤  RUNNING  │                      │  FAILED   │
+                  └─────┬─────┘                      └───────────┘
+                        │
+                        ▼ (all steps complete)
+                  ┌───────────┐
+                  │ COMPLETED │
+                  └───────────┘
+```
+
+### State Definitions:
+- **`CREATED`**: Flow execution created via `POST /executions`. Initialized with step 0 status `PENDING`.
+- **`RUNNING`**: Active execution in progress. The step handler is executing logic or communicating with external networks.
+- **`SUSPENDED` / `WAITING_APPROVAL`**: Execution paused at a `manual-approval` step. Requires operator sign-off via `POST /executions/:id/approve`.
+- **`SUSPENDED` / `WAITING_WEBHOOK`**: Execution paused waiting for an external callback (e.g. SEP-24 deposit webview callback). Resumed via `POST /webhooks/resume`.
+- **`RETRYING`**: Transitory state after a step failure. Scheduled for execution retry using exponential backoff logic.
+- **`COMPLETED`**: Terminal status achieved when all steps in the flow definition succeed.
+- **`FAILED`**: Terminal status triggered when a step fails permanently or manual approval is rejected.
+- **`CANCELLED`**: Terminal status invoked via cancellation API.
+
+---
+
+## 3. Crash Recovery & Resilience Protocol
+
+In-flight workflows can remain in a `SUSPENDED` state for hours or days waiting for user interaction. Mesa runtime guarantees **zero lost state** across server restarts or crashes:
+
+1. **Atomic Step Persistence**: Before invoking a provider step handler, Mesa persists `status = RUNNING` and increments `attempt_count` in PostgreSQL.
+2. **Orphan Recovery Sweep**: Upon server startup, the Mesa Scheduler runs an orphan sweep query:
+   ```sql
+   SELECT id FROM executions 
+   WHERE status = 'RUNNING' 
+     AND updated_at < NOW() - INTERVAL '5 minutes';
+   ```
+3. **Automatic Resumption**: Identified orphaned executions are reset to `PENDING` or scheduled for retry, ensuring execution continuity without duplicate side-effects.
+
+---
+
+## 4. Cryptographic Webhook Verification & Replay Protection
+
+Mesa implements strict security protocols for incoming external webhooks:
+
+### A. HMAC SHA-256 Signature Verification
+Incoming webhooks must supply the signature computed over the raw request payload:
+$$\text{Signature} = \text{HMAC-SHA256}(\text{Secret}, \text{Timestamp} + "." + \text{RawBody})$$
+Passed in header: `X-Mesa-Signature`.
+
+### B. 5-Minute Timestamp Drift Tolerance
+Rejects requests where $|T_{\text{server}} - T_{\text{header}}| > 300\text{ seconds}$ via `X-Mesa-Timestamp` to prevent delayed replay attacks.
+
+### C. Database Event Idempotency
+Unique event IDs (`X-Mesa-Event-Id`) are logged in the `webhook_events` table. Duplicate submissions trigger immediate `409 Conflict` responses.
+
+---
+
+## 5. Pluggable Provider Registry Architecture
+
+Mesa enforces strict separation between core engine orchestration and ledger-specific integrations:
+
+```ts
 export interface MesaProvider {
   readonly name: string;
+  metadata?: ProviderMetadata;
   execute(step: StepDefinition, context: ExecutionContext): Promise<StepResult>;
   resume?(event: ExternalEvent, context: ExecutionContext): Promise<StepResult>;
 }
+
+// Dynamic Registration
+registerProvider(new Sep10Provider());
+registerProvider(new Sep24AnchorProvider());
+registerProvider(new SorobanProvider());
 ```
 
-- **`execute()`:** Invoked by the executor to start the step. Returns `completed`, `suspended` (with a suspension key), or throws an error (triggering retry).
-- **`resume()`:** Invoked by the server when a webhook callback matches a waiting `suspensionKey`.
-
----
-
-## 🔒 Security Model
-
-- **Signer Custody:** Only the runtime signer key (`MESA_SIGNER_SECRET`) is stored in the environment. Client wallets are used only to generate signatures for actions initiated on the frontend.
-- **Workflow Integrity:** Workflows are immutable once registered in the database.
-- **Database Safety:** All raw database queries are fully parameterized.
+This design allows third-party developers to package and publish custom providers without modifying Mesa runtime internals.

@@ -169,9 +169,16 @@ npx mesa validate packages/workflows/flow.json
 
 ---
 
-## 🤝 Contributing & License
+## 🏛️ Deep Technical Documentation
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
+For detailed architectural specs, crash recovery protocols, and release notes:
+- 📘 **[Architecture & Engine Internals](./ARCHITECTURE.md)** — State machine lifecycle, HMAC cryptographic verification, and pluggable provider interfaces.
+- 📜 **[Changelog & Releases](./CHANGELOG.md)** — Version history, API changes, and release milestones.
+- 🤝 **[Contributing Guide](./CONTRIBUTING.md)** — Contribution workflows and development setup.
+
+---
+
+## ⚖️ License
 
 Mesa Protocol is open-source software licensed under the [MIT License](./LICENSE).
 
