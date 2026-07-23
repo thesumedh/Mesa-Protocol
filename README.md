@@ -184,6 +184,16 @@ For detailed architectural specs, crash recovery protocols, and release notes:
 - 📜 **[Changelog & Releases](./CHANGELOG.md)** — Version history, API changes, and release milestones.
 - 🤝 **[Contributing Guide](./CONTRIBUTING.md)** — Contribution workflows and development setup.
 
+### Architectural Decision Record (ADR) Summary
+
+| Record | Architectural Decision | Status | Technical Rationale |
+|---|---|---|---|
+| **[ADR-001](./ADR.md#adr-001-monorepo-workspace-architecture)** | Monorepo Workspace Split | `ACCEPTED` | Reduced SDK bundle size from 9.5 MB to 10 KB by separating AST codegen. |
+| **[ADR-002](./ADR.md#adr-002-lifo-saga-pattern-for-distributed-step-compensation)** | LIFO Saga Rollback Steps | `ACCEPTED` | Prevents stranded funds by executing refund steps in reverse order upon failure. |
+| **[ADR-003](./ADR.md#adr-003-dynamic-pluggable-provider-registry)** | Dynamic Provider Registry | `ACCEPTED` | Allows community adapters to extend Mesa primitives without touching runtime core. |
+| **[ADR-004](./ADR.md#adr-004-hmac-sha-256-webhook-verification--drift-tolerance)** | HMAC SHA-256 Webhooks | `ACCEPTED` | Prevents webhook tampering, replay attacks, and duplicate event processing. |
+| **[ADR-005](./ADR.md#adr-005-single-source-of-truth-for-workflow-templates)** | `@mesaprotocol/templates` | `ACCEPTED` | Guarantees visual Studio UI and CLI create identical workflow app scaffolds. |
+
 ---
 
 ## ⚖️ License

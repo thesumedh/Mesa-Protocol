@@ -273,3 +273,45 @@ export const ApproveExecutionPayloadSchema = z.object({
   reason: z.string().optional(),
 });
 export type ApproveExecutionPayload = z.infer<typeof ApproveExecutionPayloadSchema>;
+
+// ─── Structured Error Codes & Error Classes ───────────────────────────────────
+
+export const MesaErrorCodeSchema = z.enum([
+  'ERR_INVALID_FLOW_DEFINITION',
+  'ERR_FLOW_NOT_FOUND',
+  'ERR_EXECUTION_NOT_FOUND',
+  'ERR_STEP_FAILED',
+  'ERR_ANCHOR_TIMEOUT',
+  'ERR_INSUFFICIENT_BALANCE',
+  'ERR_HMAC_INVALID',
+  'ERR_TIMESTAMP_DRIFT_EXCEEDED',
+  'ERR_DUPLICATE_EVENT_ID',
+  'ERR_APPROVAL_REJECTED',
+  'ERR_COMPENSATION_FAILED',
+  'ERR_PROVIDER_NOT_FOUND',
+]);
+export type MesaErrorCode = z.infer<typeof MesaErrorCodeSchema>;
+
+export class MesaError extends Error {
+  readonly code: MesaErrorCode;
+  readonly statusCode: number;
+  readonly details?: Record<string, unknown>;
+
+  constructor(code: MesaErrorCode, message: string, statusCode = 400, details?: Record<string, unknown>) {
+    super(message);
+    this.name = 'MesaError';
+    this.code = code;
+    this.statusCode = statusCode;
+    this.details = details;
+    Object.setPrototypeOf(this, MesaError.prototype);
+  }
+
+  toJSON() {
+    return {
+      error: this.message,
+      code: this.code,
+      statusCode: this.statusCode,
+      details: this.details,
+    };
+  }
+}

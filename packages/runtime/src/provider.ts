@@ -40,6 +40,8 @@ export interface ExternalEvent {
 export interface MesaProvider {
   readonly name: string;
   metadata?: ProviderMetadata;
+  init?(): Promise<void>;
+  shutdown?(): Promise<void>;
   execute(step: StepDefinition, context: ExecutionContext): Promise<StepResult>;
   resume?(event: ExternalEvent, context: ExecutionContext): Promise<StepResult>;
   cancel?(context: ExecutionContext): Promise<void>;
@@ -312,6 +314,24 @@ export function getProviderMetadata(name: string): ProviderMetadata {
     mockSupport: true,
     realSupport: true
   };
+}
+
+export async function initProviders(): Promise<void> {
+  for (const [name, provider] of registry.entries()) {
+    if (provider.init) {
+      console.log(`[MesaRuntime] Initializing provider lifecycle: ${name}...`);
+      await provider.init();
+    }
+  }
+}
+
+export async function shutdownProviders(): Promise<void> {
+  for (const [name, provider] of registry.entries()) {
+    if (provider.shutdown) {
+      console.log(`[MesaRuntime] Shutting down provider: ${name}...`);
+      await provider.shutdown();
+    }
+  }
 }
 
 // Auto-register native providers
