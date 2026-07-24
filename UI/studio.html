@@ -6,6 +6,7 @@
     <title>Mesa Studio | Stellar Visual Workflow & App Builder</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/@stellar/freighter-api/build/index.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Geist:wght@500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <style>
         .material-symbols-outlined {
@@ -142,22 +143,26 @@
 </head>
 <body class="bg-background text-on-background font-body-md selection:bg-primary-container/30 overflow-hidden flex flex-col h-screen">
     <!-- TopNavBar -->
-    <header class="h-16 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-outline-variant/30 flex justify-between items-center px-6 shrink-0">
-        <div class="flex items-center gap-6">
-            <a href="index.html" class="font-headline-md text-primary tracking-tighter font-bold flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">layers</span>
-                Mesa Studio
+    <header class="h-16 w-full z-50 bg-[#040608]/95 backdrop-blur-2xl border-b border-white/10 flex justify-between items-center px-4 shrink-0 shadow-2xl overflow-x-auto">
+        <div class="flex items-center gap-3 shrink-0">
+            <a href="index.html" class="font-headline-md text-primary tracking-tighter font-bold flex items-center gap-2 text-base">
+                <span class="material-symbols-outlined text-cyan-400 text-xl" style="font-variation-settings: 'FILL' 1;">layers</span>
+                <span class="bg-gradient-to-r from-cyan-300 via-white to-purple-400 bg-clip-text text-transparent font-bold">Mesa Studio</span>
             </a>
-            <div class="h-6 w-px bg-outline-variant/30"></div>
-            <div class="flex items-center gap-2">
-                <span class="text-on-surface-variant font-label-mono text-xs uppercase tracking-widest">Flow:</span>
-                <input id="flow-name-input" type="text" oninput="updateFlowName(this.value)" class="bg-transparent font-headline-md text-on-surface text-base font-bold outline-none border-b border-transparent focus:border-primary px-1" value="Stellar Payment Flow"/>
+
+            <div class="h-5 w-px bg-white/10"></div>
+
+            <!-- Flow Name Input -->
+            <div class="flex items-center gap-1.5">
+                <span class="text-outline font-label-mono text-[11px] uppercase tracking-wider">Flow:</span>
+                <input id="flow-name-input" type="text" oninput="updateFlowName(this.value)" class="bg-surface/80 font-headline-md text-on-surface text-xs font-bold outline-none border border-white/10 focus:border-cyan-400 rounded-lg px-2 py-1 w-36 text-ellipsis transition" value="Stellar Payment Flow"/>
             </div>
+
             <!-- Preset Template Selector -->
-            <div class="flex items-center gap-2 bg-surface border border-outline-variant/40 rounded-lg px-3 py-1 text-xs">
-                <span class="material-symbols-outlined text-primary text-sm">space_dashboard</span>
-                <select id="template-select" onchange="loadTemplate(this.value)" class="bg-surface text-on-surface font-label-mono outline-none cursor-pointer">
-                    <option value="" disabled selected class="bg-surface text-outline">Load Stellar Template...</option>
+            <div class="flex items-center gap-1.5 bg-surface/80 border border-white/10 rounded-lg px-2.5 py-1 text-xs">
+                <span class="material-symbols-outlined text-cyan-400 text-sm">space_dashboard</span>
+                <select id="template-select" onchange="loadTemplate(this.value)" class="bg-surface text-on-surface font-label-mono outline-none cursor-pointer text-xs">
+                    <option value="" disabled selected class="bg-surface text-outline">Load Template...</option>
                     <option value="remittance" class="bg-surface text-on-surface">🌍 Cross-Border Remittance Corridor</option>
                     <option value="ngo" class="bg-surface text-on-surface">🤝 NGO Aid Payout Corridor</option>
                     <option value="escrow" class="bg-surface text-on-surface">🔒 Savings Circle / Escrow App</option>
@@ -165,19 +170,39 @@
                     <option value="soroban" class="bg-surface text-on-surface">⚡ Soroban Yield Vault</option>
                 </select>
             </div>
+
+            <!-- Stellar Network Selector -->
+            <div class="flex items-center gap-1.5 bg-surface/80 border border-white/10 rounded-lg px-2 py-1 text-xs">
+                <span id="network-icon-led" class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                <select id="network-select" onchange="switchStellarNetwork(this.value)" class="bg-surface text-on-surface font-label-mono outline-none cursor-pointer text-xs font-semibold">
+                    <option value="testnet" selected class="bg-surface text-cyan-400">🧪 Testnet</option>
+                    <option value="mainnet" class="bg-surface text-emerald-400">🚀 Mainnet</option>
+                </select>
+            </div>
         </div>
 
-        <!-- Action Controls -->
-        <div class="flex items-center gap-3">
-            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border border-outline-variant/30 text-xs text-on-surface-variant font-label-mono">
-                <div class="status-led"></div>
-                <span>Engine Active</span>
-            </div>
-            <button onclick="openImportModal()" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface hover:bg-outline-variant/30 text-on-surface border border-outline-variant/40 text-xs font-headline-md font-semibold transition">
-                <span class="material-symbols-outlined text-sm">code</span>
-                Import Code
+        <!-- Action Controls Right -->
+        <div class="flex items-center gap-2 shrink-0">
+            <!-- Connect Wallet Button -->
+            <button id="wallet-connect-btn" onclick="connectStellarWallet()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-label-mono font-semibold transition shadow-sm">
+                <span class="material-symbols-outlined text-sm">account_balance_wallet</span>
+                <span id="wallet-btn-text">Connect Wallet</span>
             </button>
-            <button onclick="downloadStarterZip()" class="flex items-center gap-2 px-5 py-2 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-headline-md font-bold text-xs shadow-lg shadow-primary-container/20 transition">
+
+            <!-- Runtime Console Link -->
+            <a href="http://localhost:3001/dashboard" target="_blank" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface border border-white/10 hover:border-cyan-400/40 text-on-surface text-xs font-headline-md font-medium transition" title="Open Runtime Console">
+                <span class="status-led"></span>
+                <span class="text-[11px] font-label-mono">Console</span>
+            </a>
+
+            <!-- Import Code Modal Trigger -->
+            <button onclick="openImportModal()" class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface hover:bg-white/5 text-on-surface border border-white/10 text-xs font-headline-md font-semibold transition">
+                <span class="material-symbols-outlined text-sm">code</span>
+                Import
+            </button>
+
+            <!-- Export Starter ZIP -->
+            <button onclick="downloadStarterZip()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 text-on-primary font-headline-md font-bold text-xs shadow-md shadow-cyan-500/20 transition transform active:scale-95">
                 <span class="material-symbols-outlined text-sm">download</span>
                 Export App Starter
             </button>
@@ -189,9 +214,18 @@
         <!-- Sidebar Palette -->
         <aside class="w-64 bg-surface/90 border-r border-outline-variant/30 flex flex-col p-4 gap-4 z-20 shrink-0">
             <div>
-                <h3 class="text-xs font-label-mono text-outline uppercase tracking-wider mb-3">Node Palette</h3>
-                <div class="flex flex-col gap-2">
-                    <button onclick="addNode('receive')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-label-mono text-outline uppercase tracking-wider">Node Palette</h3>
+                    <span id="node-count-chip" class="text-[9px] font-label-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">3 Steps</span>
+                </div>
+                <!-- Node Search Filter -->
+                <div class="relative mb-3">
+                    <span class="material-symbols-outlined text-outline text-sm absolute left-2.5 top-2.5">search</span>
+                    <input id="node-search-input" type="text" oninput="filterPaletteNodes(this.value)" placeholder="Search primitives..." class="w-full bg-background border border-outline-variant/40 rounded-lg pl-8 pr-3 py-1.5 text-xs text-on-surface placeholder-outline font-label-mono outline-none focus:border-primary"/>
+                </div>
+
+                <div id="palette-node-list" class="flex flex-col gap-2 overflow-y-auto max-h-[calc(100vh-220px)] pr-1">
+                    <button data-type="receive" onclick="addNode('receive')" class="palette-item flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-xl">payments</span>
                             <div>
@@ -202,7 +236,7 @@
                         <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
                     </button>
 
-                    <button onclick="addNode('delay')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                    <button data-type="delay" onclick="addNode('delay')" class="palette-item flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-xl">schedule</span>
                             <div>
@@ -213,7 +247,7 @@
                         <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
                     </button>
 
-                    <button onclick="addNode('payment')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                    <button data-type="payment" onclick="addNode('payment')" class="palette-item flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-xl">send</span>
                             <div>
@@ -224,7 +258,7 @@
                         <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
                     </button>
 
-                    <button onclick="addNode('sep10')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                    <button data-type="sep10" onclick="addNode('sep10')" class="palette-item flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-xl">key</span>
                             <div>
@@ -235,7 +269,7 @@
                         <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
                     </button>
 
-                    <button onclick="addNode('anchor')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                    <button data-type="anchor" onclick="addNode('anchor')" class="palette-item flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-xl">account_balance</span>
                             <div>
@@ -246,7 +280,7 @@
                         <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
                     </button>
 
-                    <button onclick="addNode('path-payment')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                    <button data-type="path-payment" onclick="addNode('path-payment')" class="palette-item flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-xl">swap_horiz</span>
                             <div>
@@ -257,7 +291,7 @@
                         <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
                     </button>
 
-                    <button onclick="addNode('soroban')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                    <button data-type="soroban" onclick="addNode('soroban')" class="palette-item flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-xl">code</span>
                             <div>
@@ -268,7 +302,7 @@
                         <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
                     </button>
 
-                    <button onclick="addNode('approval')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                    <button data-type="approval" onclick="addNode('approval')" class="palette-item flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-xl">gavel</span>
                             <div>
@@ -279,7 +313,7 @@
                         <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
                     </button>
 
-                    <button onclick="addNode('condition')" class="flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                    <button data-type="condition" onclick="addNode('condition')" class="palette-item flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-xl">alt_route</span>
                             <div>
@@ -294,7 +328,7 @@
         </aside>
 
         <!-- Canvas Area -->
-        <main id="canvas-wrapper" class="flex-1 relative dot-grid overflow-auto p-12">
+        <main id="canvas-wrapper" class="flex-1 relative dot-grid overflow-auto p-0">
             <!-- Canvas Floating Controls Bar -->
             <div class="absolute top-4 right-4 z-30 flex items-center gap-2 bg-surface/90 border border-outline-variant/40 rounded-xl p-1.5 backdrop-blur-md shadow-2xl">
                 <button onclick="zoomOut()" title="Zoom Out" class="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-background transition">
@@ -309,8 +343,23 @@
                 </button>
             </div>
 
-            <svg id="svg-connections" class="absolute inset-0 w-full h-full pointer-events-none z-10" style="min-width: 3000px; min-height: 2000px; transform-origin: top left; transition: transform 0.15s ease-out;"></svg>
-            <div id="canvas-nodes" class="relative" style="min-width: 3000px; min-height: 2000px; transform-origin: top left; transition: transform 0.15s ease-out;"></div>
+            <!-- Canvas Floating Status & Validation Bar -->
+            <div class="absolute bottom-4 left-4 z-30 flex items-center gap-3 bg-surface/90 border border-outline-variant/40 rounded-xl px-3 py-2 backdrop-blur-md shadow-2xl text-xs font-label-mono">
+                <div class="flex items-center gap-1.5 text-emerald-400 font-bold">
+                    <span class="material-symbols-outlined text-sm">verified</span>
+                    <span id="canvas-validation-text">Flow 100% Valid</span>
+                </div>
+                <div class="h-3.5 w-px bg-outline-variant/40"></div>
+                <span class="text-outline text-[11px]" id="canvas-status-info">Auto-saved to local session</span>
+                <div class="h-3.5 w-px bg-outline-variant/40"></div>
+                <span class="text-primary/70 text-[10px] uppercase">Space + Drag to Pan</span>
+            </div>
+
+            <!-- Unified Zoom & Pan Viewport -->
+            <div id="canvas-viewport" class="relative" style="min-width: 4000px; min-height: 3000px; transform-origin: top left; transition: transform 0.15s ease-out;">
+                <svg id="svg-connections" class="absolute inset-0 w-full h-full pointer-events-none z-10"></svg>
+                <div id="canvas-nodes" class="absolute inset-0 w-full h-full z-20"></div>
+            </div>
         </main>
 
         <!-- Properties & Live Code Generator Panel -->

@@ -8,6 +8,8 @@ let dragNodeId = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
 let zoomLevel = 1.0;
+let stellarNetwork = "testnet";
+let userWalletPublicKey = null;
 
 let nodes = [
     { id: 1, type: 'receive', name: 'Receive Payment', x: 60, y: 60, params: { asset: 'XLM', minAmount: 25, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' } },
@@ -17,9 +19,13 @@ let nodes = [
 
 // Init
 document.addEventListener('DOMContentLoaded', () => {
+    loadSavedFlow();
     render();
     setupDragListeners();
     setupZoomWheelListeners();
+    setupCanvasPanning();
+    setupKeyboardShortcuts();
+    initFreighterAutoConnect();
 });
 
 // Main Render Dispatcher
@@ -29,6 +35,8 @@ function render() {
     renderProperties();
     renderCode();
     applyZoomTransform();
+    updateCanvasValidation();
+    autoSaveFlow();
 }
 
 // Render Nodes on Canvas
@@ -66,8 +74,8 @@ function renderNodes() {
             <div class="text-[11px] font-label-mono text-on-surface-variant bg-background p-2.5 rounded-lg border border-outline-variant/30">
                 ${getSummary(node)}
             </div>
-            ${idx < nodes.length - 1 ? '<div class="node-port" style="right: -5px; top: 50%; transform: translateY(-50%);"></div>' : ''}
-            ${idx > 0 ? '<div class="node-port" style="left: -5px; top: 50%; transform: translateY(-50%);"></div>' : ''}
+            ${idx < nodes.length - 1 ? `<div id="port-out-${node.id}" class="node-port node-port-out" style="right: -5px; top: 50%; transform: translateY(-50%);"></div>` : ''}
+            ${idx > 0 ? `<div id="port-in-${node.id}" class="node-port node-port-in" style="left: -5px; top: 50%; transform: translateY(-50%);"></div>` : ''}
         `;
 
         container.appendChild(card);
@@ -84,12 +92,13 @@ function renderConnections() {
         const n1 = nodes[i];
         const n2 = nodes[i + 1];
 
+        // Exact center of right output port (n1) to left input port (n2)
         const x1 = n1.x + 256;
-        const y1 = n1.y + 50;
+        const y1 = n1.y + 58;
         const x2 = n2.x;
-        const y2 = n2.y + 50;
+        const y2 = n2.y + 58;
 
-        const dx = (x2 - x1) / 2;
+        const dx = Math.max(40, Math.abs(x2 - x1) * 0.45);
         const pathStr = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
 
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -602,12 +611,10 @@ function showToast(msg) {
 // ─── Canvas Zoom & Append Step Controls ─────────────────────────────────────
 
 function applyZoomTransform() {
-    const nodesEl = document.getElementById('canvas-nodes');
-    const svgEl = document.getElementById('svg-connections');
+    const viewportEl = document.getElementById('canvas-viewport');
     const badgeEl = document.getElementById('zoom-badge');
     
-    if (nodesEl) nodesEl.style.transform = `scale(${zoomLevel})`;
-    if (svgEl) svgEl.style.transform = `scale(${zoomLevel})`;
+    if (viewportEl) viewportEl.style.transform = `scale(${zoomLevel})`;
     if (badgeEl) badgeEl.innerText = `${Math.round(zoomLevel * 100)}%`;
 }
 
@@ -646,5 +653,358 @@ function setupZoomWheelListeners() {
             }
         }
     }, { passive: false });
+}
+
+// ─── Production Palette Search & Filtering ────────────────────────────────────
+
+window.filterPaletteNodes = function(query) {
+    const q = (query || '').toLowerCase().trim();
+    const items = document.querySelectorAll('.palette-item');
+    items.forEach(item => {
+        const text = item.innerText.toLowerCase();
+        if (!q || text.includes(q)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// ─── Production Canvas Viewport Panning (Space + Drag / Background Drag) ──────
+
+function setupCanvasPanning() {
+    const wrapper = document.getElementById('canvas-wrapper');
+    if (!wrapper) return;
+
+    let isPanning = false;
+    let startX = 0;
+    let startY = 0;
+    let scrollLeft = 0;
+    let scrollTop = 0;
+
+    wrapper.addEventListener('mousedown', (e) => {
+        // Pan if clicking background (not on a node or button) or holding Space
+        const isNode = e.target.closest('.node-card') || e.target.closest('button') || e.target.closest('input');
+        if (isNode && !e.spaceKey) return;
+
+        isPanning = true;
+        wrapper.classList.add('canvas-panning');
+        startX = e.pageX - wrapper.offsetLeft;
+        startY = e.pageY - wrapper.offsetTop;
+        scrollLeft = wrapper.scrollLeft;
+        scrollTop = wrapper.scrollTop;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        e.preventDefault();
+        const x = e.pageX - wrapper.offsetLeft;
+        const y = e.pageY - wrapper.offsetTop;
+        const walkX = (x - startX) * 1.2;
+        const walkY = (y - startY) * 1.2;
+        wrapper.scrollLeft = scrollLeft - walkX;
+        wrapper.scrollTop = scrollTop - walkY;
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (isPanning) {
+            isPanning = false;
+            wrapper.classList.remove('canvas-panning');
+        }
+    });
+}
+
+// ─── Production Keyboard Shortcuts (Delete, Esc, Ctrl+S) ─────────────────────
+
+function setupKeyboardShortcuts() {
+    window.addEventListener('keydown', (e) => {
+        // Ignore if user is typing inside an input or textarea
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (selectedNodeId && nodes.length > 1) {
+                e.preventDefault();
+                deleteSelectedNode();
+                showToast("Step Removed!");
+            }
+        }
+
+        if (e.key === 'Escape') {
+            closeImportModal();
+        }
+
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            autoSaveFlow();
+            showToast("Flow Saved to Session!");
+        }
+    });
+}
+
+// ─── Flow Validation & Status Telemetry Bar ──────────────────────────────────
+
+function updateCanvasValidation() {
+    const textEl = document.getElementById('canvas-validation-text');
+    const infoEl = document.getElementById('canvas-status-info');
+    const chipEl = document.getElementById('node-count-chip');
+
+    if (chipEl) chipEl.innerText = `${nodes.length} Primitive Steps`;
+
+    let isValid = true;
+    let issue = '';
+
+    nodes.forEach((n, idx) => {
+        if (n.type === 'receive' && (!n.params.toAddress || n.params.toAddress.length < 10)) {
+            isValid = false;
+            issue = `Step #${idx + 1} (${n.name}): Invalid receiver address`;
+        }
+        if (n.type === 'payment' && (!n.params.to || n.params.to.length < 10)) {
+            isValid = false;
+            issue = `Step #${idx + 1} (${n.name}): Invalid payout destination`;
+        }
+    });
+
+    if (textEl) {
+        if (isValid) {
+            textEl.innerHTML = `<span class="text-emerald-400 font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">verified</span> Flow 100% Valid</span>`;
+        } else {
+            textEl.innerHTML = `<span class="text-amber-400 font-bold flex items-center gap-1"><span class="material-symbols-outlined text-sm">warning</span> ${issue}</span>`;
+        }
+    }
+
+    if (infoEl) {
+        infoEl.innerText = `${nodes.length} Steps connected • Engine Active`;
+    }
+}
+
+// ─── Local Storage Session Persistence ────────────────────────────────────────
+
+function autoSaveFlow() {
+    try {
+        const payload = { flowName, nodes, nextId, selectedNodeId, stellarNetwork };
+        localStorage.setItem('mesa_studio_flow', JSON.stringify(payload));
+    } catch {
+        // Ignore quota error
+    }
+}
+
+function loadSavedFlow() {
+    try {
+        const raw = localStorage.getItem('mesa_studio_flow');
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (saved && Array.isArray(saved.nodes) && saved.nodes.length > 0) {
+            nodes = saved.nodes;
+            flowName = saved.flowName || flowName;
+            nextId = saved.nextId || (nodes.length + 1);
+            selectedNodeId = saved.selectedNodeId || nodes[0].id;
+            stellarNetwork = saved.stellarNetwork || 'testnet';
+            const input = document.getElementById('flow-name-input');
+            if (input) input.value = flowName;
+            const netSelect = document.getElementById('network-select');
+            if (netSelect) netSelect.value = stellarNetwork;
+        }
+    } catch {
+        // Ignore parse error
+    }
+}
+
+// ─── Stellar Network & Wallet Integrations ────────────────────────────────────
+
+window.switchStellarNetwork = function(net) {
+    stellarNetwork = net;
+    const led = document.getElementById('network-icon-led');
+    
+    nodes.forEach(node => {
+        if (node.type === 'payment') {
+            node.params.horizonUrl = (net === 'mainnet') 
+                ? 'https://horizon.stellar.org' 
+                : 'https://horizon-testnet.stellar.org';
+        }
+    });
+
+    if (led) {
+        if (net === 'mainnet') {
+            led.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+        } else {
+            led.className = 'w-2 h-2 rounded-full bg-cyan-400 animate-pulse';
+        }
+    }
+
+    render();
+    showToast(`Switched Network to Stellar ${net.toUpperCase()}`);
+}
+
+// ─── Native Freighter Extension API Connector ─────────────────────────────────
+
+async function getFreighterPublicKey() {
+    const f = window.freighterApi || window.freighter;
+    if (!f) return null;
+
+    try {
+        let res = null;
+        if (typeof f.requestAccess === 'function') {
+            res = await f.requestAccess();
+        } else if (typeof f.setAllowed === 'function') {
+            res = await f.setAllowed();
+        } else if (typeof f.getPublicKey === 'function') {
+            res = await f.getPublicKey();
+        }
+
+        if (!res) return null;
+
+        // Parse String vs Object return schemas ({ publicKey: "G..." }, { address: "G..." }, or "G...")
+        if (typeof res === 'string' && res.startsWith('G')) {
+            return res;
+        } else if (res && typeof res.publicKey === 'string' && res.publicKey.startsWith('G')) {
+            return res.publicKey;
+        } else if (res && typeof res.address === 'string' && res.address.startsWith('G')) {
+            return res.address;
+        }
+
+        // Secondary fallback to getPublicKey() if requestAccess returned boolean true
+        if (typeof f.getPublicKey === 'function') {
+            const keyRes = await f.getPublicKey();
+            if (typeof keyRes === 'string' && keyRes.startsWith('G')) {
+                return keyRes;
+            } else if (keyRes && typeof keyRes.publicKey === 'string' && keyRes.publicKey.startsWith('G')) {
+                return keyRes.publicKey;
+            }
+        }
+    } catch (err) {
+        console.warn("Freighter API call warning:", err);
+    }
+    return null;
+}
+
+function applyConnectedWallet(pubKey, toastMsg) {
+    userWalletPublicKey = pubKey;
+    const btnText = document.getElementById('wallet-btn-text');
+    const btn = document.getElementById('wallet-connect-btn');
+
+    const shortKey = `${pubKey.substring(0, 4)}...${pubKey.substring(pubKey.length - 4)}`;
+    if (btnText) btnText.innerHTML = `<span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> ${shortKey}</span>`;
+    if (btn) btn.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-label-mono font-semibold transition shadow-md shadow-emerald-500/10';
+
+    // Update Receive Payment step parameter
+    const receiveNode = nodes.find(n => n.type === 'receive');
+    if (receiveNode && receiveNode.params) {
+        receiveNode.params.toAddress = pubKey;
+        render();
+    }
+
+    showToast(toastMsg || `Connected: ${shortKey}`);
+}
+
+function initFreighterAutoConnect() {
+    let attempts = 0;
+    const interval = setInterval(async () => {
+        attempts++;
+        const f = window.freighterApi || window.freighter;
+        if (f) {
+            clearInterval(interval);
+            const btnText = document.getElementById('wallet-btn-text');
+            if (btnText && !userWalletPublicKey) {
+                btnText.innerText = "Connect Freighter";
+            }
+            
+            try {
+                if (typeof f.isAllowed === 'function') {
+                    const allowedRes = await f.isAllowed();
+                    const isAllowed = (typeof allowedRes === 'boolean') ? allowedRes : (allowedRes && allowedRes.isAllowed);
+                    if (isAllowed) {
+                        const key = await getFreighterPublicKey();
+                        if (key) {
+                            applyConnectedWallet(key, "Freighter Extension Detected & Connected");
+                        }
+                    }
+                }
+            } catch {
+                // Ignore error
+            }
+        } else if (attempts >= 10) {
+            clearInterval(interval);
+        }
+    }, 250);
+}
+
+window.connectStellarWallet = async function() {
+    const btnText = document.getElementById('wallet-btn-text');
+    const btn = document.getElementById('wallet-connect-btn');
+
+    if (userWalletPublicKey) {
+        // Disconnect
+        userWalletPublicKey = null;
+        if (btnText) btnText.innerText = 'Connect Wallet';
+        if (btn) btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-label-mono font-semibold transition shadow-sm';
+        showToast("Wallet Disconnected");
+        return;
+    }
+
+    // Inspect all possible Freighter injection locations
+    const freighter = window.freighterApi || window.freighter || (window.StellarFreighter && window.StellarFreighter.freighterApi) || window.stellar;
+
+    if (freighter) {
+        try {
+            console.log("⚡ Executing Freighter Extension Connection Request...");
+
+            let res = null;
+            if (typeof freighter.requestAccess === 'function') {
+                res = await freighter.requestAccess();
+            } else if (typeof freighter.setAllowed === 'function') {
+                res = await freighter.setAllowed();
+            } else if (typeof freighter.getPublicKey === 'function') {
+                res = await freighter.getPublicKey();
+            }
+
+            console.log("⚡ Freighter Response Raw:", res);
+
+            let pubKey = null;
+            if (typeof res === 'string' && res.startsWith('G')) {
+                pubKey = res;
+            } else if (res && typeof res.publicKey === 'string' && res.publicKey.startsWith('G')) {
+                pubKey = res.publicKey;
+            } else if (res && typeof res.address === 'string' && res.address.startsWith('G')) {
+                pubKey = res.address;
+            } else if (res && res.error) {
+                alert(`Freighter Error: ${res.error}`);
+                return;
+            }
+
+            if (!pubKey && typeof freighter.getPublicKey === 'function') {
+                const keyRes = await freighter.getPublicKey();
+                if (typeof keyRes === 'string' && keyRes.startsWith('G')) {
+                    pubKey = keyRes;
+                } else if (keyRes && typeof keyRes.publicKey === 'string' && keyRes.publicKey.startsWith('G')) {
+                    pubKey = keyRes.publicKey;
+                }
+            }
+
+            if (pubKey) {
+                applyConnectedWallet(pubKey, "Freighter Extension Connected Successfully!");
+                return;
+            }
+        } catch (err) {
+            console.error("Freighter Extension error:", err);
+            alert("Freighter extension connection request failed or modal was closed. Please unlock your Freighter browser extension and try again.");
+            return;
+        }
+    }
+
+    // Fallback if extension not detected on window
+    const promptResult = prompt(
+        "🚀 Freighter Wallet Not Detected on window.freighterApi\n\n" +
+        "Make sure:\n" +
+        "1. Freighter Chrome/Edge Extension is installed & active\n" +
+        "2. Reload this page so Chrome injects the extension API\n\n" +
+        "Or paste your Stellar Public Key (G...):",
+        "GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV"
+    );
+
+    if (promptResult && promptResult.startsWith('G')) {
+        applyConnectedWallet(promptResult, "Stellar Wallet Connected");
+    } else if (promptResult) {
+        alert("Invalid Stellar Public Key. Key must start with 'G'.");
+    }
 }
 
