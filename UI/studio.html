@@ -240,8 +240,27 @@
 
         <!-- Canvas Area -->
         <main id="canvas-wrapper" class="flex-1 relative dot-grid overflow-auto p-12">
-            <svg id="svg-connections" class="absolute inset-0 w-full h-full pointer-events-none z-10" style="min-width: 3000px; min-height: 2000px;"></svg>
-            <div id="canvas-nodes" class="relative" style="min-width: 3000px; min-height: 2000px;"></div>
+            <!-- Canvas Floating Controls Bar -->
+            <div class="absolute top-4 right-4 z-30 flex items-center gap-2 bg-surface/90 border border-outline-variant/40 rounded-xl p-1.5 backdrop-blur-md shadow-2xl">
+                <button onclick="appendStepPrompt()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-headline-md font-bold text-xs shadow-md transition">
+                    <span class="material-symbols-outlined text-sm">add_circle</span>
+                    Append Step
+                </button>
+                <div class="h-4 w-px bg-outline-variant/40"></div>
+                <button onclick="zoomOut()" title="Zoom Out" class="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-background transition">
+                    <span class="material-symbols-outlined text-sm">zoom_out</span>
+                </button>
+                <span id="zoom-badge" class="font-label-mono text-xs text-primary font-semibold px-2">100%</span>
+                <button onclick="zoomIn()" title="Zoom In" class="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-background transition">
+                    <span class="material-symbols-outlined text-sm">zoom_in</span>
+                </button>
+                <button onclick="resetZoom()" title="Reset Zoom (100%)" class="px-2 py-1 rounded-lg text-xs font-label-mono text-outline hover:text-on-surface hover:bg-background transition">
+                    100%
+                </button>
+            </div>
+
+            <svg id="svg-connections" class="absolute inset-0 w-full h-full pointer-events-none z-10" style="min-width: 3000px; min-height: 2000px; transform-origin: top left; transition: transform 0.15s ease-out;"></svg>
+            <div id="canvas-nodes" class="relative" style="min-width: 3000px; min-height: 2000px; transform-origin: top left; transition: transform 0.15s ease-out;"></div>
         </main>
 
         <!-- Properties & Live Code Generator Panel -->

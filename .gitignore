@@ -40,3 +40,8 @@ mesa-protocol/
 
 # NPM pack tarballs
 *.tgz
+
+# Exported test apps & zips
+fresh-app/
+mesa-starter.zip
+

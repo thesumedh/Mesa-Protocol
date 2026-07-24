@@ -1,14 +1,14 @@
-ww<!DOCTYPE html>
-<html lang="en" class="h-full bg-[#030712] text-slate-100 font-sans">
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#040608] text-slate-100 font-sans">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mesa — Developer Console</title>
   
-  <!-- Premium Fonts -->
+  <!-- Premium Fonts from DESIGN.md -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -21,9 +21,16 @@ ww<!DOCTYPE html>
     tailwind.config = {
       theme: {
         extend: {
+          colors: {
+            'mesa-cyan': '#00dbe9',
+            'mesa-cyan-glow': 'rgba(0, 219, 233, 0.4)',
+            'mesa-purple': '#7000ff',
+            'mesa-surface': '#0a0c10',
+            'mesa-bg': '#040608',
+          },
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
-            display: ['Outfit', 'sans-serif'],
+            display: ['Geist', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
           },
         },
@@ -31,44 +38,43 @@ ww<!DOCTYPE html>
     }
   </script>
   <style>
-    /* Premium glassmorphic scrollbars */
+    /* Technical Glassmorphism styles from DESIGN.md */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
     }
     ::-webkit-scrollbar-track {
-      background: #02040a;
+      background: #040608;
     }
     ::-webkit-scrollbar-thumb {
-      background: #111827;
+      background: #1c2024;
       border-radius: 99px;
-      border: 1px solid rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #1f2937;
+      background: #00dbe9;
     }
     
-    /* Vercel/Linear style glow effects */
     .glow-card {
-      background: rgba(10, 15, 30, 0.5);
+      background: rgba(10, 12, 16, 0.85);
       backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .glow-card:hover {
-      border-color: rgba(99, 102, 241, 0.25);
-      box-shadow: 0 0 30px rgba(99, 102, 241, 0.08);
+      border-color: rgba(0, 219, 233, 0.4);
+      box-shadow: 0 0 25px rgba(0, 219, 233, 0.15);
       transform: translateY(-1px);
     }
     
     .glow-card-selected {
-      background: rgba(99, 102, 241, 0.08) !important;
-      border-color: rgba(99, 102, 241, 0.45) !important;
-      box-shadow: 0 0 30px rgba(99, 102, 241, 0.12);
+      background: rgba(0, 219, 233, 0.08) !important;
+      border-color: #00dbe9 !important;
+      box-shadow: 0 0 30px rgba(0, 219, 233, 0.25);
     }
 
     .glow-accent {
-      box-shadow: 0 0 35px rgba(99, 102, 241, 0.2);
+      box-shadow: 0 0 35px rgba(0, 219, 233, 0.2);
     }
 
     [v-cloak] {

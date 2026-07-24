@@ -7,6 +7,7 @@ let isDragging = false;
 let dragNodeId = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
+let zoomLevel = 1.0;
 
 let nodes = [
     { id: 1, type: 'receive', name: 'Receive Payment', x: 60, y: 60, params: { asset: 'XLM', minAmount: 25, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' } },
@@ -18,6 +19,7 @@ let nodes = [
 document.addEventListener('DOMContentLoaded', () => {
     render();
     setupDragListeners();
+    setupZoomWheelListeners();
 });
 
 // Main Render Dispatcher
@@ -26,6 +28,7 @@ function render() {
     renderConnections();
     renderProperties();
     renderCode();
+    applyZoomTransform();
 }
 
 // Render Nodes on Canvas
@@ -49,9 +52,9 @@ function renderNodes() {
                     <span class="text-xs font-headline-md font-bold text-on-surface">${node.name}</span>
                 </div>
                 <div class="flex items-center gap-1">
-                    <button onclick="moveNode(event, ${node.id}, -1)" class="text-outline hover:text-on-surface text-xs p-0.5">◀</button>
+                    <button onclick="moveNode(event, ${node.id}, -1)" class="text-outline hover:text-on-surface text-xs p-0.5" title="Move Left">◀</button>
                     <span class="text-[10px] font-label-mono text-outline">${idx + 1}</span>
-                    <button onclick="moveNode(event, ${node.id}, 1)" class="text-outline hover:text-on-surface text-xs p-0.5">▶</button>
+                    <button onclick="moveNode(event, ${node.id}, 1)" class="text-outline hover:text-on-surface text-xs p-0.5" title="Move Right">▶</button>
                 </div>
             </div>
             <div class="text-[11px] font-label-mono text-on-surface-variant bg-background p-2 rounded border border-outline-variant/30">
@@ -63,6 +66,23 @@ function renderNodes() {
 
         container.appendChild(card);
     });
+
+    // Render Append Step Plus Card at the end of the node chain
+    const lastNode = nodes[nodes.length - 1];
+    if (lastNode) {
+        const appendCard = document.createElement('div');
+        appendCard.className = `absolute w-44 bg-surface/50 border border-dashed border-primary/40 hover:border-primary rounded-xl p-3 cursor-pointer transition-all flex flex-col items-center justify-center text-center shadow-lg hover:bg-surface/80 group`;
+        appendCard.style.left = `${lastNode.x + 300}px`;
+        appendCard.style.top = `${lastNode.y}px`;
+        appendCard.onclick = () => appendStepPrompt();
+
+        appendCard.innerHTML = `
+            <span class="material-symbols-outlined text-primary text-2xl group-hover:scale-110 transition-transform">add_circle</span>
+            <span class="text-xs font-headline-md font-bold text-primary mt-1">+ Append Step</span>
+            <span class="text-[10px] font-label-mono text-outline">Click to add step</span>
+        `;
+        container.appendChild(appendCard);
+    }
 }
 
 // Draw SVG Connections
@@ -556,3 +576,76 @@ function showToast(msg) {
     toast.classList.remove('translate-y-20', 'opacity-0');
     setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2500);
 }
+
+// ─── Canvas Zoom & Append Step Controls ─────────────────────────────────────
+
+function applyZoomTransform() {
+    const nodesEl = document.getElementById('canvas-nodes');
+    const svgEl = document.getElementById('svg-connections');
+    const badgeEl = document.getElementById('zoom-badge');
+    
+    if (nodesEl) nodesEl.style.transform = `scale(${zoomLevel})`;
+    if (svgEl) svgEl.style.transform = `scale(${zoomLevel})`;
+    if (badgeEl) badgeEl.innerText = `${Math.round(zoomLevel * 100)}%`;
+}
+
+window.zoomIn = function() {
+    if (zoomLevel < 2.0) {
+        zoomLevel = Math.min(2.0, zoomLevel + 0.15);
+        applyZoomTransform();
+    }
+}
+
+window.zoomOut = function() {
+    if (zoomLevel > 0.4) {
+        zoomLevel = Math.max(0.4, zoomLevel - 0.15);
+        applyZoomTransform();
+    }
+}
+
+window.resetZoom = function() {
+    zoomLevel = 1.0;
+    applyZoomTransform();
+}
+
+window.appendStepPrompt = function() {
+    const types = [
+        { type: 'payment', label: 'Stellar Payment' },
+        { type: 'delay', label: 'Compliance Delay' },
+        { type: 'receive', label: 'Receive Payment' },
+        { type: 'anchor', label: 'Anchor SEP-24 Deposit' },
+        { type: 'sep10', label: 'SEP-10 Auth' },
+        { type: 'path-payment', label: 'Path Payment / Swap' },
+        { type: 'soroban', label: 'Soroban Invocation' },
+        { type: 'approval', label: 'Manual Approval' }
+    ];
+    
+    const choice = prompt("Select step type to append:\n1. Stellar Payment\n2. Compliance Delay\n3. Receive Payment\n4. Anchor Deposit\n5. SEP-10 Auth\n6. Path Payment Swap\n7. Soroban Invocation\n8. Manual Approval", "1");
+    if (!choice) return;
+
+    const index = parseInt(choice, 10) - 1;
+    if (index >= 0 && index < types.length) {
+        addNode(types[index].type);
+        showToast(`Appended ${types[index].label} Step!`);
+    } else {
+        addNode('payment');
+        showToast("Appended Stellar Payment Step!");
+    }
+}
+
+function setupZoomWheelListeners() {
+    const wrapper = document.getElementById('canvas-wrapper');
+    if (!wrapper) return;
+
+    wrapper.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                zoomIn();
+            } else {
+                zoomOut();
+            }
+        }
+    }, { passive: false });
+}
+
