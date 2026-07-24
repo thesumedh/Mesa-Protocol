@@ -40,7 +40,7 @@ function renderNodes() {
     nodes.forEach((node, idx) => {
         const isSelected = node.id === selectedNodeId;
         const card = document.createElement('div');
-        card.className = `node-card absolute w-64 bg-surface border ${isSelected ? 'node-active border-primary' : 'border-outline-variant/40'} rounded-xl p-4 cursor-move shadow-xl transition-all`;
+        card.className = `node-card absolute w-64 bg-surface/90 border ${isSelected ? 'node-active border-primary' : 'border-outline-variant/40'} rounded-xl p-4 cursor-move shadow-2xl transition-all`;
         card.style.left = `${node.x}px`;
         card.style.top = `${node.y}px`;
         card.onmousedown = (e) => startDrag(e, node.id);
@@ -53,11 +53,17 @@ function renderNodes() {
                 </div>
                 <div class="flex items-center gap-1">
                     <button onclick="moveNode(event, ${node.id}, -1)" class="text-outline hover:text-on-surface text-xs p-0.5" title="Move Left">◀</button>
-                    <span class="text-[10px] font-label-mono text-outline">${idx + 1}</span>
+                    <span class="text-[9px] font-label-mono text-primary font-bold bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">#${idx + 1}</span>
                     <button onclick="moveNode(event, ${node.id}, 1)" class="text-outline hover:text-on-surface text-xs p-0.5" title="Move Right">▶</button>
                 </div>
             </div>
-            <div class="text-[11px] font-label-mono text-on-surface-variant bg-background p-2 rounded border border-outline-variant/30">
+            <div class="flex items-center justify-between my-2">
+                <span class="text-[9px] font-label-mono uppercase tracking-wider text-primary/80 bg-primary/10 px-2 py-0.5 rounded border border-primary/20 font-bold">
+                    ${getProviderTag(node.type)}
+                </span>
+                <span class="status-led" title="Node Active"></span>
+            </div>
+            <div class="text-[11px] font-label-mono text-on-surface-variant bg-background p-2.5 rounded-lg border border-outline-variant/30">
                 ${getSummary(node)}
             </div>
             ${idx < nodes.length - 1 ? '<div class="node-port" style="right: -5px; top: 50%; transform: translateY(-50%);"></div>' : ''}
@@ -79,19 +85,16 @@ function renderConnections() {
         const n2 = nodes[i + 1];
 
         const x1 = n1.x + 256;
-        const y1 = n1.y + 45;
+        const y1 = n1.y + 50;
         const x2 = n2.x;
-        const y2 = n2.y + 45;
+        const y2 = n2.y + 50;
 
         const dx = (x2 - x1) / 2;
         const pathStr = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
 
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', pathStr);
-        path.setAttribute('stroke', '#00dbe9');
-        path.setAttribute('stroke-width', '2');
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke-dasharray', '4 4');
+        path.setAttribute('class', 'connection-path');
 
         svg.appendChild(path);
     }
@@ -415,16 +418,40 @@ function getIcon(type) {
     if (type === 'receive') return 'payments';
     if (type === 'delay') return 'schedule';
     if (type === 'payment') return 'send';
+    if (type === 'sep10') return 'key';
+    if (type === 'anchor') return 'account_balance';
+    if (type === 'path-payment') return 'swap_horiz';
+    if (type === 'soroban') return 'code';
+    if (type === 'approval') return 'gavel';
+    if (type === 'condition') return 'alt_route';
     if (type === 'webhook') return 'link';
     return 'extension';
+}
+
+function getProviderTag(type) {
+    if (type === 'receive') return 'Stellar Receive';
+    if (type === 'delay') return 'Compliance Delay';
+    if (type === 'payment') return 'Horizon Payout';
+    if (type === 'sep10') return 'SEP-10 Auth';
+    if (type === 'anchor') return 'SEP-24 Anchor';
+    if (type === 'path-payment') return 'DEX Path Swap';
+    if (type === 'soroban') return 'Soroban Contract';
+    if (type === 'approval') return 'Operator Sign-off';
+    if (type === 'condition') return 'Router Condition';
+    if (type === 'compensation') return 'Saga Refund';
+    return 'Custom Provider';
 }
 
 function getSummary(node) {
     if (node.type === 'receive') return `${node.params.minAmount || 0} ${node.params.asset || 'XLM'}`;
     if (node.type === 'delay') return `${node.params.seconds || 0} Sec Hold`;
     if (node.type === 'payment') return `${node.params.amount || 0} XLM`;
+    if (node.type === 'sep10') return node.params.domain || 'anchor.stellar.org';
+    if (node.type === 'anchor') return `${node.params.amount || 100} ${node.params.assetCode || 'USDC'}`;
+    if (node.type === 'path-payment') return `${node.params.sendAsset || 'USDC'} ➔ ${node.params.destAsset || 'XLM'}`;
+    if (node.type === 'soroban') return node.params.contractId ? `${node.params.contractId.substring(0, 8)}...` : 'Yield Vault';
     if (node.type === 'webhook') return node.params.url || 'No URL';
-    return '';
+    return 'Configured Step';
 }
 
 function startDrag(e, nodeId) {

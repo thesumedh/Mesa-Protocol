@@ -48,15 +48,37 @@
             user-select: none;
             touch-action: none;
             will-change: left, top;
+            backdrop-filter: blur(12px);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .node-card:hover {
+            border-color: rgba(0, 219, 233, 0.6) !important;
+            box-shadow: 0 0 15px rgba(0, 219, 233, 0.25);
         }
         .node-active {
-            box-shadow: 0 0 25px rgba(0, 219, 233, 0.45);
+            box-shadow: 0 0 30px rgba(0, 219, 233, 0.5) !important;
             border-color: #00dbe9 !important;
+        }
+        @keyframes dash-flow {
+            to {
+                stroke-dashoffset: -24;
+            }
+        }
+        .connection-path {
+            stroke: #00dbe9;
+            stroke-width: 2.5;
+            fill: none;
+            stroke-dasharray: 6 6;
+            animation: dash-flow 1.2s linear infinite;
+            filter: drop-shadow(0 0 6px rgba(0, 219, 233, 0.6));
         }
         .dot-grid {
             background-color: #040608;
-            background-image: radial-gradient(circle, #272a2e 1px, transparent 1px);
-            background-size: 24px 24px;
+            background-image: radial-gradient(circle, #272a2e 1.2px, transparent 1.2px);
+            background-size: 28px 28px;
+        }
+        .canvas-panning {
+            cursor: grabbing !important;
         }
         .node-port {
             width: 10px;
