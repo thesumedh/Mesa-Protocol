@@ -1690,7 +1690,7 @@ var StellarProvider = class {
   async execute(step, context) {
     const action = step.params.action || "payment";
     const hasSecret = Boolean(step.params.senderSecret || step.params.senderSecretRef && process.env[step.params.senderSecretRef]);
-    const isMock = step.params.mock === true || process.env.STELLAR_MOCK === "true" || !hasSecret || action === "receive";
+    const isMock = step.params.mock === true || step.params.mock === "true" || process.env.STELLAR_MOCK === "true" || action === "receive" || !hasSecret || String(step.params.senderSecret).startsWith("SDUMMY");
     if (isMock) {
       return this.executeMock(action, step, context);
     }

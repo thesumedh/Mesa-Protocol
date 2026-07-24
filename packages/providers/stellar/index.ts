@@ -14,7 +14,7 @@ export class StellarProvider implements MesaProvider {
   async execute(step: StepDefinition, context: ExecutionContext): Promise<StepResult> {
     const action = step.params.action as string || 'payment';
     const hasSecret = Boolean(step.params.senderSecret || (step.params.senderSecretRef && process.env[step.params.senderSecretRef as string]));
-    const isMock = step.params.mock === true || process.env.STELLAR_MOCK === 'true' || !hasSecret || action === 'receive';
+    const isMock = step.params.mock === true || step.params.mock === 'true' || process.env.STELLAR_MOCK === 'true' || action === 'receive' || !hasSecret || String(step.params.senderSecret).startsWith('SDUMMY');
 
     if (isMock) {
       return this.executeMock(action, step, context);
