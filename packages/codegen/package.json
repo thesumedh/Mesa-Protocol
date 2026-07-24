@@ -1,6 +1,6 @@
 {
   "name": "@mesaprotocol/codegen",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "TypeScript AST parser, code generator, and 1-click app workspace exporter for Mesa Protocol",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
