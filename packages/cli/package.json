@@ -1,6 +1,6 @@
 {
   "name": "@mesaprotocol/cli",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Mesa CLI — Command-line interface for creating, validating, and running Stellar financial workflow apps",
   "main": "dist/bin.js",
   "bin": {
@@ -11,10 +11,10 @@
     "test": "tsc --noEmit"
   },
   "dependencies": {
-    "@mesaprotocol/codegen": "^0.2.0",
-    "@mesaprotocol/schema": "^0.2.0",
-    "@mesaprotocol/sdk": "^0.2.0",
-    "@mesaprotocol/templates": "^0.2.0"
+    "@mesaprotocol/codegen": "^0.3.0",
+    "@mesaprotocol/schema": "^0.3.0",
+    "@mesaprotocol/sdk": "^0.3.0",
+    "@mesaprotocol/templates": "^0.3.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

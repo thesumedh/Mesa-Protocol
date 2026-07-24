@@ -16,7 +16,7 @@ console.log(`
   ██║ ╚═╝ ██║███████╗███████║██║  ██║
   ╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝
 
-  Mesa Protocol CLI — Stellar Embedded Finance App Builder v0.2.0
+  Mesa Protocol CLI — Stellar Embedded Finance App Builder v0.3.0
 `);
 
 switch (command) {
@@ -97,9 +97,9 @@ async function handleCreate(cmdArgs: string[]) {
       "build": "tsc"
     },
     dependencies: {
-      "@mesaprotocol/runtime": "^0.2.0",
-      "@mesaprotocol/sdk": "^0.2.0",
-      "@mesaprotocol/schema": "^0.2.0",
+      "@mesaprotocol/runtime": "^0.3.0",
+      "@mesaprotocol/sdk": "^0.3.0",
+      "@mesaprotocol/schema": "^0.3.0",
       "concurrently": "^8.2.2",
       "dotenv": "^16.4.5",
       "express": "^4.19.2"
