@@ -66,23 +66,6 @@ function renderNodes() {
 
         container.appendChild(card);
     });
-
-    // Render Append Step Plus Card at the end of the node chain
-    const lastNode = nodes[nodes.length - 1];
-    if (lastNode) {
-        const appendCard = document.createElement('div');
-        appendCard.className = `absolute w-44 bg-surface/50 border border-dashed border-primary/40 hover:border-primary rounded-xl p-3 cursor-pointer transition-all flex flex-col items-center justify-center text-center shadow-lg hover:bg-surface/80 group`;
-        appendCard.style.left = `${lastNode.x + 300}px`;
-        appendCard.style.top = `${lastNode.y}px`;
-        appendCard.onclick = () => appendStepPrompt();
-
-        appendCard.innerHTML = `
-            <span class="material-symbols-outlined text-primary text-2xl group-hover:scale-110 transition-transform">add_circle</span>
-            <span class="text-xs font-headline-md font-bold text-primary mt-1">+ Append Step</span>
-            <span class="text-[10px] font-label-mono text-outline">Click to add step</span>
-        `;
-        container.appendChild(appendCard);
-    }
 }
 
 // Draw SVG Connections
@@ -456,6 +439,8 @@ function startDrag(e, nodeId) {
     render();
 }
 
+let rafId = null;
+
 function setupDragListeners() {
     window.addEventListener('mousemove', (e) => {
         if (!isDragging || !dragNodeId) return;
@@ -463,14 +448,24 @@ function setupDragListeners() {
         if (node) {
             node.x = Math.max(20, e.clientX - dragOffsetX);
             node.y = Math.max(20, e.clientY - dragOffsetY);
-            renderNodes();
-            renderConnections();
+
+            if (!rafId) {
+                rafId = requestAnimationFrame(() => {
+                    renderNodes();
+                    renderConnections();
+                    rafId = null;
+                });
+            }
         }
     });
 
     window.addEventListener('mouseup', () => {
         isDragging = false;
         dragNodeId = null;
+        if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+        }
     });
 }
 
@@ -608,30 +603,7 @@ window.resetZoom = function() {
     applyZoomTransform();
 }
 
-window.appendStepPrompt = function() {
-    const types = [
-        { type: 'payment', label: 'Stellar Payment' },
-        { type: 'delay', label: 'Compliance Delay' },
-        { type: 'receive', label: 'Receive Payment' },
-        { type: 'anchor', label: 'Anchor SEP-24 Deposit' },
-        { type: 'sep10', label: 'SEP-10 Auth' },
-        { type: 'path-payment', label: 'Path Payment / Swap' },
-        { type: 'soroban', label: 'Soroban Invocation' },
-        { type: 'approval', label: 'Manual Approval' }
-    ];
-    
-    const choice = prompt("Select step type to append:\n1. Stellar Payment\n2. Compliance Delay\n3. Receive Payment\n4. Anchor Deposit\n5. SEP-10 Auth\n6. Path Payment Swap\n7. Soroban Invocation\n8. Manual Approval", "1");
-    if (!choice) return;
 
-    const index = parseInt(choice, 10) - 1;
-    if (index >= 0 && index < types.length) {
-        addNode(types[index].type);
-        showToast(`Appended ${types[index].label} Step!`);
-    } else {
-        addNode('payment');
-        showToast("Appended Stellar Payment Step!");
-    }
-}
 
 function setupZoomWheelListeners() {
     const wrapper = document.getElementById('canvas-wrapper');

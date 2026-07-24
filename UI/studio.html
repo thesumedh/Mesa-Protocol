@@ -11,6 +11,34 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+        /* Custom Dark Glassmorphism Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #040608;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1c2024;
+            border-radius: 99px;
+            border: 1px solid rgba(0, 219, 233, 0.2);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00dbe9;
+        }
+        html, body {
+            color-scheme: dark;
+            background-color: #040608;
+        }
+        #canvas-wrapper {
+            scroll-behavior: smooth;
+            color-scheme: dark;
+        }
+        #canvas-nodes, #svg-connections {
+            will-change: transform;
+            backface-visibility: hidden;
+        }
         .glass-panel {
             background: rgba(10, 12, 16, 0.85);
             backdrop-filter: blur(20px);
@@ -19,9 +47,10 @@
         .node-card {
             user-select: none;
             touch-action: none;
+            will-change: left, top;
         }
         .node-active {
-            box-shadow: 0 0 20px rgba(0, 219, 233, 0.4);
+            box-shadow: 0 0 25px rgba(0, 219, 233, 0.45);
             border-color: #00dbe9 !important;
         }
         .dot-grid {
@@ -57,6 +86,10 @@
         .code-block {
             background: #000000;
             border: 1px solid #272a2e;
+        }
+        option {
+            background-color: #0a0c10;
+            color: #e0e2e8;
         }
     </style>
     <script id="tailwind-config">
@@ -101,13 +134,13 @@
             <!-- Preset Template Selector -->
             <div class="flex items-center gap-2 bg-surface border border-outline-variant/40 rounded-lg px-3 py-1 text-xs">
                 <span class="material-symbols-outlined text-primary text-sm">space_dashboard</span>
-                <select id="template-select" onchange="loadTemplate(this.value)" class="bg-transparent text-on-surface font-label-mono outline-none cursor-pointer">
-                    <option value="" disabled selected>Load Stellar Template...</option>
-                    <option value="remittance">🌍 Cross-Border Remittance Corridor</option>
-                    <option value="ngo">🤝 NGO Aid Payout Corridor</option>
-                    <option value="escrow">🔒 Savings Circle / Escrow App</option>
-                    <option value="payroll">💼 Automated Stellar Payroll</option>
-                    <option value="soroban">⚡ Soroban Yield Vault</option>
+                <select id="template-select" onchange="loadTemplate(this.value)" class="bg-surface text-on-surface font-label-mono outline-none cursor-pointer">
+                    <option value="" disabled selected class="bg-surface text-outline">Load Stellar Template...</option>
+                    <option value="remittance" class="bg-surface text-on-surface">🌍 Cross-Border Remittance Corridor</option>
+                    <option value="ngo" class="bg-surface text-on-surface">🤝 NGO Aid Payout Corridor</option>
+                    <option value="escrow" class="bg-surface text-on-surface">🔒 Savings Circle / Escrow App</option>
+                    <option value="payroll" class="bg-surface text-on-surface">💼 Automated Stellar Payroll</option>
+                    <option value="soroban" class="bg-surface text-on-surface">⚡ Soroban Yield Vault</option>
                 </select>
             </div>
         </div>
@@ -242,11 +275,6 @@
         <main id="canvas-wrapper" class="flex-1 relative dot-grid overflow-auto p-12">
             <!-- Canvas Floating Controls Bar -->
             <div class="absolute top-4 right-4 z-30 flex items-center gap-2 bg-surface/90 border border-outline-variant/40 rounded-xl p-1.5 backdrop-blur-md shadow-2xl">
-                <button onclick="appendStepPrompt()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-headline-md font-bold text-xs shadow-md transition">
-                    <span class="material-symbols-outlined text-sm">add_circle</span>
-                    Append Step
-                </button>
-                <div class="h-4 w-px bg-outline-variant/40"></div>
                 <button onclick="zoomOut()" title="Zoom Out" class="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-background transition">
                     <span class="material-symbols-outlined text-sm">zoom_out</span>
                 </button>
