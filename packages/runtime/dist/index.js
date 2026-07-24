@@ -1882,6 +1882,9 @@ var StellarProvider = class {
 
 // src/index.ts
 dotenv.config();
+if (!process.env.SENDER_SECRET) {
+  process.env.SENDER_SECRET = "SDUMMYMOCKSECRETKEYFORSTALLERDEVWORKFLOWS12345";
+}
 var PORT = parseInt(process.env.PORT ?? "3001", 10);
 async function main() {
   console.log("");

@@ -1,6 +1,10 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+if (!process.env.SENDER_SECRET) {
+  process.env.SENDER_SECRET = 'SDUMMYMOCKSECRETKEYFORSTALLERDEVWORKFLOWS12345';
+}
+
 import { initSchema } from './store';
 import { Scheduler } from './engine/scheduler';
 import { createServer } from './server';
