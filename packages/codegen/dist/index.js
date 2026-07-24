@@ -236,9 +236,9 @@ async function generateRunnableAppZip(flow) {
             "build": "tsc"
         },
         dependencies: {
-            "@mesaprotocol/runtime": "^0.2.0",
-            "@mesaprotocol/sdk": "^0.2.0",
-            "@mesaprotocol/schema": "^0.2.0",
+            "@mesaprotocol/runtime": "^0.3.0",
+            "@mesaprotocol/sdk": "^0.3.0",
+            "@mesaprotocol/schema": "^0.3.0",
             "concurrently": "^8.2.2",
             "dotenv": "^16.4.5",
             "express": "^4.19.2"
