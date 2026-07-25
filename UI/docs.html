@@ -296,6 +296,110 @@
                         </p>
                     </section>
 
+                    <!-- Core Theory: Why Web3 Financial Workflows are Hard -->
+                    <section class="glass-panel p-6 rounded-2xl space-y-4">
+                        <h2 class="font-headline-md text-xl font-bold text-emerald-400 flex items-center gap-2">
+                            <span class="material-symbols-outlined">lightbulb</span> Simple Theory: Why Orchestration Matters
+                        </h2>
+                        <p class="font-body-md text-sm text-on-surface-variant leading-relaxed">
+                            In traditional software, API calls either succeed or fail instantly. In blockchain financial applications, multi-step payments involve <strong>asynchronous network settlement, compliance holds, anchor webviews, and smart contract execution</strong>.
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-label-mono text-xs pt-2">
+                            <div class="p-4 rounded-xl bg-black/50 border border-red-500/20 space-y-1">
+                                <span class="text-red-400 font-bold text-sm block">❌ Without Orchestration</span>
+                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
+                                    If a server crashes at Step 3 of a 4-step cross-border transfer, funds are stuck mid-flight. Retrying raw transactions causes <strong>double-spends or sequence number errors</strong>.
+                                </p>
+                            </div>
+                            <div class="p-4 rounded-xl bg-black/50 border border-emerald-500/20 space-y-1">
+                                <span class="text-emerald-400 font-bold text-sm block">✅ With Mesa Orchestration</span>
+                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
+                                    Every step transition is <strong>checkpointed to database storage</strong>. If a server restarts, Mesa resumes right where it left off, automatically retrying Horizon calls safely.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- System Architecture Diagram (3 Tiers) -->
+                    <section class="glass-panel p-6 rounded-2xl space-y-5">
+                        <div class="flex justify-between items-center">
+                            <h2 class="font-headline-md text-xl font-bold text-primary flex items-center gap-2">
+                                <span class="material-symbols-outlined">account_tree</span> 3-Tier System Architecture
+                            </h2>
+                            <span class="px-2.5 py-1 bg-primary/10 text-primary font-label-mono text-[10px] rounded font-bold">PRODUCTION BLUEPRINT</span>
+                        </div>
+
+                        <div class="space-y-4 font-label-mono text-xs">
+                            <!-- Tier 1 -->
+                            <div class="p-4 rounded-xl bg-primary/5 border border-primary/20 space-y-2">
+                                <div class="flex items-center gap-2 text-primary font-bold text-sm">
+                                    <span class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px]">1</span>
+                                    LAYER 1 — Visual Studio & SDK Layer (@mesaprotocol/sdk)
+                                </div>
+                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
+                                    Developers define financial workflows visually in <strong>Mesa Studio Canvas</strong> or programmatically using the fluent method-chaining TypeScript SDK.
+                                </p>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="text-center text-outline-variant text-sm font-bold">↓ JSON AST Flow Definition ↓</div>
+
+                            <!-- Tier 2 -->
+                            <div class="p-4 rounded-xl bg-secondary/5 border border-secondary/20 space-y-2">
+                                <div class="flex items-center gap-2 text-secondary font-bold text-sm">
+                                    <span class="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center text-[10px]">2</span>
+                                    LAYER 2 — Durable Runtime Engine (@mesaprotocol/runtime)
+                                </div>
+                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
+                                    The core engine manages <strong>state persistence (Postgres/InMemoryPool)</strong>, non-blocking step scheduling, webhook suspension keys, and Saga rollback compensations.
+                                </p>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="text-center text-outline-variant text-sm font-bold">↓ Executable RPC Operations & Signatures ↓</div>
+
+                            <!-- Tier 3 -->
+                            <div class="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-2">
+                                <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                                    <span class="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-[10px]">3</span>
+                                    LAYER 3 — Stellar Blockchain Infrastructure
+                                </div>
+                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
+                                    Direct integration with <strong>Stellar Horizon RPC</strong> (on-chain payments), <strong>Soroban Smart Contracts</strong> (WASM RPC), <strong>SEP-10</strong> (Web Auth), and <strong>SEP-24</strong> (Anchors).
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Workflow Execution Lifecycle -->
+                    <section class="glass-panel p-6 rounded-2xl space-y-4">
+                        <h2 class="font-headline-md text-xl font-bold text-secondary flex items-center gap-2">
+                            <span class="material-symbols-outlined">timeline</span> Step-by-Step Execution Lifecycle
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-3 font-label-mono text-[11px]">
+                            <div class="p-3 rounded-lg bg-black/50 border border-outline-variant/30 text-center space-y-1">
+                                <span class="text-primary font-bold block">1. Define</span>
+                                <span class="text-on-surface-variant text-[10px]">Studio / SDK generates JSON AST</span>
+                            </div>
+                            <div class="p-3 rounded-lg bg-black/50 border border-outline-variant/30 text-center space-y-1">
+                                <span class="text-primary font-bold block">2. Enqueue</span>
+                                <span class="text-on-surface-variant text-[10px]">Runtime stores Execution in DB</span>
+                            </div>
+                            <div class="p-3 rounded-lg bg-black/50 border border-outline-variant/30 text-center space-y-1">
+                                <span class="text-secondary font-bold block">3. Execute</span>
+                                <span class="text-on-surface-variant text-[10px]">Provider processes step logic</span>
+                            </div>
+                            <div class="p-3 rounded-lg bg-black/50 border border-outline-variant/30 text-center space-y-1">
+                                <span class="text-amber-300 font-bold block">4. Checkpoint</span>
+                                <span class="text-on-surface-variant text-[10px]">Outputs saved to DB state</span>
+                            </div>
+                            <div class="p-3 rounded-lg bg-black/50 border border-outline-variant/30 text-center space-y-1">
+                                <span class="text-emerald-400 font-bold block">5. Settle</span>
+                                <span class="text-on-surface-variant text-[10px]">Signed TX submitted to Horizon</span>
+                            </div>
+                        </div>
+                    </section>
+
                     <!-- What Mesa Abstracts -->
                     <section class="glass-panel p-6 rounded-2xl space-y-4">
                         <h2 class="font-headline-md text-xl font-bold text-primary flex items-center gap-2">
