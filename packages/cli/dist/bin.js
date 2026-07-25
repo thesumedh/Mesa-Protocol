@@ -118,8 +118,8 @@ async function handleCreate(cmdArgs) {
             "build": "tsc"
         },
         dependencies: {
-            "@mesaprotocol/runtime": "^0.3.0",
-            "@mesaprotocol/sdk": "^0.3.0",
+            "@mesaprotocol/runtime": "^0.3.1",
+            "@mesaprotocol/sdk": "^0.3.1",
             "@mesaprotocol/schema": "^0.3.0",
             "concurrently": "^8.2.2",
             "dotenv": "^16.4.5",
@@ -146,7 +146,7 @@ async function handleCreate(cmdArgs) {
     fs.writeFileSync(path.join(outputDir, 'packages', 'workflows', 'mesa.flow.ts'), (0, codegen_1.generateSDKCode)(sampleFlow));
     fs.writeFileSync(path.join(outputDir, 'packages', 'workflows', 'flow.json'), JSON.stringify(sampleFlow, null, 2));
     // Write Server Startup File with dotenv/config import
-    fs.writeFileSync(path.join(outputDir, 'mesa-server.ts'), `import 'dotenv/config';\nimport express from 'express';\nimport { createServer } from '@mesaprotocol/runtime';\nimport { main as registerAndRun } from './packages/workflows/mesa.flow';\n\nconst app = createServer();\nconst port = process.env.PORT || 3001;\n\napp.listen(port, async () => {\n  console.log(\`🚀 Mesa Production Runtime Server running on http://localhost:\${port}\`);\n  try {\n    await registerAndRun();\n  } catch (err) {\n    console.error('Failed to auto-register flow:', err);\n  }\n});\n`);
+    fs.writeFileSync(path.join(outputDir, 'mesa-server.ts'), `import 'dotenv/config';\nimport { startServer } from '@mesaprotocol/runtime';\n\nconst port = Number(process.env.PORT || 3001);\n\nstartServer(port).then(() => {\n  console.log(\`🚀 Mesa Production Runtime Server running on http://localhost:\${port}\`);\n  console.log(\`📊 Dashboard Console: http://localhost:\${port}/dashboard\`);\n}).catch(err => {\n  console.error('Failed to start Mesa Runtime Server:', err);\n});\n`);
     // Write Web App Files
     fs.writeFileSync(path.join(outputDir, 'apps', 'web', 'index.html'), `<!DOCTYPE html><html><head><title>${appName}</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>`);
     fs.writeFileSync(path.join(outputDir, 'apps', 'web', 'src', 'main.tsx'), `import React from 'react';\nimport ReactDOM from 'react-dom/client';\nimport App from './App';\n\nReactDOM.createRoot(document.getElementById('root')!).render(<App />);\n`);

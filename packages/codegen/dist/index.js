@@ -236,8 +236,8 @@ async function generateRunnableAppZip(flow) {
             "build": "tsc"
         },
         dependencies: {
-            "@mesaprotocol/runtime": "^0.3.0",
-            "@mesaprotocol/sdk": "^0.3.0",
+            "@mesaprotocol/runtime": "^0.3.1",
+            "@mesaprotocol/sdk": "^0.3.1",
             "@mesaprotocol/schema": "^0.3.0",
             "concurrently": "^8.2.2",
             "dotenv": "^16.4.5",
@@ -265,7 +265,7 @@ async function generateRunnableAppZip(flow) {
     zip.file("packages/workflows/mesa.flow.ts", tsCode);
     zip.file("packages/workflows/flow.json", JSON.stringify(flow, null, 2));
     // mesa-server.ts (Includes dotenv/config import)
-    zip.file("mesa-server.ts", `import 'dotenv/config';\nimport express from 'express';\nimport { createServer } from '@mesaprotocol/runtime';\nimport { main as registerAndRun } from './packages/workflows/mesa.flow';\n\nconst app = createServer();\nconst port = process.env.PORT || 3001;\n\napp.listen(port, async () => {\n  console.log(\`🚀 Mesa Production Runtime Server running on http://localhost:\${port}\`);\n  try {\n    await registerAndRun();\n  } catch (err) {\n    console.error('Failed to auto-register flow:', err);\n  }\n});\n`);
+    zip.file("mesa-server.ts", `import 'dotenv/config';\nimport { startServer } from '@mesaprotocol/runtime';\n\nconst port = Number(process.env.PORT || 3001);\n\nstartServer(port).then(() => {\n  console.log(\`🚀 Mesa Production Runtime Server running on http://localhost:\${port}\`);\n  console.log(\`📊 Dashboard Console: http://localhost:\${port}/dashboard\`);\n}).catch(err => {\n  console.error('Failed to start Mesa Runtime Server:', err);\n});\n`);
     // apps/web/index.html & App.tsx
     zip.file("apps/web/index.html", `<!DOCTYPE html><html><head><title>${flow.name} App</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>`);
     zip.file("apps/web/src/main.tsx", `import React from 'react';\nimport ReactDOM from 'react-dom/client';\nimport App from './App';\n\nReactDOM.createRoot(document.getElementById('root')!).render(<App />);\n`);

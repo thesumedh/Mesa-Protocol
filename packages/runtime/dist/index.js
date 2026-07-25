@@ -5,6 +5,10 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -21,8 +25,24 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // src/index.ts
+var index_exports = {};
+__export(index_exports, {
+  Scheduler: () => Scheduler,
+  createServer: () => createServer,
+  default: () => index_default,
+  getPool: () => getPool,
+  getProvider: () => getProvider,
+  initRuntime: () => initRuntime,
+  initSchema: () => initSchema,
+  listProviders: () => listProviders,
+  main: () => main,
+  registerProvider: () => registerProvider,
+  startServer: () => startServer
+});
+module.exports = __toCommonJS(index_exports);
 var dotenv = __toESM(require("dotenv"));
 
 // src/store/index.ts
@@ -1885,7 +1905,40 @@ dotenv.config();
 if (!process.env.SENDER_SECRET) {
   process.env.SENDER_SECRET = "SDUMMYMOCKSECRETKEYFORSTALLERDEVWORKFLOWS12345";
 }
-var PORT = parseInt(process.env.PORT ?? "3001", 10);
+var defaultScheduler = null;
+var initialized = false;
+async function initRuntime() {
+  if (initialized) return;
+  await initSchema();
+  registerProvider(new WebhookProvider());
+  registerProvider(new DelayProvider());
+  registerProvider(new AnchorProvider());
+  registerProvider(new StellarProvider());
+  defaultScheduler = new Scheduler();
+  defaultScheduler.start();
+  initialized = true;
+}
+async function startServer(port) {
+  await initRuntime();
+  const PORT = port ?? parseInt(process.env.PORT ?? "3001", 10);
+  const app = createServer();
+  const server = app.listen(PORT, () => {
+    console.log(`[MesaRuntime] Runtime listening on http://localhost:${PORT}`);
+    console.log(`[MesaRuntime] Health: http://localhost:${PORT}/health`);
+    console.log(`[MesaRuntime] Dashboard: http://localhost:${PORT}/dashboard`);
+  });
+  process.on("SIGTERM", () => {
+    defaultScheduler?.stop();
+    server.close();
+    process.exit(0);
+  });
+  process.on("SIGINT", () => {
+    defaultScheduler?.stop();
+    server.close();
+    process.exit(0);
+  });
+  return { app, server, scheduler: defaultScheduler };
+}
 async function main() {
   console.log("");
   console.log("  \u2588\u2588\u2588\u2557   \u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2557 ");
@@ -1897,28 +1950,30 @@ async function main() {
   console.log("");
   console.log("  Financial Workflow Runtime for Stellar");
   console.log("");
-  await initSchema();
-  registerProvider(new WebhookProvider());
-  registerProvider(new DelayProvider());
-  registerProvider(new AnchorProvider());
-  registerProvider(new StellarProvider());
-  const scheduler = new Scheduler();
-  scheduler.start();
-  const app = createServer();
-  app.listen(PORT, () => {
-    console.log(`[MesaRuntime] Runtime listening on http://localhost:${PORT}`);
-    console.log(`[MesaRuntime] Health: http://localhost:${PORT}/health`);
-  });
-  process.on("SIGTERM", () => {
-    scheduler.stop();
-    process.exit(0);
-  });
-  process.on("SIGINT", () => {
-    scheduler.stop();
-    process.exit(0);
+  return await startServer();
+}
+var index_default = {
+  createServer,
+  startServer,
+  initRuntime,
+  main
+};
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("[MesaRuntime] Fatal startup error:", err);
+    process.exit(1);
   });
 }
-main().catch((err) => {
-  console.error("[MesaRuntime] Fatal startup error:", err);
-  process.exit(1);
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
+  Scheduler,
+  createServer,
+  getPool,
+  getProvider,
+  initRuntime,
+  initSchema,
+  listProviders,
+  main,
+  registerProvider,
+  startServer
 });

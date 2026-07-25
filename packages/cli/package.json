@@ -1,6 +1,6 @@
 {
   "name": "@mesaprotocol/cli",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Mesa CLI — Command-line interface for creating, validating, and running Stellar financial workflow apps",
   "main": "dist/bin.js",
   "bin": {
