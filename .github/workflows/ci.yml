@@ -24,17 +24,14 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Build SDK
-      run: npm run build --workspace=packages/mesa-sdk
+    - name: Build All Workspaces
+      run: npm run build
 
-    - name: Build CLI
-      run: npm run build --workspace=packages/mesa-cli
+    - name: Run Typecheck
+      run: npm run typecheck
 
-    - name: Run Indexer Unit Tests
-      run: npm run test --workspace=packages/mesa-indexer
-
-    - name: Build Next.js Sandbox Application
-      run: npm run build --workspace=sandbox-run
+    - name: Run Unit Tests
+      run: npm run test
 
   testnet-e2e:
     name: On-Chain Testnet Integration Tests (Optional)
@@ -55,8 +52,5 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Build SDK
-      run: npm run build --workspace=packages/mesa-sdk
-
-    - name: Run On-Chain Testnet Integration Test
-      run: npm run test:e2e
+    - name: Build All Workspaces
+      run: npm run build
