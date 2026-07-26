@@ -115,8 +115,8 @@
                 </a>
                 <div class="hidden md:flex gap-6 items-center font-mono text-xs">
                     <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="studio.html">Studio Canvas</a>
-                    <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="http://localhost:3001/dashboard" target="_blank">Console Dashboard</a>
-                    <a class="text-primary font-bold border-b-2 border-primary pb-0.5" href="docs.html">API Reference</a>
+                    <a class="text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer" onclick="openConsoleLink(event)">Console Dashboard</a>
+                    <a class="text-cyan-400 font-bold border-b-2 border-cyan-400 pb-0.5" href="docs.html">API Reference</a>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -125,7 +125,7 @@
                     <span class="material-symbols-outlined text-xs text-outline absolute left-2.5 top-2.5">search</span>
                 </div>
                 <a href="https://github.com/thesumedh/Mesa-Protocol" target="_blank" class="px-3 py-1.5 font-mono text-xs text-on-surface-variant hover:text-on-surface border border-outline-variant/30 rounded-lg">GitHub</a>
-                <a href="studio.html" class="bg-primary text-on-primary px-3 py-1.5 font-mono text-xs font-bold rounded-lg hover:bg-primary-container transition">Launch Studio</a>
+                <a href="studio.html" class="bg-cyan-400 text-slate-950 px-4 py-2 font-mono text-xs font-extrabold rounded-lg hover:bg-cyan-300 transition shadow-lg shadow-cyan-500/20 active:scale-95">Launch Studio</a>
             </div>
         </div>
     </nav>
@@ -736,6 +736,22 @@ main().catch(console.error);</pre>
     </div>
 
     <script>
+        function openConsoleLink(e) {
+            if (e) e.preventDefault();
+            const targetUrl = 'http://localhost:3001/dashboard';
+            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                fetch('http://localhost:3001/providers', { mode: 'no-cors' })
+                    .then(() => {
+                        window.open(targetUrl, '_blank');
+                    })
+                    .catch(() => {
+                        alert('📌 Mesa Developer Console runs on your local Mesa runtime server (http://localhost:3001/dashboard).\n\nTo view your live console:\n1. Run: npx mesa dev (or node mesa-server.ts)\n2. Open: http://localhost:3001/dashboard\n\nOr click "Launch Studio" to design workflows visually!');
+                    });
+            } else {
+                window.open(targetUrl, '_blank');
+            }
+        }
+
         const templates = {
             remittance: `const flow = Mesa.flow('cross-border-remittance-corridor')
   .sep10Auth({ domain: 'anchor.stellar.org', accountSecretRef: 'SENDER_SECRET' })

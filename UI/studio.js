@@ -11,6 +11,22 @@ let zoomLevel = 1.0;
 let stellarNetwork = "testnet";
 let userWalletPublicKey = null;
 
+function openConsoleLink(e) {
+    if (e) e.preventDefault();
+    const targetUrl = 'http://localhost:3001/dashboard';
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        fetch('http://localhost:3001/providers', { mode: 'no-cors' })
+            .then(() => {
+                window.open(targetUrl, '_blank');
+            })
+            .catch(() => {
+                alert('📌 Mesa Developer Console runs on your local Mesa runtime server (http://localhost:3001/dashboard).\n\nTo view your live console:\n1. Run: npx mesa dev (or node mesa-server.ts)\n2. Open: http://localhost:3001/dashboard\n\nOr click "Export App Starter" to build a runnable app!');
+            });
+    } else {
+        window.open(targetUrl, '_blank');
+    }
+}
+
 let nodes = [
     { id: 1, type: 'receive', name: 'Receive Payment', x: 60, y: 60, params: { asset: 'XLM', minAmount: 25, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' } },
     { id: 2, type: 'delay', name: 'Compliance Delay', x: 360, y: 60, params: { seconds: 5 } },
