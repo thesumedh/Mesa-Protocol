@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Mesa Protocol — Developer Documentation & Live SDK Playground</title>
+    <title>Mesa Protocol — Technical Developer Documentation & API Specification</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -15,73 +15,28 @@
             "colors": {
               "on-background": "#e0e2e8",
               "secondary-fixed": "#e9ddff",
-              "on-tertiary-fixed-variant": "#454650",
               "background": "#000000",
               "surface-container-lowest": "#040608",
               "surface-container-highest": "#1c2024",
               "surface-variant": "#101417",
-              "inverse-primary": "#006970",
               "surface": "#0a0c10",
               "primary": "#dbfcff",
               "surface-container-high": "#181c20",
-              "on-error-container": "#ffdad6",
               "secondary-container": "#7000ff",
-              "inverse-surface": "#e0e2e8",
-              "on-primary-fixed-variant": "#004f54",
-              "error-container": "#93000a",
-              "on-tertiary": "#2e3039",
-              "surface-dim": "#0a0c10",
-              "tertiary-fixed": "#e1e1ed",
-              "on-secondary-container": "#ddcdff",
-              "on-tertiary-fixed": "#191b23",
               "primary-container": "#00f0ff",
               "primary-fixed": "#7df4ff",
               "outline": "#849495",
-              "error": "#ffb4ab",
-              "secondary-fixed-dim": "#d1bcff",
-              "tertiary": "#f5f4ff",
-              "on-error": "#690005",
               "secondary": "#d1bcff",
-              "on-primary-fixed": "#002022",
               "on-surface": "#e0e2e8",
-              "on-secondary-fixed-variant": "#5700c9",
-              "surface-tint": "#00dbe9",
               "outline-variant": "#272a2e",
               "surface-container": "#101417",
-              "inverse-on-surface": "#2d3135",
-              "tertiary-fixed-dim": "#c5c6d1",
-              "surface-container-low": "#0b0f12",
-              "tertiary-container": "#d8d8e4",
-              "on-primary": "#00363a",
               "on-surface-variant": "#b9cacb",
-              "primary-fixed-dim": "#00dbe9",
-              "on-secondary": "#3c0090",
-              "on-secondary-fixed": "#23005b",
-              "surface-bright": "#323539",
-              "on-tertiary-container": "#5c5e68",
-              "on-primary-container": "#006970"
-            },
-            "borderRadius": {
-              "DEFAULT": "0.125rem",
-              "lg": "0.25rem",
-              "xl": "0.5rem",
-              "full": "0.75rem"
-            },
-            "spacing": {
-              "gutter": "24px",
-              "container-max": "1440px",
-              "unit": "4px",
-              "margin-desktop": "48px",
-              "margin-mobile": "16px"
+              "primary-fixed-dim": "#00dbe9"
             },
             "fontFamily": {
-              "headline-lg-mobile": ["Geist"],
-              "body-md": ["Inter"],
-              "headline-md": ["Geist"],
-              "label-mono": ["JetBrains Mono"],
-              "headline-lg": ["Geist"],
-              "code-sm": ["JetBrains Mono"],
-              "body-lg": ["Inter"]
+              "headline": ["Geist"],
+              "body": ["Inter"],
+              "mono": ["JetBrains Mono"]
             }
           },
         },
@@ -101,7 +56,7 @@
             filter: blur(100px);
             pointer-events: none;
             z-index: 0;
-            opacity: 0.45;
+            opacity: 0.35;
             will-change: transform;
         }
         .bg-orb-cyan {
@@ -110,7 +65,6 @@
             width: 600px;
             height: 600px;
             background: radial-gradient(circle, #00dbe9 0%, rgba(0, 219, 233, 0) 70%);
-            animation: float-cyan 18s ease-in-out infinite alternate;
         }
         .bg-orb-purple {
             top: 250px;
@@ -118,751 +72,666 @@
             width: 650px;
             height: 650px;
             background: radial-gradient(circle, #7000ff 0%, rgba(112, 0, 255, 0) 70%);
-            animation: float-purple 22s ease-in-out infinite alternate;
-        }
-        .bg-orb-emerald {
-            bottom: -200px;
-            left: 10%;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, #10b981 0%, rgba(16, 185, 129, 0) 70%);
-            animation: float-emerald 20s ease-in-out infinite alternate;
-        }
-
-        @keyframes float-cyan {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(80px, 60px) scale(1.1); }
-            100% { transform: translate(-60px, 100px) scale(0.95); }
-        }
-        @keyframes float-purple {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(-90px, -70px) scale(1.15); }
-            100% { transform: translate(50px, 80px) scale(0.9); }
-        }
-        @keyframes float-emerald {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(70px, -80px) scale(1.08); }
-            100% { transform: translate(-50px, -40px) scale(0.95); }
         }
 
         .animated-dot-grid {
             background-image: radial-gradient(rgba(132, 148, 149, 0.12) 1.2px, transparent 1.2px);
             background-size: 28px 28px;
-            animation: grid-move 40s linear infinite;
-        }
-        @keyframes grid-move {
-            0% { background-position: 0 0; }
-            100% { background-position: 56px 56px; }
         }
 
         .glass-panel {
-            background: rgba(10, 12, 16, 0.75);
+            background: rgba(10, 12, 16, 0.85);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             position: relative;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
-        }
-        .glass-panel::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            padding: 1px;
-            background: linear-gradient(to bottom right, rgba(0, 219, 233, 0.25), transparent 40%, rgba(112, 0, 255, 0.2));
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
         }
 
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
             vertical-align: middle;
         }
-        .glow-hover:hover {
-            box-shadow: 0 0 30px rgba(0, 219, 233, 0.25);
-            border-color: rgba(0, 219, 233, 0.5) !important;
-            transform: translateY(-2px);
-        }
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #272a2e; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #00dbe9; }
+
+        pre code {
+            font-family: 'JetBrains Mono', monospace;
+        }
     </style>
 </head>
-<body class="font-body-md text-body-md overflow-x-hidden selection:bg-primary-container/30">
-    <!-- Ambient Background Orbs -->
+<body class="font-body text-sm overflow-x-hidden selection:bg-primary-container/30">
     <div class="bg-orb bg-orb-cyan"></div>
     <div class="bg-orb bg-orb-purple"></div>
-    <div class="bg-orb bg-orb-emerald"></div>
 
-    <!-- Top Navigation Bar -->
-    <nav class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-outline-variant/30">
-        <div class="flex justify-between items-center h-16 px-gutter max-w-container-max mx-auto">
+    <!-- Navigation Header -->
+    <nav class="fixed top-0 w-full z-50 bg-background/90 backdrop-blur-xl border-b border-outline-variant/30">
+        <div class="flex justify-between items-center h-16 px-6 max-w-7xl mx-auto">
             <div class="flex items-center gap-8">
-                <a class="font-headline-md text-headline-md font-bold text-primary tracking-tighter flex items-center gap-2" href="index.html">
+                <a class="font-headline text-lg font-bold text-primary tracking-tight flex items-center gap-2" href="index.html">
                     <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">layers</span>
-                    Mesa Protocol
+                    Mesa Protocol Technical Docs
                 </a>
-                <div class="hidden md:flex gap-6 items-center">
-                    <a class="font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-colors" href="studio.html">Studio Canvas</a>
-                    <a class="font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-colors" href="http://localhost:3001/dashboard" target="_blank">Console Dashboard</a>
-                    <a class="font-label-mono text-label-mono text-primary font-bold border-b-2 border-primary pb-0.5" href="docs.html">Docs & API Reference</a>
+                <div class="hidden md:flex gap-6 items-center font-mono text-xs">
+                    <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="studio.html">Studio Canvas</a>
+                    <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="http://localhost:3001/dashboard" target="_blank">Console Dashboard</a>
+                    <a class="text-primary font-bold border-b-2 border-primary pb-0.5" href="docs.html">API Reference</a>
                 </div>
             </div>
-            <div class="flex items-center gap-4">
-                <a href="https://github.com/thesumedh/Mesa-Protocol" target="_blank" class="hidden md:flex px-4 py-2 font-label-mono text-label-mono text-on-surface-variant hover:text-on-surface transition-all active:scale-95 duration-200">GitHub</a>
-                <a href="studio.html" class="bg-primary text-on-primary px-4 py-2 font-label-mono text-label-mono font-bold hover:bg-primary-container active:scale-95 transition-all duration-200 shadow-lg shadow-primary/20">Launch Studio</a>
+            <div class="flex items-center gap-3">
+                <div class="relative hidden sm:block">
+                    <input type="text" id="doc-search" onkeyup="filterDocs()" placeholder="Search docs, SDK methods, providers..." class="bg-black/60 border border-outline-variant/40 rounded-lg px-3 py-1.5 font-mono text-xs text-on-surface w-64 focus:outline-none focus:border-primary pl-8"/>
+                    <span class="material-symbols-outlined text-xs text-outline absolute left-2.5 top-2.5">search</span>
+                </div>
+                <a href="https://github.com/thesumedh/Mesa-Protocol" target="_blank" class="px-3 py-1.5 font-mono text-xs text-on-surface-variant hover:text-on-surface border border-outline-variant/30 rounded-lg">GitHub</a>
+                <a href="studio.html" class="bg-primary text-on-primary px-3 py-1.5 font-mono text-xs font-bold rounded-lg hover:bg-primary-container transition">Launch Studio</a>
             </div>
         </div>
     </nav>
 
     <div class="flex pt-16 min-h-screen relative z-10 animated-dot-grid">
         <!-- Sidebar Navigation -->
-        <aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-[280px] z-40 bg-surface-container-lowest/90 backdrop-blur-xl border-r border-outline-variant/30 hidden md:flex flex-col py-6 px-4 space-y-6 overflow-y-auto">
+        <aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-[280px] z-40 bg-surface-container-lowest/95 backdrop-blur-xl border-r border-outline-variant/30 hidden md:flex flex-col py-6 px-4 space-y-6 overflow-y-auto">
             <div class="px-2">
-                <h3 class="font-label-mono text-[10px] text-on-surface-variant uppercase tracking-widest font-bold mb-3">Developer Guide</h3>
-                <nav class="space-y-1 font-label-mono text-xs" id="doc-nav">
-                    <button onclick="switchTab('intro')" id="btn-intro" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-primary bg-primary/10 border-l-2 border-primary transition font-bold">
-                        <span class="material-symbols-outlined text-base">description</span>
-                        Overview & Architecture
+                <h3 class="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest font-bold mb-3">Core Reference</h3>
+                <nav class="space-y-1 font-mono text-xs" id="doc-nav">
+                    <button onclick="switchTab('intro')" id="btn-intro" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-primary bg-primary/10 border-l-2 border-primary font-bold text-left">
+                        <span class="material-symbols-outlined text-base">account_tree</span> Architecture & Specs
                     </button>
-                    <button onclick="switchTab('quickstart')" id="btn-quickstart" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition">
-                        <span class="material-symbols-outlined text-base">bolt</span>
-                        Quickstart (3 Mins)
+                    <button onclick="switchTab('quickstart')" id="btn-quickstart" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high text-left">
+                        <span class="material-symbols-outlined text-base">bolt</span> Quickstart & Environment
                     </button>
-                    <button onclick="switchTab('providers')" id="btn-providers" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition">
-                        <span class="material-symbols-outlined text-base">widgets</span>
-                        9 Core Providers Reference
+                    <button onclick="switchTab('providers')" id="btn-providers" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high text-left">
+                        <span class="material-symbols-outlined text-base">widgets</span> 9 Providers Reference
                     </button>
-                    <button onclick="switchTab('sdk')" id="btn-sdk" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition">
-                        <span class="material-symbols-outlined text-base">code</span>
-                        SDK Builder API
+                    <button onclick="switchTab('recipes')" id="btn-recipes" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high text-left">
+                        <span class="material-symbols-outlined text-base">menu_book</span> Production Code Recipes
                     </button>
-                    <button onclick="switchTab('comparison')" id="btn-comparison" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition">
-                        <span class="material-symbols-outlined text-base">compare</span>
-                        Stellar SDK vs Mesa
+                    <button onclick="switchTab('api')" id="btn-api" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high text-left">
+                        <span class="material-symbols-outlined text-base">api</span> REST API & Webhooks
                     </button>
-                    <button onclick="switchTab('mainnet')" id="btn-mainnet" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition">
-                        <span class="material-symbols-outlined text-base">rocket_launch</span>
-                        Mainnet Deployment
+                    <button onclick="switchTab('errors')" id="btn-errors" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high text-left">
+                        <span class="material-symbols-outlined text-base">warning</span> Error Codes & Sagas
                     </button>
                 </nav>
             </div>
 
             <div class="px-2">
-                <h3 class="font-label-mono text-[10px] text-on-surface-variant uppercase tracking-widest font-bold mb-3">Interactive Workspace</h3>
-                <nav class="space-y-1 font-label-mono text-xs">
-                    <button onclick="switchTab('playground')" id="btn-playground" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-secondary-fixed bg-secondary-container/20 border border-secondary-container/40 hover:bg-secondary-container/30 transition">
-                        <span class="material-symbols-outlined text-base text-secondary">terminal</span>
-                        Live SDK Playground 🧪
+                <h3 class="font-mono text-[10px] text-on-surface-variant uppercase tracking-widest font-bold mb-3">Live Tools</h3>
+                <nav class="space-y-1 font-mono text-xs">
+                    <button onclick="switchTab('playground')" id="btn-playground" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-secondary-fixed bg-secondary-container/20 border border-secondary-container/40 text-left">
+                        <span class="material-symbols-outlined text-base text-secondary">terminal</span> SDK AST Playground 🧪
                     </button>
-                    <a href="studio.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition">
-                        <span class="material-symbols-outlined text-base text-primary">account_tree</span>
-                        Visual Studio Canvas
+                    <a href="studio.html" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high">
+                        <span class="material-symbols-outlined text-base text-primary">draw</span> Visual Studio Canvas
                     </a>
                 </nav>
             </div>
 
-            <div class="mt-auto p-3 rounded-lg bg-surface-container-high/60 border border-outline-variant/30 font-label-mono text-[11px] space-y-1">
-                <div class="flex justify-between text-on-surface-variant">
-                    <span>NPM SDK</span>
-                    <span class="text-emerald-400 font-bold">v0.3.1</span>
-                </div>
-                <div class="flex justify-between text-on-surface-variant">
-                    <span>Runtime</span>
-                    <span class="text-emerald-400 font-bold">v0.3.7</span>
-                </div>
+            <div class="mt-auto p-3 rounded-lg bg-surface-container-high/80 border border-outline-variant/40 font-mono text-[11px] space-y-1">
+                <div class="flex justify-between text-on-surface-variant"><span>SDK</span><span class="text-emerald-400 font-bold">v0.3.1</span></div>
+                <div class="flex justify-between text-on-surface-variant"><span>Runtime</span><span class="text-emerald-400 font-bold">v0.3.7</span></div>
+                <div class="flex justify-between text-on-surface-variant"><span>Schema</span><span class="text-emerald-400 font-bold">v0.3.0</span></div>
             </div>
         </aside>
 
         <!-- Main Content Area -->
-        <main class="flex-1 md:ml-[280px] px-6 md:px-12 py-10 overflow-y-auto">
-            <div class="max-w-4xl mx-auto">
+        <main class="flex-1 md:ml-[280px] px-6 md:px-12 py-8 overflow-y-auto">
+            <div class="max-w-4xl mx-auto space-y-10">
 
-                <!-- TAB 1: Introduction & Architecture -->
-                <div id="tab-intro" class="doc-tab space-y-10">
+                <!-- TAB 1: Architecture & Technical Specifications -->
+                <div id="tab-intro" class="doc-tab space-y-8">
                     <section>
-                        <div class="flex items-center gap-2 mb-4 font-label-mono text-xs text-on-surface-variant uppercase tracking-wider">
+                        <div class="flex items-center gap-2 mb-2 font-mono text-xs text-on-surface-variant uppercase tracking-wider">
                             <span>Documentation</span>
                             <span class="material-symbols-outlined text-sm">chevron_right</span>
-                            <span class="text-primary-fixed-dim font-semibold">Overview & Architecture</span>
+                            <span class="text-primary-fixed-dim font-bold">Architecture Specs</span>
                         </div>
-                        <h1 class="font-headline-lg text-4xl text-on-surface mb-4 tracking-tight font-extrabold">Mesa Protocol Documentation</h1>
-                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-6">
-                            Mesa Protocol is an open-source, durable embedded finance orchestration framework built for Stellar and Soroban. It abstracts complex Web3 transaction pipelines into simple, composable primitives so developers can launch fintech applications in minutes.
+                        <h1 class="font-headline text-3xl md:text-4xl text-on-surface font-extrabold tracking-tight">Mesa Protocol Architecture & Technical Specifications</h1>
+                        <p class="font-body text-base text-on-surface-variant leading-relaxed mt-3">
+                            Mesa Protocol provides a <strong>type-safe, durable state machine runtime</strong> for complex financial transactions on Stellar and Soroban. It replaces imperative SDK boilerplate with declarative workflow definitions that survive server restarts, network congestion, and compliance delays.
                         </p>
                     </section>
 
-                    <!-- Core Theory: Why Web3 Financial Workflows are Hard -->
-                    <section class="glass-panel p-6 rounded-2xl space-y-4">
-                        <h2 class="font-headline-md text-xl font-bold text-emerald-400 flex items-center gap-2">
-                            <span class="material-symbols-outlined">lightbulb</span> Simple Theory: Why Orchestration Matters
+                    <!-- Why Orchestration: Simple Theory -->
+                    <section class="glass-panel p-6 rounded-xl space-y-4">
+                        <h2 class="font-headline text-lg font-bold text-emerald-400 flex items-center gap-2">
+                            <span class="material-symbols-outlined">lightbulb</span> Technical Core: Why Durable Orchestration Matters
                         </h2>
-                        <p class="font-body-md text-sm text-on-surface-variant leading-relaxed">
-                            In traditional software, API calls either succeed or fail instantly. In blockchain financial applications, multi-step payments involve <strong>asynchronous network settlement, compliance holds, anchor webviews, and smart contract execution</strong>.
+                        <p class="text-xs text-on-surface-variant leading-relaxed">
+                            Web3 payment pipelines combine synchronous blockchain operations with asynchronous external dependencies (e.g., SEP-24 Anchor deposit callbacks, KYC manual sign-offs, and Soroban WASM contract execution). If a Node.js process crashes or experiences HTTP timeouts mid-pipeline, traditional in-memory <code class="text-primary">try/catch</code> blocks leave user funds stuck in inconsistent states.
                         </p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-label-mono text-xs pt-2">
-                            <div class="p-4 rounded-xl bg-black/50 border border-red-500/20 space-y-1">
-                                <span class="text-red-400 font-bold text-sm block">❌ Without Orchestration</span>
-                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
-                                    If a server crashes at Step 3 of a 4-step cross-border transfer, funds are stuck mid-flight. Retrying raw transactions causes <strong>double-spends or sequence number errors</strong>.
-                                </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs pt-2">
+                            <div class="p-4 rounded-lg bg-black/60 border border-red-500/30 space-y-2">
+                                <span class="text-red-400 font-bold text-xs block flex items-center gap-1"><span class="material-symbols-outlined text-sm">close</span> Raw Stellar SDK (Imperative)</span>
+                                <ul class="text-on-surface-variant text-[11px] space-y-1.5 list-disc pl-4">
+                                    <li>State lost on process crash or restart</li>
+                                    <li>Sequence number collisions on retry</li>
+                                    <li>No built-in compensation / refund mechanism</li>
+                                    <li>Requires 150+ lines of custom glue code per endpoint</li>
+                                </ul>
                             </div>
-                            <div class="p-4 rounded-xl bg-black/50 border border-emerald-500/20 space-y-1">
-                                <span class="text-emerald-400 font-bold text-sm block">✅ With Mesa Orchestration</span>
-                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
-                                    Every step transition is <strong>checkpointed to database storage</strong>. If a server restarts, Mesa resumes right where it left off, automatically retrying Horizon calls safely.
-                                </p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- System Architecture Diagram (3 Tiers) -->
-                    <section class="glass-panel p-6 rounded-2xl space-y-5">
-                        <div class="flex justify-between items-center">
-                            <h2 class="font-headline-md text-xl font-bold text-primary flex items-center gap-2">
-                                <span class="material-symbols-outlined">account_tree</span> 3-Tier System Architecture
-                            </h2>
-                            <span class="px-2.5 py-1 bg-primary/10 text-primary font-label-mono text-[10px] rounded font-bold">PRODUCTION BLUEPRINT</span>
-                        </div>
-
-                        <div class="space-y-4 font-label-mono text-xs">
-                            <!-- Tier 1 -->
-                            <div class="p-4 rounded-xl bg-primary/5 border border-primary/20 space-y-2">
-                                <div class="flex items-center gap-2 text-primary font-bold text-sm">
-                                    <span class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px]">1</span>
-                                    LAYER 1 — Visual Studio & SDK Layer (@mesaprotocol/sdk)
-                                </div>
-                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
-                                    Developers define financial workflows visually in <strong>Mesa Studio Canvas</strong> or programmatically using the fluent method-chaining TypeScript SDK.
-                                </p>
-                            </div>
-
-                            <!-- Arrow -->
-                            <div class="text-center text-outline-variant text-sm font-bold">↓ JSON AST Flow Definition ↓</div>
-
-                            <!-- Tier 2 -->
-                            <div class="p-4 rounded-xl bg-secondary/5 border border-secondary/20 space-y-2">
-                                <div class="flex items-center gap-2 text-secondary font-bold text-sm">
-                                    <span class="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center text-[10px]">2</span>
-                                    LAYER 2 — Durable Runtime Engine (@mesaprotocol/runtime)
-                                </div>
-                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
-                                    The core engine manages <strong>state persistence (Postgres/InMemoryPool)</strong>, non-blocking step scheduling, webhook suspension keys, and Saga rollback compensations.
-                                </p>
-                            </div>
-
-                            <!-- Arrow -->
-                            <div class="text-center text-outline-variant text-sm font-bold">↓ Executable RPC Operations & Signatures ↓</div>
-
-                            <!-- Tier 3 -->
-                            <div class="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-2">
-                                <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
-                                    <span class="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-[10px]">3</span>
-                                    LAYER 3 — Stellar Blockchain Infrastructure
-                                </div>
-                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
-                                    Direct integration with <strong>Stellar Horizon RPC</strong> (on-chain payments), <strong>Soroban Smart Contracts</strong> (WASM RPC), <strong>SEP-10</strong> (Web Auth), and <strong>SEP-24</strong> (Anchors).
-                                </p>
+                            <div class="p-4 rounded-lg bg-black/60 border border-emerald-500/30 space-y-2">
+                                <span class="text-emerald-400 font-bold text-xs block flex items-center gap-1"><span class="material-symbols-outlined text-sm">check</span> Mesa Protocol Runtime (Durable)</span>
+                                <ul class="text-on-surface-variant text-[11px] space-y-1.5 list-disc pl-4">
+                                    <li>Every step transition checkpointed to database</li>
+                                    <li>Resumes seamlessly at exact step after server reboot</li>
+                                    <li>Automated Saga pattern compensating refunds</li>
+                                    <li>Declarative JSON AST generated from TypeScript SDK</li>
+                                </ul>
                             </div>
                         </div>
                     </section>
 
-                    <!-- Workflow Execution Lifecycle -->
-                    <section class="glass-panel p-6 rounded-2xl space-y-4">
-                        <h2 class="font-headline-md text-xl font-bold text-secondary flex items-center gap-2">
-                            <span class="material-symbols-outlined">timeline</span> Step-by-Step Execution Lifecycle
+                    <!-- 3-Tier System Architecture Blueprint -->
+                    <section class="glass-panel p-6 rounded-xl space-y-4">
+                        <h2 class="font-headline text-lg font-bold text-primary flex items-center gap-2">
+                            <span class="material-symbols-outlined">layers</span> 3-Tier System Architecture Blueprint
                         </h2>
-                        <div class="grid grid-cols-1 md:grid-cols-5 gap-3 font-label-mono text-[11px]">
-                            <div class="p-3 rounded-lg bg-black/50 border border-outline-variant/30 text-center space-y-1">
-                                <span class="text-primary font-bold block">1. Define</span>
-                                <span class="text-on-surface-variant text-[10px]">Studio / SDK generates JSON AST</span>
+                        <div class="space-y-3 font-mono text-xs">
+                            <div class="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-1">
+                                <span class="text-primary font-bold block text-xs">Tier 1: Developer SDK & Studio Canvas (@mesaprotocol/sdk & @mesaprotocol/codegen)</span>
+                                <p class="text-on-surface-variant text-[11px]">Fluent method-chaining builder that validates steps against canonical Zod schemas and generates immutable JSON Flow Definitions.</p>
                             </div>
-                            <div class="p-3 rounded-lg bg-black/50 border border-outline-variant/30 text-center space-y-1">
-                                <span class="text-primary font-bold block">2. Enqueue</span>
-                                <span class="text-on-surface-variant text-[10px]">Runtime stores Execution in DB</span>
+                            <div class="text-center text-outline-variant text-xs font-bold">↓ JSON AST Flow Definition (id, version, steps) ↓</div>
+                            <div class="p-4 rounded-lg bg-secondary/5 border border-secondary/20 space-y-1">
+                                <span class="text-secondary font-bold block text-xs">Tier 2: Durable Runtime Engine & Store (@mesaprotocol/runtime)</span>
+                                <p class="text-on-surface-variant text-[11px]">Postgres / InMemoryPool state store, 2-second polling scheduler, webhook HMAC verification, and Saga rollback compensator.</p>
                             </div>
-                            <div class="p-3 rounded-lg bg-black/50 border border-outline-variant/30 text-center space-y-1">
-                                <span class="text-secondary font-bold block">3. Execute</span>
-                                <span class="text-on-surface-variant text-[10px]">Provider processes step logic</span>
+                            <div class="text-center text-outline-variant text-xs font-bold">↓ Signed Transactions & RPC Payloads ↓</div>
+                            <div class="p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20 space-y-1">
+                                <span class="text-emerald-400 font-bold block text-xs">Tier 3: Stellar Blockchain Infrastructure</span>
+                                <p class="text-on-surface-variant text-[11px]">Stellar Horizon RPC (on-chain XLM / token payments), Soroban RPC (WASM smart contracts), SEP-10 Auth, and SEP-24 Anchors.</p>
                             </div>
-                            <div class="p-3 rounded-lg bg-black/50 border border-outline-variant/30 text-center space-y-1">
-                                <span class="text-amber-300 font-bold block">4. Checkpoint</span>
-                                <span class="text-on-surface-variant text-[10px]">Outputs saved to DB state</span>
-                            </div>
-                            <div class="p-3 rounded-lg bg-black/50 border border-outline-variant/30 text-center space-y-1">
-                                <span class="text-emerald-400 font-bold block">5. Settle</span>
-                                <span class="text-on-surface-variant text-[10px]">Signed TX submitted to Horizon</span>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- What Mesa Abstracts -->
-                    <section class="glass-panel p-6 rounded-2xl space-y-4">
-                        <h2 class="font-headline-md text-xl font-bold text-primary flex items-center gap-2">
-                            <span class="material-symbols-outlined">auto_fix_high</span> What Mesa Abstracts for Developers
-                        </h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-label-mono text-xs">
-                            <div class="p-4 rounded-xl bg-black/50 border border-outline-variant/30 space-y-1">
-                                <span class="text-primary font-bold text-sm block">1. Stellar SDK Boilerplate</span>
-                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
-                                    Eliminates manual Keypair loading, Account sequence fetching, Fee estimation, and TransactionBuilder construction.
-                                </p>
-                            </div>
-                            <div class="p-4 rounded-xl bg-black/50 border border-outline-variant/30 space-y-1">
-                                <span class="text-secondary font-bold text-sm block">2. Soroban Smart Contracts</span>
-                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
-                                    Handles Soroban RPC connection, XDR parameter serialization, and contract invocation without custom glue code.
-                                </p>
-                            </div>
-                            <div class="p-4 rounded-xl bg-black/50 border border-outline-variant/30 space-y-1">
-                                <span class="text-amber-300 font-bold text-sm block">3. SEP Protocols (10 & 24)</span>
-                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
-                                    Built-in SEP-10 Web-Auth challenge signing & JWT caching, plus SEP-24 Anchor deposit/withdrawal webviews.
-                                </p>
-                            </div>
-                            <div class="p-4 rounded-xl bg-black/50 border border-outline-variant/30 space-y-1">
-                                <span class="text-emerald-400 font-bold text-sm block">4. Durable Saga Rollbacks</span>
-                                <p class="text-on-surface-variant text-[11px] leading-relaxed">
-                                    State persistence via PostgreSQL/InMemoryPool with automatic compensating transactions if a step fails.
-                                </p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Feature Grid -->
-                    <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="glass-panel p-6 rounded-xl glow-hover flex flex-col gap-3">
-                            <span class="material-symbols-outlined text-primary text-3xl">replay</span>
-                            <h3 class="font-headline-md text-lg text-on-surface font-bold">Durable Retries</h3>
-                            <p class="text-on-surface-variant text-xs leading-relaxed">
-                                Ledger congestion or Horizon RPC timeouts trigger automatic exponential backoff retry loops with zero data loss.
-                            </p>
-                        </div>
-                        <div class="glass-panel p-6 rounded-xl glow-hover flex flex-col gap-3">
-                            <span class="material-symbols-outlined text-secondary text-3xl">database</span>
-                            <h3 class="font-headline-md text-lg text-on-surface font-bold">State Checkpointing</h3>
-                            <p class="text-on-surface-variant text-xs leading-relaxed">
-                                State transitions are saved immediately to database storage so workflow progress survives server restarts.
-                            </p>
-                        </div>
-                        <div class="glass-panel p-6 rounded-xl glow-hover flex flex-col gap-3">
-                            <span class="material-symbols-outlined text-emerald-400 text-3xl">verified_user</span>
-                            <h3 class="font-headline-md text-lg text-on-surface font-bold">Secure Secret Refs</h3>
-                            <p class="text-on-surface-variant text-xs leading-relaxed">
-                                Private keys are referenced via environment aliases (<code class="text-primary">SENDER_SECRET</code>) and never written to disk or logs.
-                            </p>
                         </div>
                     </section>
                 </div>
 
-                <!-- TAB 2: Quickstart (3 Mins) -->
+                <!-- TAB 2: Quickstart & Environment Configuration -->
                 <div id="tab-quickstart" class="doc-tab hidden space-y-8">
                     <section>
-                        <div class="flex items-center gap-2 mb-4 font-label-mono text-xs text-on-surface-variant uppercase tracking-wider">
+                        <div class="flex items-center gap-2 mb-2 font-mono text-xs text-on-surface-variant uppercase tracking-wider">
                             <span>Documentation</span>
                             <span class="material-symbols-outlined text-sm">chevron_right</span>
-                            <span class="text-primary-fixed-dim font-semibold">Quickstart</span>
+                            <span class="text-primary-fixed-dim font-bold">Quickstart</span>
                         </div>
-                        <h1 class="font-headline-lg text-4xl text-on-surface mb-2 tracking-tight font-extrabold">3-Minute Quickstart Guide</h1>
-                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
-                            Set up Mesa SDK in your Node.js or Next.js project and run your first workflow in 3 simple steps.
-                        </p>
+                        <h1 class="font-headline text-3xl font-extrabold text-on-surface tracking-tight">Quickstart & Environment Setup</h1>
+                        <p class="font-body text-base text-on-surface-variant mt-2">Set up Mesa Protocol in your backend Node.js application in under 3 minutes.</p>
                     </section>
 
-                    <!-- Step 1 -->
+                    <!-- Package Installation -->
                     <div class="space-y-3">
-                        <div class="flex items-center gap-3">
-                            <span class="w-8 h-8 rounded-full bg-primary/20 text-primary font-label-mono font-bold flex items-center justify-center border border-primary/40">1</span>
-                            <h3 class="font-headline-md text-lg font-bold text-on-surface">Install NPM Packages</h3>
-                        </div>
-                        <div class="bg-black/80 rounded-xl p-4 border border-outline-variant/40 relative font-label-mono text-xs">
-                            <div class="flex justify-between items-center mb-2 border-b border-outline-variant/20 pb-2">
-                                <span class="text-on-surface-variant">bash</span>
-                                <button onclick="copyCode('qs-step1')" class="px-2.5 py-1 bg-surface-container-high hover:bg-surface-bright rounded text-on-surface flex items-center gap-1 transition">
-                                    <span class="material-symbols-outlined text-xs">content_copy</span> Copy
-                                </button>
+                        <h3 class="font-headline text-base font-bold text-on-surface">1. Install NPM Workspace Packages</h3>
+                        <div class="bg-black/90 rounded-xl p-4 border border-outline-variant/40 font-mono text-xs relative">
+                            <div class="flex justify-between items-center mb-2 border-b border-outline-variant/20 pb-2 text-on-surface-variant">
+                                <span>bash</span>
+                                <button onclick="copyCode('qs-install')" class="px-2 py-1 bg-surface-container-high rounded hover:bg-surface-bright text-on-surface transition">Copy</button>
                             </div>
-                            <code id="qs-step1" class="text-primary-container block">npm install @mesaprotocol/sdk @mesaprotocol/runtime @mesaprotocol/schema</code>
+                            <code id="qs-install" class="text-primary-container block">npm install @mesaprotocol/sdk @mesaprotocol/runtime @mesaprotocol/schema dotenv</code>
                         </div>
                     </div>
 
-                    <!-- Step 2 -->
+                    <!-- Environment Variables Reference Table -->
                     <div class="space-y-3">
-                        <div class="flex items-center gap-3">
-                            <span class="w-8 h-8 rounded-full bg-secondary/20 text-secondary font-label-mono font-bold flex items-center justify-center border border-secondary/40">2</span>
-                            <h3 class="font-headline-md text-lg font-bold text-on-surface">Configure Environment Variables</h3>
-                        </div>
-                        <div class="bg-black/80 rounded-xl p-4 border border-outline-variant/40 relative font-label-mono text-xs">
-                            <div class="flex justify-between items-center mb-2 border-b border-outline-variant/20 pb-2">
-                                <span class="text-on-surface-variant">.env</span>
-                                <button onclick="copyCode('qs-step2')" class="px-2.5 py-1 bg-surface-container-high hover:bg-surface-bright rounded text-on-surface flex items-center gap-1 transition">
-                                    <span class="material-symbols-outlined text-xs">content_copy</span> Copy
-                                </button>
-                            </div>
-                            <code id="qs-step2" class="text-emerald-300 block">SENDER_SECRET=SD6K5ODP2TKUDFEX6E5FQUZMKCJZDJPM35OZAA3AP6VEMVRROEC5MRQP
-HORIZON_URL=https://horizon-testnet.stellar.org
-STELLAR_NETWORK=TESTNET
-PORT=3001</code>
+                        <h3 class="font-headline text-base font-bold text-on-surface">2. Environment Configuration Reference (.env)</h3>
+                        <div class="overflow-x-auto rounded-xl border border-outline-variant/40 glass-panel">
+                            <table class="w-full text-left font-mono text-xs">
+                                <thead>
+                                    <tr class="bg-surface-container-high text-primary border-b border-outline-variant/30">
+                                        <th class="p-3">Variable</th>
+                                        <th class="p-3">Type</th>
+                                        <th class="p-3">Default</th>
+                                        <th class="p-3">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-outline-variant/20 text-on-surface-variant">
+                                    <tr>
+                                        <td class="p-3 text-primary font-bold">SENDER_SECRET</td>
+                                        <td class="p-3">SecretRef</td>
+                                        <td class="p-3 text-outline">Required</td>
+                                        <td class="p-3">Stellar secret key (S-address) used for signingHorizon transactions.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 text-primary font-bold">HORIZON_URL</td>
+                                        <td class="p-3">URL</td>
+                                        <td class="p-3 text-outline">https://horizon-testnet.stellar.org</td>
+                                        <td class="p-3">Horizon RPC endpoint (switch to horizon.stellar.org for Mainnet).</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 text-primary font-bold">STELLAR_NETWORK</td>
+                                        <td class="p-3">String</td>
+                                        <td class="p-3 text-outline">TESTNET</td>
+                                        <td class="p-3">Stellar Network passphrase identifier (<code class="text-primary">TESTNET</code> or <code class="text-primary">PUBLIC</code>).</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 text-primary font-bold">PORT</td>
+                                        <td class="p-3">Number</td>
+                                        <td class="p-3 text-outline">3001</td>
+                                        <td class="p-3">HTTP Port for Mesa Runtime REST API server.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 text-primary font-bold">DATABASE_URL</td>
+                                        <td class="p-3">URI / mock</td>
+                                        <td class="p-3 text-outline">mock</td>
+                                        <td class="p-3">Postgres connection URI. Set to <code class="text-emerald-400">mock</code> for zero-dependency in-memory testing.</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 text-primary font-bold">WEBHOOK_HMAC_SECRET</td>
+                                        <td class="p-3">String</td>
+                                        <td class="p-3 text-outline">Optional</td>
+                                        <td class="p-3">Secret key for verifying incoming webhook HMAC signatures (<code class="text-secondary">X-Mesa-Signature</code>).</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <!-- Step 3 -->
+                    <!-- Complete Minimal Server -->
                     <div class="space-y-3">
-                        <div class="flex items-center gap-3">
-                            <span class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 font-label-mono font-bold flex items-center justify-center border border-emerald-500/40">3</span>
-                            <h3 class="font-headline-md text-lg font-bold text-on-surface">Create & Run Your First Workflow</h3>
-                        </div>
-                        <div class="bg-black/80 rounded-xl p-4 border border-outline-variant/40 relative font-label-mono text-xs">
-                            <div class="flex justify-between items-center mb-2 border-b border-outline-variant/20 pb-2">
-                                <span class="text-on-surface-variant">mesa-server.ts</span>
-                                <button onclick="copyCode('qs-step3')" class="px-2.5 py-1 bg-surface-container-high hover:bg-surface-bright rounded text-on-surface flex items-center gap-1 transition">
-                                    <span class="material-symbols-outlined text-xs">content_copy</span> Copy
-                                </button>
+                        <h3 class="font-headline text-base font-bold text-on-surface">3. Complete Server Entrypoint (mesa-server.ts)</h3>
+                        <div class="bg-black/90 rounded-xl p-4 border border-outline-variant/40 font-mono text-xs relative">
+                            <div class="flex justify-between items-center mb-2 border-b border-outline-variant/20 pb-2 text-on-surface-variant">
+                                <span>mesa-server.ts</span>
+                                <button onclick="copyCode('qs-server')" class="px-2 py-1 bg-surface-container-high rounded hover:bg-surface-bright text-on-surface transition">Copy</button>
                             </div>
-                            <pre id="qs-step3" class="text-on-surface leading-relaxed overflow-x-auto"><span class="text-secondary">import</span> <span class="text-primary-container">'dotenv/config'</span>;
+                            <pre id="qs-server" class="text-on-surface leading-relaxed overflow-x-auto"><span class="text-secondary">import</span> <span class="text-primary-container">'dotenv/config'</span>;
 <span class="text-secondary">import</span> { startServer } <span class="text-secondary">from</span> <span class="text-primary-container">'@mesaprotocol/runtime'</span>;
+<span class="text-secondary">import</span> { Mesa } <span class="text-secondary">from</span> <span class="text-primary-container">'@mesaprotocol/sdk'</span>;
+
+<span class="text-[#849495]">// Define Workflow using Mesa Fluent Builder</span>
+<span class="text-secondary">const</span> flow = Mesa.flow(<span class="text-primary-container">'Remittance Payment'</span>, <span class="text-primary-container">'remittance-flow'</span>)
+  .sep10Auth({ domain: <span class="text-primary-container">'anchor.stellar.org'</span> })
+  .delay({ seconds: <span class="text-secondary-fixed">2</span> })
+  .payment({ asset: <span class="text-primary-container">'XLM'</span>, amount: <span class="text-secondary-fixed">50</span>, to: <span class="text-primary-container">'GA7IL52JSHMHWCP6HEPYE6IXIR5IZGDEISUFSJVPKCAU7NE7A6EJOFMN'</span> })
+  .build();
 
 <span class="text-secondary">const</span> port = Number(process.env.PORT || <span class="text-secondary-fixed">3001</span>);
 
-startServer(port).then(() => {
-  console.log(<span class="text-primary-container">`🚀 Mesa Production Runtime Server running on http://localhost:${port}`</span>);
-  console.log(<span class="text-primary-container">`📊 Dashboard Console: http://localhost:${port}/dashboard`</span>);
-});</pre>
+<span class="text-secondary">async function</span> main() {
+  <span class="text-[#849495]">// 1. Initialize Runtime HTTP Server & DB Pool</span>
+  <span class="text-secondary">await</span> startServer(port);
+
+  <span class="text-[#849495]">// 2. Auto-Register Workflow Definition</span>
+  <span class="text-secondary">await</span> Mesa.register(flow);
+
+  console.log(<span class="text-primary-container">`🚀 Mesa Server running on http://localhost:${port}`</span>);
+}
+
+main().catch(console.error);</pre>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB 3: 9 Core Providers Reference -->
+                <!-- TAB 3: 9 Core Execution Providers Reference -->
                 <div id="tab-providers" class="doc-tab hidden space-y-8">
                     <section>
-                        <div class="flex items-center gap-2 mb-4 font-label-mono text-xs text-on-surface-variant uppercase tracking-wider">
+                        <div class="flex items-center gap-2 mb-2 font-mono text-xs text-on-surface-variant uppercase tracking-wider">
                             <span>Documentation</span>
                             <span class="material-symbols-outlined text-sm">chevron_right</span>
-                            <span class="text-primary-fixed-dim font-semibold">Providers Reference</span>
+                            <span class="text-primary-fixed-dim font-bold">Providers Reference</span>
                         </div>
-                        <h1 class="font-headline-lg text-4xl text-on-surface mb-2 tracking-tight font-extrabold">9 Core Execution Providers</h1>
-                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
-                            Mesa features 9 modular execution providers that handle everything from Stellar payments and SEP anchors to Soroban smart contracts and Saga rollbacks.
-                        </p>
+                        <h1 class="font-headline text-3xl font-extrabold text-on-surface tracking-tight">9 Built-in Execution Providers</h1>
+                        <p class="font-body text-base text-on-surface-variant mt-2">Detailed technical specifications, parameter schemas, and output states for all 9 Mesa execution primitives.</p>
                     </section>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-label-mono text-xs">
-                        <!-- Provider 1: sep10 -->
-                        <div class="glass-panel p-5 rounded-xl border border-primary/20 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-primary font-bold text-sm">1. sep10</span>
-                                <span class="px-2 py-0.5 bg-primary/10 text-primary rounded text-[10px]">Stellar Auth</span>
-                            </div>
-                            <p class="text-on-surface-variant text-[11px]">Executes SEP-10 Web-Auth challenge signing & retrieves cached JWT access tokens.</p>
-                            <code class="text-primary-container bg-black/80 p-2 rounded block border border-outline-variant/30">.sep10Auth({ domain: 'anchor.stellar.org' })</code>
+                    <!-- Provider 1: sep10 -->
+                    <div class="glass-panel p-6 rounded-xl space-y-3 border-l-4 border-l-primary">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-mono font-bold text-primary text-base">1. Provider: sep10 (SEP-10 Web Auth)</h3>
+                            <span class="px-2 py-0.5 bg-primary/10 text-primary font-mono text-[10px] rounded font-bold">STELLAR AUTH</span>
                         </div>
-
-                        <!-- Provider 2: anchor -->
-                        <div class="glass-panel p-5 rounded-xl border border-secondary/20 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-secondary font-bold text-sm">2. anchor</span>
-                                <span class="px-2 py-0.5 bg-secondary/10 text-secondary rounded text-[10px]">SEP-24 Webview</span>
-                            </div>
-                            <p class="text-on-surface-variant text-[11px]">Triggers interactive anchor deposit/withdrawal flows and returns webview interactive URLs.</p>
-                            <code class="text-secondary-container bg-black/80 p-2 rounded block border border-outline-variant/30">.anchor({ action: 'deposit', asset: 'USDC' })</code>
+                        <p class="text-xs text-on-surface-variant">Executes SEP-10 challenge transaction request, signs with private key secret reference, submits challenge back to anchor auth server, and returns cached JWT token.</p>
+                        <div class="bg-black/80 p-3 rounded-lg font-mono text-xs">
+                            <span class="text-secondary block mb-1">SDK Builder Method:</span>
+                            <code class="text-primary-container block">.sep10Auth({ domain: 'anchor.stellar.org', accountSecretRef: 'SENDER_SECRET' })</code>
                         </div>
-
-                        <!-- Provider 3: soroban -->
-                        <div class="glass-panel p-5 rounded-xl border border-emerald-500/20 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-emerald-400 font-bold text-sm">3. soroban</span>
-                                <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[10px]">Smart Contracts</span>
-                            </div>
-                            <p class="text-on-surface-variant text-[11px]">Invokes Soroban WASM smart contract functions via RPC with typed parameter serialization.</p>
-                            <code class="text-emerald-300 bg-black/80 p-2 rounded block border border-outline-variant/30">.soroban({ contractId: 'C...', method: 'transfer' })</code>
+                        <div class="font-mono text-[11px] text-on-surface-variant space-y-1">
+                            <span class="text-on-surface font-bold">Emitted Context Output:</span>
+                            <code class="text-emerald-400 block bg-black/60 p-2 rounded">{ sep10Auth: true, authenticatedDomain: "anchor.stellar.org", jwtToken: "sep10_jwt_..." }</code>
                         </div>
+                    </div>
 
-                        <!-- Provider 4: stellar -->
-                        <div class="glass-panel p-5 rounded-xl border border-amber-500/20 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-amber-300 font-bold text-sm">4. stellar</span>
-                                <span class="px-2 py-0.5 bg-amber-500/10 text-amber-300 rounded text-[10px]">Horizon Primitives</span>
-                            </div>
-                            <p class="text-on-surface-variant text-[11px]">Submits native XLM & token payment operations with automatic Horizon fee management.</p>
-                            <code class="text-amber-200 bg-black/80 p-2 rounded block border border-outline-variant/30">.payment({ asset: 'XLM', amount: 50, to: 'G...' })</code>
+                    <!-- Provider 2: anchor -->
+                    <div class="glass-panel p-6 rounded-xl space-y-3 border-l-4 border-l-secondary">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-mono font-bold text-secondary text-base">2. Provider: anchor (SEP-24 Webview)</h3>
+                            <span class="px-2 py-0.5 bg-secondary/10 text-secondary font-mono text-[10px] rounded font-bold">SEP-24 ANCHOR</span>
                         </div>
-
-                        <!-- Provider 5: approval -->
-                        <div class="glass-panel p-5 rounded-xl border border-purple-500/20 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-purple-300 font-bold text-sm">5. approval</span>
-                                <span class="px-2 py-0.5 bg-purple-500/10 text-purple-300 rounded text-[10px]">Compliance Hold</span>
-                            </div>
-                            <p class="text-on-surface-variant text-[11px]">Suspends execution state and waits for an operator/compliance manual approval sign-off.</p>
-                            <code class="text-purple-200 bg-black/80 p-2 rounded block border border-outline-variant/30">.approval({ approverRole: 'compliance-officer' })</code>
+                        <p class="text-xs text-on-surface-variant">Initiates interactive SEP-24 deposit or withdrawal flow, returns interactive webview URL, and suspends execution until anchor callback notifies successful funding.</p>
+                        <div class="bg-black/80 p-3 rounded-lg font-mono text-xs">
+                            <span class="text-secondary block mb-1">SDK Builder Method:</span>
+                            <code class="text-secondary-container block">.anchorDeposit({ anchorDomain: 'anchor.stellar.org', assetCode: 'USDC', amount: 100 })</code>
                         </div>
-
-                        <!-- Provider 6: condition -->
-                        <div class="glass-panel p-5 rounded-xl border border-cyan-500/20 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-cyan-300 font-bold text-sm">6. condition</span>
-                                <span class="px-2 py-0.5 bg-cyan-500/10 text-cyan-300 rounded text-[10px]">Dynamic Router</span>
-                            </div>
-                            <p class="text-on-surface-variant text-[11px]">Evaluates dynamic expression conditions for directed branch routing.</p>
-                            <code class="text-cyan-200 bg-black/80 p-2 rounded block border border-outline-variant/30">.condition({ expression: 'amount >= 100' })</code>
+                        <div class="font-mono text-[11px] text-on-surface-variant space-y-1">
+                            <span class="text-on-surface font-bold">Resumed Output State:</span>
+                            <code class="text-emerald-400 block bg-black/60 p-2 rounded">{ depositedAmount: 100, depositTxHash: "7590ce43...", depositStatus: "COMPLETED" }</code>
                         </div>
+                    </div>
 
-                        <!-- Provider 7: delay -->
-                        <div class="glass-panel p-5 rounded-xl border border-blue-500/20 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-blue-300 font-bold text-sm">7. delay</span>
-                                <span class="px-2 py-0.5 bg-blue-500/10 text-blue-300 rounded text-[10px]">Screening Delay</span>
-                            </div>
-                            <p class="text-on-surface-variant text-[11px]">Schedules retry-safe non-blocking delays (e.g. 5-second sanctions window).</p>
-                            <code class="text-blue-200 bg-black/80 p-2 rounded block border border-outline-variant/30">.delay({ seconds: 5 })</code>
+                    <!-- Provider 3: soroban -->
+                    <div class="glass-panel p-6 rounded-xl space-y-3 border-l-4 border-l-emerald-400">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-mono font-bold text-emerald-400 text-base">3. Provider: soroban (Smart Contracts)</h3>
+                            <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 font-mono text-[10px] rounded font-bold">SOROBAN WASM</span>
                         </div>
-
-                        <!-- Provider 8: webhook -->
-                        <div class="glass-panel p-5 rounded-xl border border-rose-500/20 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-rose-300 font-bold text-sm">8. webhook</span>
-                                <span class="px-2 py-0.5 bg-rose-500/10 text-rose-300 rounded text-[10px]">External Callback</span>
-                            </div>
-                            <p class="text-on-surface-variant text-[11px]">Parks execution until an external HTTP webhook callback resumes the flow.</p>
-                            <code class="text-rose-200 bg-black/80 p-2 rounded block border border-outline-variant/30">POST /webhooks/resume {"suspensionKey": "..."}</code>
+                        <p class="text-xs text-on-surface-variant">Invokes methods on deployed Soroban WASM smart contracts using Soroban RPC. Automatically serializes typed XDR contract parameters.</p>
+                        <div class="bg-black/80 p-3 rounded-lg font-mono text-xs">
+                            <span class="text-secondary block mb-1">SDK Builder Method:</span>
+                            <code class="text-emerald-300 block">.invoke({ contractId: 'CAKJYFD...', method: 'transfer', args: '{"amount": 100}' })</code>
                         </div>
+                    </div>
 
-                        <!-- Provider 9: compensation -->
-                        <div class="glass-panel p-5 rounded-xl border border-red-500/20 space-y-2 md:col-span-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-red-400 font-bold text-sm">9. compensation</span>
-                                <span class="px-2 py-0.5 bg-red-500/10 text-red-400 rounded text-[10px]">Saga Rollback</span>
-                            </div>
-                            <p class="text-on-surface-variant text-[11px]">Executes distributed Saga compensating transactions if downstream steps fail, ensuring user refunds.</p>
-                            <code class="text-red-300 bg-black/80 p-2 rounded block border border-outline-variant/30">.compensate({ reason: 'Refund deposit on payment failure' })</code>
+                    <!-- Provider 4: stellar -->
+                    <div class="glass-panel p-6 rounded-xl space-y-3 border-l-4 border-l-amber-300">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-mono font-bold text-amber-300 text-base">4. Provider: stellar (Payments & Swaps)</h3>
+                            <span class="px-2 py-0.5 bg-amber-500/10 text-amber-300 font-mono text-[10px] rounded font-bold">HORIZON PRIMITIVES</span>
+                        </div>
+                        <p class="text-xs text-on-surface-variant">Handles native XLM payments, custom asset token transfers, and path payment strict receive/send operations on Stellar Horizon RPC.</p>
+                        <div class="bg-black/80 p-3 rounded-lg font-mono text-xs space-y-1">
+                            <span class="text-secondary block">SDK Builder Methods:</span>
+                            <code class="text-amber-200 block">.payment({ to: 'GA7IL...', amount: 50, asset: 'XLM' })</code>
+                            <code class="text-amber-200 block">.pathPayment({ sendAsset: 'USDC', destAsset: 'XLM', sendAmount: 10, destMinAmount: 45, destination: 'GA7IL...' })</code>
+                        </div>
+                    </div>
+
+                    <!-- Provider 5: approval -->
+                    <div class="glass-panel p-6 rounded-xl space-y-3 border-l-4 border-l-purple-400">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-mono font-bold text-purple-400 text-base">5. Provider: approval (Compliance Gate)</h3>
+                            <span class="px-2 py-0.5 bg-purple-500/10 text-purple-400 font-mono text-[10px] rounded font-bold">MANUAL COMPLIANCE</span>
+                        </div>
+                        <p class="text-xs text-on-surface-variant">Suspends workflow execution and waits for an operator or compliance officer to manually approve or reject the transaction via dashboard/webhook.</p>
+                        <div class="bg-black/80 p-3 rounded-lg font-mono text-xs">
+                            <span class="text-secondary block mb-1">SDK Builder Method:</span>
+                            <code class="text-purple-300 block">.manualApproval({ approverRole: 'compliance-officer', timeoutSeconds: 86400 })</code>
+                        </div>
+                    </div>
+
+                    <!-- Provider 6: condition -->
+                    <div class="glass-panel p-6 rounded-xl space-y-3 border-l-4 border-l-cyan-300">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-mono font-bold text-cyan-300 text-base">6. Provider: condition (Branch Router)</h3>
+                            <span class="px-2 py-0.5 bg-cyan-500/10 text-cyan-300 font-mono text-[10px] rounded font-bold">DIRECTED BRANCHING</span>
+                        </div>
+                        <p class="text-xs text-on-surface-variant">Evaluates dynamic boolean expressions over context variables (<code class="text-cyan-200">depositedAmount >= 100</code>, <code class="text-cyan-200">status == APPROVED</code>) and routes execution to <code class="text-primary">ifTrueStep</code> or <code class="text-primary">ifFalseStep</code>.</p>
+                        <div class="bg-black/80 p-3 rounded-lg font-mono text-xs">
+                            <span class="text-secondary block mb-1">SDK Builder Method:</span>
+                            <code class="text-cyan-200 block">.condition({ expression: 'depositedAmount >= 100', ifTrueStep: 3, ifFalseStep: 5 })</code>
+                        </div>
+                    </div>
+
+                    <!-- Provider 7: delay -->
+                    <div class="glass-panel p-6 rounded-xl space-y-3 border-l-4 border-l-blue-400">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-mono font-bold text-blue-400 text-base">7. Provider: delay (Sanctions Timer)</h3>
+                            <span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 font-mono text-[10px] rounded font-bold">NON-BLOCKING TIMER</span>
+                        </div>
+                        <p class="text-xs text-on-surface-variant">Schedules a non-blocking timer delay (e.g. 5-second sanctions hold) using durable scheduler timestamps.</p>
+                        <div class="bg-black/80 p-3 rounded-lg font-mono text-xs">
+                            <code class="text-blue-300 block">.delay({ seconds: 5 })</code>
+                        </div>
+                    </div>
+
+                    <!-- Provider 8: webhook -->
+                    <div class="glass-panel p-6 rounded-xl space-y-3 border-l-4 border-l-rose-400">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-mono font-bold text-rose-400 text-base">8. Provider: webhook (External Callback)</h3>
+                            <span class="px-2 py-0.5 bg-rose-500/10 text-rose-400 font-mono text-[10px] rounded font-bold">EXTERNAL CALLBACK</span>
+                        </div>
+                        <p class="text-xs text-on-surface-variant">Parks execution and exposes a suspension key until an external system POSTs to <code class="text-rose-300">/webhooks/resume</code>.</p>
+                        <div class="bg-black/80 p-3 rounded-lg font-mono text-xs">
+                            <code class="text-rose-300 block">.webhook({ url: 'https://api.myapp.com/callback' })</code>
+                        </div>
+                    </div>
+
+                    <!-- Provider 9: compensation -->
+                    <div class="glass-panel p-6 rounded-xl space-y-3 border-l-4 border-l-red-400">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-mono font-bold text-red-400 text-base">9. Provider: compensation (Saga Rollback)</h3>
+                            <span class="px-2 py-0.5 bg-red-500/10 text-red-400 font-mono text-[10px] rounded font-bold">SAGA REFUND</span>
+                        </div>
+                        <p class="text-xs text-on-surface-variant">Executes distributed Saga compensating transactions to refund users if downstream steps fail permanently.</p>
+                        <div class="bg-black/80 p-3 rounded-lg font-mono text-xs">
+                            <code class="text-red-300 block">.compensate({ refundAddress: 'GBHTYH2...', refundAsset: 'USDC' })</code>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB 4: SDK API Reference -->
-                <div id="tab-sdk" class="doc-tab hidden space-y-8">
+                <!-- TAB 4: Production Code Recipes -->
+                <div id="tab-recipes" class="doc-tab hidden space-y-8">
                     <section>
-                        <div class="flex items-center gap-2 mb-4 font-label-mono text-xs text-on-surface-variant uppercase tracking-wider">
+                        <div class="flex items-center gap-2 mb-2 font-mono text-xs text-on-surface-variant uppercase tracking-wider">
                             <span>Documentation</span>
                             <span class="material-symbols-outlined text-sm">chevron_right</span>
-                            <span class="text-primary-fixed-dim font-semibold">SDK API Reference</span>
+                            <span class="text-primary-fixed-dim font-bold">Code Recipes</span>
                         </div>
-                        <h1 class="font-headline-lg text-4xl text-on-surface mb-2 tracking-tight font-extrabold">Fluent FlowBuilder SDK API</h1>
-                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
-                            The Mesa TypeScript SDK uses a type-safe method chaining builder pattern to assemble financial workflows.
-                        </p>
+                        <h1 class="font-headline text-3xl font-extrabold text-on-surface tracking-tight">Production Code Recipes</h1>
+                        <p class="font-body text-base text-on-surface-variant mt-2">End-to-end runnable TypeScript code examples for real-world Stellar financial applications.</p>
                     </section>
 
-                    <div class="bg-black/80 p-5 rounded-xl border border-outline-variant/40 font-label-mono text-xs text-on-surface leading-relaxed overflow-x-auto">
+                    <!-- Recipe A: Cross-Border Remittance -->
+                    <div class="space-y-3">
+                        <h3 class="font-headline text-lg font-bold text-primary flex items-center gap-2">
+                            <span class="material-symbols-outlined">payments</span> Recipe A: Cross-Border Remittance Corridor
+                        </h3>
+                        <div class="bg-black/90 p-4 rounded-xl border border-outline-variant/40 font-mono text-xs leading-relaxed overflow-x-auto">
 <pre><span class="text-secondary">import</span> { Mesa } <span class="text-secondary">from</span> <span class="text-primary-container">'@mesaprotocol/sdk'</span>;
 
-<span class="text-secondary">export const</span> flow = Mesa.flow(<span class="text-primary-container">'Cross-Border Remittance Corridor'</span>, <span class="text-primary-container">'cross-border-remittance-corridor'</span>)
-  <span class="text-outline">// 1. SEP-10 Authentication Challenge</span>
-  .sep10Auth({
-    domain: <span class="text-primary-container">'anchor.stellar.org'</span>,
-    accountSecretRef: <span class="text-primary-container">'SENDER_SECRET'</span>
-  })
-  <span class="text-outline">// 2. Sanctions Screening Window (2 seconds)</span>
-  .delay({ seconds: <span class="text-secondary-fixed">2</span> })
-  <span class="text-outline">// 3. Compliance Manual Approval Gate</span>
-  .approval({ approverRole: <span class="text-primary-container">'compliance-officer'</span> })
-  <span class="text-outline">// 4. Stellar XLM Payment</span>
+<span class="text-secondary">export const</span> remittanceFlow = Mesa.flow(<span class="text-primary-container">'USDC to XLM Remittance'</span>, <span class="text-primary-container">'remittance-corridor'</span>)
+  <span class="text-[#849495]">// 1. Authenticate with Anchor via SEP-10</span>
+  .sep10Auth({ domain: <span class="text-primary-container">'anchor.stellar.org'</span> })
+  <span class="text-[#849495]">// 2. Trigger SEP-24 Interactive Deposit</span>
+  .anchorDeposit({ anchorDomain: <span class="text-primary-container">'anchor.stellar.org'</span>, assetCode: <span class="text-primary-container">'USDC'</span>, amount: <span class="text-secondary-fixed">100</span> })
+  <span class="text-[#849495]">// 3. Compliance Hold (5 seconds)</span>
+  .delay({ seconds: <span class="text-secondary-fixed">5</span> })
+  <span class="text-[#849495]">// 4. Operator Manual Sign-Off Gate</span>
+  .manualApproval({ approverRole: <span class="text-primary-container">'compliance-officer'</span> })
+  <span class="text-[#849495]">// 5. Execute On-Chain XLM Payout</span>
   .payment({
     asset: <span class="text-primary-container">'XLM'</span>,
     amount: <span class="text-secondary-fixed">50</span>,
     to: <span class="text-primary-container">'GA7IL52JSHMHWCP6HEPYE6IXIR5IZGDEISUFSJVPKCAU7NE7A6EJOFMN'</span>,
-    senderSecretRef: <span class="text-primary-container">'SENDER_SECRET'</span>,
-    horizonUrl: <span class="text-primary-container">'https://horizon-testnet.stellar.org'</span>
+    senderSecretRef: <span class="text-primary-container">'SENDER_SECRET'</span>
   })
   .build();</pre>
+                        </div>
                     </div>
-                </div>
 
-                <!-- TAB 5: Code Comparison (SDK vs Mesa) -->
-                <div id="tab-comparison" class="doc-tab hidden space-y-8">
-                    <section>
-                        <div class="flex items-center gap-2 mb-4 font-label-mono text-xs text-on-surface-variant uppercase tracking-wider">
-                            <span>Documentation</span>
-                            <span class="material-symbols-outlined text-sm">chevron_right</span>
-                            <span class="text-primary-fixed-dim font-semibold">Code Comparison</span>
-                        </div>
-                        <h1 class="font-headline-lg text-4xl text-on-surface mb-2 tracking-tight font-extrabold">Stellar SDK vs. Mesa Protocol</h1>
-                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
-                            See how Mesa eliminates over 150 lines of repetitive Stellar SDK boilerplate while adding state persistence and retries.
-                        </p>
-                    </section>
+                    <!-- Recipe B: Soroban Smart Contract Escrow Vault -->
+                    <div class="space-y-3">
+                        <h3 class="font-headline text-lg font-bold text-secondary flex items-center gap-2">
+                            <span class="material-symbols-outlined">security</span> Recipe B: Soroban Smart Contract Escrow Vault
+                        </h3>
+                        <div class="bg-black/90 p-4 rounded-xl border border-outline-variant/40 font-mono text-xs leading-relaxed overflow-x-auto">
+<pre><span class="text-secondary">import</span> { Mesa } <span class="text-secondary">from</span> <span class="text-primary-container">'@mesaprotocol/sdk'</span>;
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 font-label-mono text-xs">
-                        <!-- Without Mesa -->
-                        <div class="glass-panel p-5 rounded-xl border border-red-500/30 space-y-3">
-                            <span class="text-red-400 font-bold text-sm block flex items-center gap-1.5">
-                                <span class="material-symbols-outlined text-base">cancel</span> Without Mesa (Raw Stellar SDK)
-                            </span>
-                            <div class="bg-black/90 p-4 rounded-lg text-red-200/90 text-[11px] leading-relaxed overflow-x-auto">
-<pre>import * as StellarSdk from '@stellar/stellar-sdk';
-
-const server = new StellarSdk.Horizon.Server(
-  'https://horizon-testnet.stellar.org'
-);
-const keypair = StellarSdk.Keypair.fromSecret(
-  process.env.SENDER_SECRET
-);
-const account = await server.loadAccount(
-  keypair.publicKey()
-);
-const fee = await server.fetchBaseFee();
-
-const tx = new StellarSdk.TransactionBuilder(
-  account, { fee: fee.toString(), networkPassphrase: ... }
-)
-  .addOperation(StellarSdk.Operation.payment({
-    destination: 'GA7IL...',
-    asset: StellarSdk.Asset.native(),
-    amount: '50'
-  }))
-  .setTimeout(30)
-  .build();
-
-tx.sign(keypair);
-await server.submitTransaction(tx);
-// + 120 lines for SEP-10, retries & DB state...</pre>
-                            </div>
-                        </div>
-
-                        <!-- With Mesa -->
-                        <div class="glass-panel p-5 rounded-xl border border-emerald-500/30 space-y-3">
-                            <span class="text-emerald-400 font-bold text-sm block flex items-center gap-1.5">
-                                <span class="material-symbols-outlined text-base">check_circle</span> With Mesa Protocol
-                            </span>
-                            <div class="bg-black/90 p-4 rounded-lg text-emerald-300 text-[11px] leading-relaxed overflow-x-auto">
-<pre>import { Mesa } from '@mesaprotocol/sdk';
-
-export const flow = Mesa.flow('remittance')
-  .sep10Auth({ domain: 'anchor.stellar.org' })
-  .delay({ seconds: 2 })
-  .approval({ approverRole: 'compliance' })
-  .payment({
-    asset: 'XLM',
-    amount: 50,
-    to: 'GA7IL...'
+<span class="text-secondary">export const</span> escrowVaultFlow = Mesa.flow(<span class="text-primary-container">'Soroban Escrow Vault'</span>, <span class="text-primary-container">'soroban-escrow-vault'</span>)
+  <span class="text-[#849495]">// 1. Listen for Incoming Escrow Deposit</span>
+  .receive({ asset: <span class="text-primary-container">'USDC'</span>, minAmount: <span class="text-secondary-fixed">100</span>, toAddress: <span class="text-primary-container">'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV'</span> })
+  <span class="text-[#849495]">// 2. Invoke Soroban WASM Vault Contract</span>
+  .invoke({
+    contractId: <span class="text-primary-container">'CAKJYFDJIISEM453OFET4EWOVETS7F4YEWXDZVAFFMEJQKYFYUSGDKWE'</span>,
+    method: <span class="text-primary-container">'lock_funds'</span>
   })
-  .build();
-
-// ✅ 4 lines replace 150+ lines!
-// ✅ Includes durable state & retries!</pre>
-                            </div>
+  <span class="text-[#849495]">// 3. Automatic Saga Refund Compensation on Failure</span>
+  .compensate({
+    refundAddress: <span class="text-primary-container">'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV'</span>,
+    refundAsset: <span class="text-primary-container">'USDC'</span>
+  })
+  .build();</pre>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB 6: Mainnet Deployment -->
-                <div id="tab-mainnet" class="doc-tab hidden space-y-8">
+                <!-- TAB 5: REST API & Webhook Specifications -->
+                <div id="tab-api" class="doc-tab hidden space-y-8">
                     <section>
-                        <div class="flex items-center gap-2 mb-4 font-label-mono text-xs text-on-surface-variant uppercase tracking-wider">
+                        <div class="flex items-center gap-2 mb-2 font-mono text-xs text-on-surface-variant uppercase tracking-wider">
                             <span>Documentation</span>
                             <span class="material-symbols-outlined text-sm">chevron_right</span>
-                            <span class="text-primary-fixed-dim font-semibold">Mainnet Deployment</span>
+                            <span class="text-primary-fixed-dim font-bold">API Specifications</span>
                         </div>
-                        <h1 class="font-headline-lg text-4xl text-on-surface mb-2 tracking-tight font-extrabold">Switching to Stellar Mainnet</h1>
-                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
-                            Mesa is 100% Mainnet ready out of the box. Deploying to Stellar Mainnet requires zero code modifications—just update your environment configuration.
-                        </p>
+                        <h1 class="font-headline text-3xl font-extrabold text-on-surface tracking-tight">Mesa Runtime REST API & Webhooks</h1>
+                        <p class="font-body text-base text-on-surface-variant mt-2">HTTP Endpoint specifications and cryptographic webhook verification requirements.</p>
                     </section>
 
-                    <div class="glass-panel p-6 rounded-xl space-y-4">
-                        <h3 class="font-headline-md text-lg font-bold text-primary">Environment Switch (.env)</h3>
-                        <div class="bg-black/80 p-4 rounded-lg font-label-mono text-xs border border-outline-variant/40 space-y-2">
-                            <span class="text-on-surface-variant block"># Change these 2 lines in your .env file:</span>
-                            <code class="text-emerald-300 block">HORIZON_URL=https://horizon.stellar.org</code>
-                            <code class="text-emerald-300 block">STELLAR_NETWORK=PUBLIC</code>
+                    <!-- API Endpoint Table -->
+                    <div class="glass-panel rounded-xl overflow-x-auto">
+                        <table class="w-full text-left font-mono text-xs">
+                            <thead>
+                                <tr class="bg-surface-container-high text-primary border-b border-outline-variant/30">
+                                    <th class="p-3">Method</th>
+                                    <th class="p-3">Endpoint</th>
+                                    <th class="p-3">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-outline-variant/20 text-on-surface-variant">
+                                <tr>
+                                    <td class="p-3 font-bold text-emerald-400">POST</td>
+                                    <td class="p-3 text-primary font-bold">/flows</td>
+                                    <td class="p-3">Register or update a Flow Definition JSON object.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-blue-400">GET</td>
+                                    <td class="p-3 text-primary font-bold">/flows/:id</td>
+                                    <td class="p-3">Retrieve registered flow metadata and definition AST.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-emerald-400">POST</td>
+                                    <td class="p-3 text-primary font-bold">/executions</td>
+                                    <td class="p-3">Trigger new workflow execution with context payload.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-blue-400">GET</td>
+                                    <td class="p-3 text-primary font-bold">/executions/:id</td>
+                                    <td class="p-3">Fetch execution status, current step, and step audit events.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-emerald-400">POST</td>
+                                    <td class="p-3 text-primary font-bold">/webhooks/resume</td>
+                                    <td class="p-3">Resume suspended workflow step via suspension key.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-blue-400">GET</td>
+                                    <td class="p-3 text-primary font-bold">/providers</td>
+                                    <td class="p-3">List registered provider metadata and health check status.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Webhook Security Payload Spec -->
+                    <div class="space-y-3">
+                        <h3 class="font-headline text-base font-bold text-on-surface">Cryptographic Webhook Headers & HMAC Verification</h3>
+                        <div class="bg-black/90 p-4 rounded-xl border border-outline-variant/40 font-mono text-xs leading-relaxed space-y-2">
+                            <span class="text-secondary block">POST /webhooks/resume Headers:</span>
+                            <code class="text-emerald-300 block">X-Mesa-Signature: 7f8a9... (HMAC-SHA256 of timestamp.rawBody)</code>
+                            <code class="text-emerald-300 block">X-Mesa-Timestamp: 1784984210</code>
+                            <code class="text-emerald-300 block">X-Mesa-Event-Id: evt-9821a-unique</code>
+                            <pre class="text-on-surface mt-2">{
+  "suspensionKey": "anchor:sep24:exec-1234",
+  "payload": {
+    "amount": 100,
+    "depositTxHash": "7590ce4389968b1d8f96ad2beaf72622d32d5477d10b36a5cd79d8669a9b78d5"
+  }
+}</pre>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB 7: Live Code Playground -->
+                <!-- TAB 6: Error Codes & Sagas -->
+                <div id="tab-errors" class="doc-tab hidden space-y-8">
+                    <section>
+                        <div class="flex items-center gap-2 mb-2 font-mono text-xs text-on-surface-variant uppercase tracking-wider">
+                            <span>Documentation</span>
+                            <span class="material-symbols-outlined text-sm">chevron_right</span>
+                            <span class="text-primary-fixed-dim font-bold">Error Codes</span>
+                        </div>
+                        <h1 class="font-headline text-3xl font-extrabold text-on-surface tracking-tight">Error Codes & Saga Rollback Matrix</h1>
+                        <p class="font-body text-base text-on-surface-variant mt-2">Canonical error code references and Saga compensation failure states.</p>
+                    </section>
+
+                    <div class="glass-panel rounded-xl overflow-x-auto">
+                        <table class="w-full text-left font-mono text-xs">
+                            <thead>
+                                <tr class="bg-surface-container-high text-primary border-b border-outline-variant/30">
+                                    <th class="p-3">Error Code</th>
+                                    <th class="p-3">HTTP Status</th>
+                                    <th class="p-3">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-outline-variant/20 text-on-surface-variant">
+                                <tr>
+                                    <td class="p-3 text-red-400 font-bold">ERR_FLOW_NOT_FOUND</td>
+                                    <td class="p-3 text-amber-300">404</td>
+                                    <td class="p-3">The requested flowId is not registered in store.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 text-red-400 font-bold">ERR_HMAC_INVALID</td>
+                                    <td class="p-3 text-amber-300">401</td>
+                                    <td class="p-3">Webhook HMAC signature mismatch or invalid secret.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 text-red-400 font-bold">ERR_HMAC_EXPIRED</td>
+                                    <td class="p-3 text-amber-300">400</td>
+                                    <td class="p-3">Webhook timestamp drift exceeds 300 seconds threshold.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 text-red-400 font-bold">ERR_STEP_PERMANENTLY_FAILED</td>
+                                    <td class="p-3 text-amber-300">500</td>
+                                    <td class="p-3">Step exceeded max retries (5). Saga rollback triggered.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 7: Live Playground -->
                 <div id="tab-playground" class="doc-tab hidden space-y-8">
                     <section>
-                        <div class="flex items-center gap-2 mb-2 font-label-mono text-xs text-on-surface-variant uppercase tracking-wider">
+                        <div class="flex items-center gap-2 mb-2 font-mono text-xs text-on-surface-variant uppercase tracking-wider">
                             <span>Documentation</span>
                             <span class="material-symbols-outlined text-sm">chevron_right</span>
-                            <span class="text-secondary font-semibold">Interactive SDK Playground</span>
+                            <span class="text-secondary font-bold">SDK AST Playground</span>
                         </div>
-                        <h1 class="font-headline-lg text-4xl text-on-surface mb-2 tracking-tight font-extrabold">SDK Code Playground 🧪</h1>
-                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
-                            Edit Mesa TypeScript SDK code live, inspect generated Flow Definition AST JSON, export cURL commands, and test flow execution.
-                        </p>
+                        <h1 class="font-headline text-3xl font-extrabold text-on-surface tracking-tight">Interactive SDK AST Playground 🧪</h1>
+                        <p class="font-body text-base text-on-surface-variant mt-2">Test TypeScript SDK code live and view compiled Flow Definition JSON AST in real time.</p>
                     </section>
 
-                    <!-- Template Preset Selector -->
-                    <div class="flex flex-wrap items-center gap-3 font-label-mono text-xs">
-                        <span class="text-on-surface-variant">Preset Templates:</span>
-                        <button onclick="loadTemplate('remittance')" class="px-3 py-1.5 rounded-lg bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition font-bold">
-                            Cross-Border Remittance
-                        </button>
-                        <button onclick="loadTemplate('payout')" class="px-3 py-1.5 rounded-lg bg-secondary/10 text-secondary border border-secondary/30 hover:bg-secondary/20 transition font-bold">
-                            Merchant Payout + Refund
-                        </button>
-                        <button onclick="loadTemplate('soroban')" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition font-bold">
-                            Soroban Contract Call
-                        </button>
+                    <div class="flex items-center gap-3 font-mono text-xs">
+                        <span class="text-on-surface-variant">Templates:</span>
+                        <button onclick="loadTemplate('remittance')" class="px-3 py-1 bg-primary/10 text-primary border border-primary/30 rounded font-bold">Remittance</button>
+                        <button onclick="loadTemplate('payout')" class="px-3 py-1 bg-secondary/10 text-secondary border border-secondary/30 rounded font-bold">Merchant Payout</button>
+                        <button onclick="loadTemplate('soroban')" class="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded font-bold">Soroban Vault</button>
                     </div>
 
-                    <!-- Live Code Editor Grid -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Code Input Area -->
-                        <div class="glass-panel rounded-xl p-4 flex flex-col gap-3">
+                        <div class="glass-panel p-4 rounded-xl flex flex-col gap-3">
                             <div class="flex justify-between items-center border-b border-outline-variant/30 pb-2">
-                                <span class="font-label-mono text-xs text-primary font-bold flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-sm">edit_note</span> TypeScript SDK Code
-                                </span>
-                                <button onclick="runPlaygroundValidation()" class="px-3 py-1 bg-primary text-on-primary font-label-mono text-xs font-bold rounded transition active:scale-95 flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-xs">play_arrow</span> Build AST
-                                </button>
+                                <span class="font-mono text-xs font-bold text-primary">TypeScript SDK Code</span>
+                                <button onclick="runPlaygroundValidation()" class="px-3 py-1 bg-primary text-on-primary font-mono text-xs font-bold rounded">Compile AST</button>
                             </div>
-                            <textarea id="playground-code-input" class="w-full h-80 bg-black/80 text-on-surface font-label-mono text-xs p-4 rounded-lg border border-outline-variant/40 focus:outline-none focus:border-primary leading-relaxed resize-none" spellcheck="false"></textarea>
+                            <textarea id="playground-code-input" class="w-full h-72 bg-black/80 text-on-surface font-mono text-xs p-3 rounded-lg border border-outline-variant/40 focus:outline-none leading-relaxed" spellcheck="false"></textarea>
                         </div>
 
-                        <!-- AST Output & cURL Area -->
-                        <div class="glass-panel rounded-xl p-4 flex flex-col gap-3">
+                        <div class="glass-panel p-4 rounded-xl flex flex-col gap-3">
                             <div class="flex justify-between items-center border-b border-outline-variant/30 pb-2">
-                                <span class="font-label-mono text-xs text-secondary font-bold flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-sm">data_object</span> Compiled Flow AST JSON
-                                </span>
-                                <button onclick="copyCode('playground-output')" class="px-2.5 py-1 bg-surface-container-high hover:bg-surface-bright rounded font-label-mono text-xs text-on-surface flex items-center gap-1 transition">
-                                    <span class="material-symbols-outlined text-xs">content_copy</span> Copy
-                                </button>
+                                <span class="font-mono text-xs font-bold text-secondary">Compiled Flow AST JSON</span>
+                                <button onclick="copyCode('playground-output')" class="px-2 py-1 bg-surface-container-high rounded font-mono text-xs text-on-surface">Copy</button>
                             </div>
-                            <div id="playground-output" class="w-full h-80 bg-black/80 text-emerald-400 font-label-mono text-[11px] p-4 rounded-lg border border-outline-variant/40 overflow-y-auto leading-relaxed">
-                                // Compiled AST JSON will appear here...
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- cURL Output Card -->
-                    <div class="glass-panel rounded-xl p-4 flex flex-col gap-3 font-label-mono text-xs">
-                        <div class="flex justify-between items-center border-b border-outline-variant/30 pb-2">
-                            <span class="text-amber-300 font-bold flex items-center gap-1.5">
-                                <span class="material-symbols-outlined text-sm">terminal</span> Equivalent REST API Payload
-                            </span>
-                            <button onclick="copyCode('playground-curl')" class="px-2.5 py-1 bg-surface-container-high hover:bg-surface-bright rounded text-on-surface flex items-center gap-1 transition">
-                                <span class="material-symbols-outlined text-xs">content_copy</span> Copy cURL
-                            </button>
-                        </div>
-                        <div id="playground-curl" class="bg-black/80 text-amber-200 p-3 rounded-lg border border-outline-variant/40 overflow-x-auto">
-                            curl -X POST http://localhost:3001/flows ...
+                            <div id="playground-output" class="w-full h-72 bg-black/80 text-emerald-400 font-mono text-[11px] p-3 rounded-lg border border-outline-variant/40 overflow-y-auto leading-relaxed"></div>
                         </div>
                     </div>
                 </div>
+
             </div>
         </main>
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-primary text-on-primary px-4 py-2 font-label-mono text-xs font-bold rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2">
+    <div id="toast" class="fixed bottom-6 right-6 bg-primary text-on-primary px-4 py-2 font-mono text-xs font-bold rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2">
         <span class="material-symbols-outlined text-sm">check_circle</span> Copied to Clipboard!
     </div>
 
@@ -878,10 +747,10 @@ export const flow = Mesa.flow('remittance')
   .receive({ asset: 'USDC', minAmount: 50, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' })
   .delay({ seconds: 10 })
   .payment({ horizonUrl: 'https://horizon-testnet.stellar.org', to: 'GA7IL52JSHMHWCP6HEPYE6IXIR5IZGDEISUFSJVPKCAU7NE7A6EJOFMN', amount: 50, asset: 'XLM' })
-  .compensate({ reason: 'Refund USDC to merchant on failure' })
+  .compensate({ refundAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV', refundAsset: 'USDC' })
   .build();`,
             soroban: `const flow = Mesa.flow('soroban-smart-contract')
-  .soroban({ contractId: 'CAKJYFDJIISEM453OFET4EWOVETS7F4YEWXDZVAFFMEJQKYFYUSGDKWE', method: 'transfer', args: '{"amount": 100}' })
+  .invoke({ contractId: 'CAKJYFDJIISEM453OFET4EWOVETS7F4YEWXDZVAFFMEJQKYFYUSGDKWE', method: 'lock_funds' })
   .build();`
         };
 
@@ -899,12 +768,12 @@ export const flow = Mesa.flow('remittance')
             if (target) target.classList.remove('hidden');
 
             document.querySelectorAll('#doc-nav button').forEach(btn => {
-                btn.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition";
+                btn.className = "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high text-left font-mono text-xs";
             });
 
             const activeBtn = document.getElementById('btn-' + tabId);
             if (activeBtn) {
-                activeBtn.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-primary bg-primary/10 border-l-2 border-primary transition font-bold";
+                activeBtn.className = "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-primary bg-primary/10 border-l-2 border-primary font-bold text-left font-mono text-xs";
             }
         }
 
@@ -919,10 +788,21 @@ export const flow = Mesa.flow('remittance')
             });
         }
 
+        function filterDocs() {
+            const query = document.getElementById('doc-search').value.toLowerCase();
+            const textNodes = document.querySelectorAll('.doc-tab p, .doc-tab h2, .doc-tab h3, .doc-tab code');
+            textNodes.forEach(node => {
+                if (query && node.innerText.toLowerCase().includes(query)) {
+                    node.style.backgroundColor = 'rgba(0, 219, 233, 0.15)';
+                } else {
+                    node.style.backgroundColor = '';
+                }
+            });
+        }
+
         function runPlaygroundValidation() {
             const code = document.getElementById('playground-code-input').value;
             const output = document.getElementById('playground-output');
-            const curl = document.getElementById('playground-curl');
 
             const flowNameMatch = code.match(/Mesa\.flow\(['"]([^'"]+)['"]\)/);
             const flowName = flowNameMatch ? flowNameMatch[1] : 'custom-flow';
@@ -933,24 +813,18 @@ export const flow = Mesa.flow('remittance')
             if (code.includes('.delay(')) steps.push({ name: 'Sanctions Screening', provider: 'delay', params: { action: 'delay', seconds: 2 } });
             if (code.includes('.approval(')) steps.push({ name: 'Compliance Gate', provider: 'approval', params: { action: 'manual-approval', approverRole: 'compliance-officer' } });
             if (code.includes('.payment(')) steps.push({ name: 'Stellar XLM Payment', provider: 'stellar', params: { action: 'payment', amount: 50, asset: 'XLM' } });
-            if (code.includes('.soroban(')) steps.push({ name: 'Soroban Invocation', provider: 'soroban', params: { action: 'invoke', method: 'transfer' } });
+            if (code.includes('.invoke(')) steps.push({ name: 'Soroban Invocation', provider: 'soroban', params: { action: 'invoke', method: 'lock_funds' } });
             if (code.includes('.compensate(')) steps.push({ name: 'Saga Compensate', provider: 'compensation', params: { action: 'compensate' } });
 
             const ast = {
                 id: flowName,
-                name: flowName.replace(/-/g, ' ').toUpperCase(),
+                name: flowName.toUpperCase(),
                 version: "1.0.0",
                 steps: steps
             };
 
             if (output) {
                 output.innerText = JSON.stringify(ast, null, 2);
-            }
-
-            if (curl) {
-                curl.innerText = `curl -X POST http://localhost:3001/flows \\
-  -H "Content-Type: application/json" \\
-  -d '${JSON.stringify({ id: flowName, name: flowName, definition: ast }, null, 2)}'`;
             }
         }
 
