@@ -225,6 +225,25 @@ function renderProperties() {
                 <label class="block text-[11px] font-label-mono text-outline mb-1">Condition Expression</label>
                 <input type="text" value="${node.params.expression || 'depositedAmount >= 100'}" oninput="updateNodeParam('expression', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface font-label-mono outline-none focus:border-primary"/>
             </div>
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Step Index if True</label>
+                <input type="number" value="${node.params.ifTrueStep !== undefined ? node.params.ifTrueStep : ''}" oninput="updateNodeParam('ifTrueStep', this.value ? Number(this.value) : undefined)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface outline-none focus:border-primary"/>
+            </div>
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Step Index if False</label>
+                <input type="number" value="${node.params.ifFalseStep !== undefined ? node.params.ifFalseStep : ''}" oninput="updateNodeParam('ifFalseStep', this.value ? Number(this.value) : undefined)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface outline-none focus:border-primary"/>
+            </div>
+        `;
+    } else if (node.type === 'compensation') {
+        fieldsHtml += `
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Refund Target Address</label>
+                <input type="text" value="${node.params.refundAddress || ''}" oninput="updateNodeParam('refundAddress', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface font-label-mono outline-none focus:border-primary"/>
+            </div>
+            <div>
+                <label class="block text-[11px] font-label-mono text-outline mb-1">Refund Asset Code</label>
+                <input type="text" value="${node.params.refundAsset || 'USDC'}" oninput="updateNodeParam('refundAsset', this.value)" class="w-full bg-background border border-outline-variant/40 rounded px-3 py-1.5 text-xs text-on-surface font-label-mono outline-none focus:border-primary"/>
+            </div>
         `;
     } else if (node.type === 'webhook') {
         fieldsHtml += `

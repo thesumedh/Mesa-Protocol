@@ -323,6 +323,28 @@
                         </div>
                         <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
                     </button>
+
+                    <button data-type="webhook" onclick="addNode('webhook')" class="palette-item flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-xl">webhook</span>
+                            <div>
+                                <div class="text-xs font-headline-md font-semibold text-on-surface">Webhook Event</div>
+                                <div class="text-[10px] text-outline">External callback listener</div>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
+                    </button>
+
+                    <button data-type="compensation" onclick="addNode('compensation')" class="palette-item flex items-center justify-between p-3 rounded-lg bg-background border border-outline-variant/40 hover:border-primary/50 text-left transition group">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-red-400 text-xl">replay</span>
+                            <div>
+                                <div class="text-xs font-headline-md font-semibold text-on-surface">Saga Compensation</div>
+                                <div class="text-[10px] text-outline">Automated refund rollback</div>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-outline group-hover:text-primary text-sm">add</span>
+                    </button>
                 </div>
             </div>
         </aside>

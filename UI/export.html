@@ -295,88 +295,160 @@
 
                 zip.file("package.json", JSON.stringify({
                     name: "mesa-stellar-app",
-                    version: "0.1.0",
+                    version: "1.0.0",
                     private: true,
+                    workspaces: ["apps/web", "packages/workflows"],
                     scripts: {
-                        "dev": "vite",
-                        "build": "tsc && vite build",
-                        "start": "ts-node src/workflow.ts"
+                        "dev": "concurrently \"npm run start:server\" \"npm run start:web\"",
+                        "start:server": "ts-node mesa-server.ts",
+                        "start:web": "vite apps/web",
+                        "build": "tsc"
                     },
                     dependencies: {
+                        "@mesaprotocol/runtime": "^0.3.1",
                         "@mesaprotocol/sdk": "^0.3.1",
+                        "@mesaprotocol/schema": "^0.3.0",
+                        "concurrently": "^8.2.2",
                         "dotenv": "^16.4.5",
-                        "react": "^18.2.0",
-                        "react-dom": "^18.2.0"
+                        "express": "^4.19.2"
                     },
                     devDependencies: {
+                        "@types/express": "^4.17.21",
+                        "@types/node": "^20.10.0",
+                        "@types/react": "^18.2.43",
+                        "@types/react-dom": "^18.2.17",
+                        "@vitejs/plugin-react": "^4.2.1",
+                        "react": "^18.2.0",
+                        "react-dom": "^18.2.0",
+                        "ts-node": "^10.9.2",
                         "typescript": "^5.3.3",
                         "vite": "^5.0.0"
                     }
                 }, null, 2));
 
-                zip.file(".env.example", "SENDER_SECRET=SXXXXX...\nMESA_RUNTIME_URL=http://localhost:3001\n");
+                zip.file(".env.example", `SENDER_SECRET=SD6K5ODP2TKUDFEX6E5FQUZMKCJZDJPM35OZAA3AP6VEMVRROEC5MRQP\nHORIZON_URL=https://horizon-testnet.stellar.org\nSTELLAR_NETWORK=TESTNET\nMESA_RUNTIME_URL=http://localhost:3001\nPORT=3001\nDATABASE_URL=mock\n`);
 
-                zip.file("src/workflow.ts", `import { Mesa } from '@mesaprotocol/sdk';
+                zip.file("docker-compose.yml", `version: '3.8'\nservices:\n  postgres:\n    image: postgres:15-alpine\n    environment:\n      POSTGRES_DB: mesa\n      POSTGRES_USER: mesa\n      POSTGRES_PASSWORD: mesa\n    ports:\n      - "5432:5432"\n`);
 
-Mesa.configure({ runtimeUrl: process.env.MESA_RUNTIME_URL || 'http://localhost:3001' });
+                zip.file("packages/workflows/mesa.flow.ts", `import { Mesa } from '@mesaprotocol/sdk';
 
-export const flow = Mesa.flow('stellar-payment-flow')
-  .receive({ asset: 'XLM', minAmount: 25, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' })
-  .delay({ seconds: 5 })
-  .payment({ horizonUrl: 'https://horizon-testnet.stellar.org', senderSecretRef: 'SENDER_SECRET', to: 'GA4UFVDQRWUZIDKB32U2TVZSXSFAPCZV522UY7OYGM27BJ66MHYIIW3P', amount: 25 })
+export const flow = Mesa.flow('Cross-Border Remittance Corridor', 'remittance-corridor')
+  .sep10Auth({ domain: 'anchor.stellar.org' })
+  .delay({ seconds: 2 })
+  .approval({ approverRole: 'compliance-officer' })
+  .payment({ horizonUrl: 'https://horizon-testnet.stellar.org', senderSecretRef: 'SENDER_SECRET', to: 'GA7IL52JSHMHWCP6HEPYE6IXIR5IZGDEISUFSJVPKCAU7NE7A6EJOFMN', amount: 50, asset: 'XLM' })
   .build();
-
-export async function runWorkflow() {
-  console.log('🚀 Launching Mesa Stellar Workflow...');
-  const { executionId } = await Mesa.execute(flow);
-  console.log(\`✅ Execution started: \${executionId}\`);
-}
 `);
 
-                zip.file("src/App.tsx", `import React from 'react';
-import { runWorkflow } from './workflow';
+                zip.file("packages/workflows/flow.json", JSON.stringify({
+                    id: "remittance-corridor",
+                    name: "Cross-Border Remittance Corridor",
+                    version: "1.0.0",
+                    steps: [
+                        { name: "sep10", provider: "sep10", params: { action: "auth", domain: "anchor.stellar.org" } },
+                        { name: "delay", provider: "delay", params: { seconds: 2 } },
+                        { name: "approval", provider: "approval", params: { approverRole: "compliance-officer" } },
+                        { name: "payment", provider: "stellar", params: { action: "payment", amount: 50, asset: "XLM", to: "GA7IL52JSHMHWCP6HEPYE6IXIR5IZGDEISUFSJVPKCAU7NE7A6EJOFMN" } }
+                    ]
+                }, null, 2));
+
+                zip.file("mesa-server.ts", `import 'dotenv/config';
+import { startServer } from '@mesaprotocol/runtime';
+import { Mesa } from '@mesaprotocol/sdk';
+import { flow } from './packages/workflows/mesa.flow';
+
+const port = Number(process.env.PORT || 3001);
+
+async function main() {
+  await startServer(port);
+  try {
+    await Mesa.register(flow);
+    console.log(\`✅ Registered Mesa flow: \${flow.id}\`);
+  } catch (err) {
+    console.warn('Auto-registration notice:', (err as Error).message);
+  }
+  console.log(\`🚀 Mesa Production Runtime Server running on http://localhost:\${port}\`);
+  console.log(\`📊 Dashboard Console: http://localhost:\${port}/dashboard\`);
+}
+
+main().catch(err => {
+  console.error('Failed to start Mesa app:', err);
+  process.exit(1);
+});
+`);
+
+                zip.file("apps/web/index.html", `<!DOCTYPE html><html><head><title>Mesa Remittance App</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>`);
+                zip.file("apps/web/src/main.tsx", `import React from 'react';\nimport ReactDOM from 'react-dom/client';\nimport App from './App';\n\nReactDOM.createRoot(document.getElementById('root')!).render(<App />);\n`);
+                zip.file("apps/web/src/App.tsx", `import React, { useState } from 'react';
 
 export default function App() {
+  const [status, setStatus] = useState('Idle');
+  const [execId, setExecId] = useState('');
+  const [depositAmount, setDepositAmount] = useState('100');
+
+  const triggerWorkflow = async () => {
+    setStatus('Triggering...');
+    try {
+      const res = await fetch('http://localhost:3001/executions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flowId: 'remittance-corridor' })
+      });
+      const data = await res.json();
+      setExecId(data.executionId);
+      setStatus('RUNNING');
+    } catch (err) {
+      setStatus('Failed to connect to Mesa Runtime');
+    }
+  };
+
   return (
-    <div style={{ background: '#040608', color: '#dbfcff', minHeight: '100vh', padding: '3rem', fontFamily: 'sans-serif' }}>
-      <h1>Mesa Stellar App</h1>
-      <p>Your workflow starter kit is ready.</p>
-      <button onClick={runWorkflow} style={{ background: '#00f0ff', color: '#00363a', padding: '0.75rem 1.5rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
-        Execute Workflow
-      </button>
+    <div style={{ padding: '2rem', fontFamily: 'sans-serif', background: '#040608', color: '#00dbe9', minHeight: '100vh' }}>
+      <h1>💸 Mesa Remittance App</h1>
+      <p>Stellar Embedded Finance App Scaffold generated by Mesa Protocol</p>
+      <div style={{ background: '#0d131a', padding: '1.5rem', borderRadius: '8px', marginBottom: '1.5rem', border: '1px solid #1a2634' }}>
+        <h2>Launch Remittance Workflow</h2>
+        <button onClick={triggerWorkflow} style={{ padding: '0.75rem 1.5rem', background: '#00dbe9', color: '#040608', fontWeight: 'bold', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+          Launch Workflow
+        </button>
+        {execId && <p style={{ marginTop: '1rem' }}>Active Execution ID: <code>{execId}</code></p>}
+        <p>Current Status: <strong>{status}</strong></p>
+      </div>
     </div>
   );
-}
-`);
+}`);
 
-                zip.file("README.md", `# Mesa Stellar App Starter Kit
+                zip.file("README.md", `# Mesa Remittance App
 
-Generated by **Mesa Studio**.
+Generated by **Mesa Studio — Stellar Visual Workflow & App Builder**.
 
-## Quickstart
+## 🚀 Quickstart
 
 1. Install dependencies:
 \`\`\`bash
 npm install
 \`\`\`
 
-2. Set your environment variables:
+2. Copy environment variables:
 \`\`\`bash
 cp .env.example .env
-# Edit .env and put your testnet SENDER_SECRET
 \`\`\`
 
-3. Run the workflow:
+3. Start dev workspace (Runtime API + React Frontend):
 \`\`\`bash
-npm start
+npm run dev
 \`\`\`
+
+- **Mesa Runtime Server:** [http://localhost:3001](http://localhost:3001)
+- **Mesa Console Dashboard:** [http://localhost:3001/dashboard](http://localhost:3001/dashboard)
+- **React Frontend:** [http://localhost:5173](http://localhost:5173)
 `);
 
                 const blob = await zip.generateAsync({ type: "blob" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = "mesa-starter-kit.zip";
+                a.download = "mesa-stellar-app.zip";
                 a.click();
                 URL.revokeObjectURL(url);
             }
