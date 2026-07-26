@@ -111,13 +111,47 @@ export async function executeStep(
 
     if (newAttempts >= MAX_ATTEMPTS) {
       await store.updateStep(stepRecord.id, { status: 'FAILED', error: msg });
-      await store.updateExecution(execution.id, { status: 'PERMANENTLY_FAILED', completed_at: new Date() });
       await store.appendEvent(execution.id, 'flow.failed', { reason: `Step ${stepDef.name} permanently failed after ${newAttempts} attempts.` });
       console.error(`[MesaRuntime] ✗ Step ${stepIndex} (${stepDef.name}) permanently failed: ${msg}`);
+
+      // Trigger Saga compensation for completed steps in reverse order
+      await runCompensation(execution, stepIndex);
     } else {
       const nextRetry = new Date(Date.now() + retryDelayMs(newAttempts));
       await store.updateStep(stepRecord.id, { status: 'RETRYING', error: msg, next_retry: nextRetry });
       console.warn(`[MesaRuntime] ↻ Step ${stepIndex} (${stepDef.name}) will retry at ${nextRetry.toISOString()}`);
     }
+  }
+}
+
+async function runCompensation(execution: store.ExecutionRecord, failedStepIndex: number): Promise<void> {
+  await store.appendEvent(execution.id, 'compensation.started', { failedStepIndex });
+  console.log(`[MesaRuntime] 🔄 Starting Saga Compensation for execution ${execution.id} due to failure at step ${failedStepIndex}`);
+
+  try {
+    const flow = await store.getFlow(execution.flow_id);
+    const steps: StepDefinition[] = (flow?.definition as any)?.steps ?? [];
+
+    for (let i = failedStepIndex - 1; i >= 0; i--) {
+      const completedStep = await store.getStepForExecution(execution.id, i);
+      if (completedStep && completedStep.status === 'COMPLETED') {
+        const compProvider = getProvider('compensation');
+        if (compProvider) {
+          await compProvider.execute(
+            { name: `compensate-${completedStep.name}`, provider: 'compensation', params: { refundAddress: 'mock-refund-address', refundAsset: 'USDC' } },
+            { executionId: execution.id, flowId: execution.flow_id, stepIndex: i, stepId: completedStep.id, shared: execution.context as Record<string, unknown> }
+          );
+        }
+        await store.appendEvent(execution.id, 'step.compensated', { stepIndex: i, name: completedStep.name });
+      }
+    }
+
+    await store.updateExecution(execution.id, { status: 'COMPENSATED', completed_at: new Date() });
+    await store.appendEvent(execution.id, 'compensation.completed', { executionId: execution.id });
+    console.log(`[MesaRuntime] ✅ Saga Compensation completed for execution ${execution.id}`);
+  } catch (compErr: any) {
+    await store.updateExecution(execution.id, { status: 'COMPENSATION_FAILED', completed_at: new Date() });
+    await store.appendEvent(execution.id, 'compensation.failed', { error: compErr.message });
+    console.error(`[MesaRuntime] ❌ Saga Compensation failed for execution ${execution.id}:`, compErr.message);
   }
 }

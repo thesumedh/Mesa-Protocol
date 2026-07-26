@@ -361,7 +361,7 @@ async function updateExecution(id, updates) {
     params.push(updates.status);
     if (updates.status === "RUNNING" && !updates.started_at) {
       setClauses.push(`started_at = NOW()`);
-    } else if ((updates.status === "COMPLETED" || updates.status === "FAILED" || updates.status === "CANCELLED") && !updates.completed_at) {
+    } else if ((updates.status === "COMPLETED" || updates.status === "FAILED" || updates.status === "PERMANENTLY_FAILED" || updates.status === "COMPENSATED" || updates.status === "COMPENSATION_FAILED" || updates.status === "CANCELLED") && !updates.completed_at) {
       setClauses.push(`completed_at = NOW()`);
     }
   }
@@ -622,9 +622,11 @@ var ConditionProvider = class {
     category: "utility",
     actions: ["evaluate"],
     inputFields: [
-      { key: "expression", label: "Condition Expression", type: "string", required: true, defaultValue: "depositedAmount >= 100" }
+      { key: "expression", label: "Condition Expression", type: "string", required: true, defaultValue: "depositedAmount >= 100" },
+      { key: "ifTrueStep", label: "Step Index if True", type: "number", required: false },
+      { key: "ifFalseStep", label: "Step Index if False", type: "number", required: false }
     ],
-    outputs: ["evaluatedResult", "expression"],
+    outputs: ["evaluatedResult", "expression", "ifTrueStep", "ifFalseStep"],
     mockSupport: true,
     realSupport: true
   };
@@ -632,18 +634,54 @@ var ConditionProvider = class {
     const expr = step.params.expression || "true";
     console.log(`[ConditionProvider] Evaluating expression: "${expr}" over context.shared:`, context.shared);
     let result = true;
-    if (expr.includes(">=")) {
+    if (expr === "true") {
+      result = true;
+    } else if (expr === "false") {
+      result = false;
+    } else if (expr.includes("==")) {
+      const [varName, valStr] = expr.split("==").map((s) => s.trim().replace(/^['"]|['"]$/g, ""));
+      const leftVal = String(context.shared[varName] ?? "");
+      result = leftVal === valStr;
+    } else if (expr.includes("!=")) {
+      const [varName, valStr] = expr.split("!=").map((s) => s.trim().replace(/^['"]|['"]$/g, ""));
+      const leftVal = String(context.shared[varName] ?? "");
+      result = leftVal !== valStr;
+    } else if (expr.includes(">=")) {
       const [varName, valStr] = expr.split(">=").map((s) => s.trim());
-      const leftVal = Number(context.shared[varName] ?? 100);
+      const leftVal = Number(context.shared[varName] ?? 0);
       const rightVal = Number(valStr);
       result = leftVal >= rightVal;
+    } else if (expr.includes(">")) {
+      const [varName, valStr] = expr.split(">").map((s) => s.trim());
+      const leftVal = Number(context.shared[varName] ?? 0);
+      const rightVal = Number(valStr);
+      result = leftVal > rightVal;
+    } else if (expr.includes("<=")) {
+      const [varName, valStr] = expr.split("<=").map((s) => s.trim());
+      const leftVal = Number(context.shared[varName] ?? 0);
+      const rightVal = Number(valStr);
+      result = leftVal <= rightVal;
+    } else if (expr.includes("<")) {
+      const [varName, valStr] = expr.split("<").map((s) => s.trim());
+      const leftVal = Number(context.shared[varName] ?? 0);
+      const rightVal = Number(valStr);
+      result = leftVal < rightVal;
+    } else if (expr.includes("contains")) {
+      const [varName, valStr] = expr.split("contains").map((s) => s.trim().replace(/^['"]|['"]$/g, ""));
+      const leftVal = String(context.shared[varName] ?? "");
+      result = leftVal.includes(valStr);
+    } else if (expr.includes("exists")) {
+      const varName = expr.replace("exists", "").trim();
+      result = context.shared[varName] !== void 0 && context.shared[varName] !== null;
     }
     console.log(`[ConditionProvider] Evaluation outcome: ${result}`);
     return {
       outcome: "completed",
       output: {
         evaluatedResult: result,
-        expression: expr
+        expression: expr,
+        ifTrueStep: step.params.ifTrueStep,
+        ifFalseStep: step.params.ifFalseStep
       }
     };
   }
@@ -821,14 +859,42 @@ async function executeStep(execution, stepDef, stepIndex) {
     await appendEvent(execution.id, "step.failed", { stepIndex, name: stepDef.name, error: msg, attempt: newAttempts });
     if (newAttempts >= MAX_ATTEMPTS) {
       await updateStep(stepRecord.id, { status: "FAILED", error: msg });
-      await updateExecution(execution.id, { status: "PERMANENTLY_FAILED", completed_at: /* @__PURE__ */ new Date() });
       await appendEvent(execution.id, "flow.failed", { reason: `Step ${stepDef.name} permanently failed after ${newAttempts} attempts.` });
       console.error(`[MesaRuntime] \u2717 Step ${stepIndex} (${stepDef.name}) permanently failed: ${msg}`);
+      await runCompensation(execution, stepIndex);
     } else {
       const nextRetry = new Date(Date.now() + retryDelayMs(newAttempts));
       await updateStep(stepRecord.id, { status: "RETRYING", error: msg, next_retry: nextRetry });
       console.warn(`[MesaRuntime] \u21BB Step ${stepIndex} (${stepDef.name}) will retry at ${nextRetry.toISOString()}`);
     }
+  }
+}
+async function runCompensation(execution, failedStepIndex) {
+  await appendEvent(execution.id, "compensation.started", { failedStepIndex });
+  console.log(`[MesaRuntime] \u{1F504} Starting Saga Compensation for execution ${execution.id} due to failure at step ${failedStepIndex}`);
+  try {
+    const flow = await getFlow(execution.flow_id);
+    const steps = flow?.definition?.steps ?? [];
+    for (let i = failedStepIndex - 1; i >= 0; i--) {
+      const completedStep = await getStepForExecution(execution.id, i);
+      if (completedStep && completedStep.status === "COMPLETED") {
+        const compProvider = getProvider("compensation");
+        if (compProvider) {
+          await compProvider.execute(
+            { name: `compensate-${completedStep.name}`, provider: "compensation", params: { refundAddress: "mock-refund-address", refundAsset: "USDC" } },
+            { executionId: execution.id, flowId: execution.flow_id, stepIndex: i, stepId: completedStep.id, shared: execution.context }
+          );
+        }
+        await appendEvent(execution.id, "step.compensated", { stepIndex: i, name: completedStep.name });
+      }
+    }
+    await updateExecution(execution.id, { status: "COMPENSATED", completed_at: /* @__PURE__ */ new Date() });
+    await appendEvent(execution.id, "compensation.completed", { executionId: execution.id });
+    console.log(`[MesaRuntime] \u2705 Saga Compensation completed for execution ${execution.id}`);
+  } catch (compErr) {
+    await updateExecution(execution.id, { status: "COMPENSATION_FAILED", completed_at: /* @__PURE__ */ new Date() });
+    await appendEvent(execution.id, "compensation.failed", { error: compErr.message });
+    console.error(`[MesaRuntime] \u274C Saga Compensation failed for execution ${execution.id}:`, compErr.message);
   }
 }
 
@@ -881,9 +947,20 @@ var Scheduler = class {
       const stepRecord = await getStepForExecution(execution.id, current);
       if (!stepRecord) break;
       if (stepRecord.status === "COMPLETED") {
-        current++;
+        if (stepDef.provider === "condition" && stepRecord.output) {
+          const isTrue = stepRecord.output.evaluatedResult === true;
+          const target = isTrue ? stepDef.params.ifTrueStep : stepDef.params.ifFalseStep;
+          if (typeof target === "number" && target >= 0 && target <= steps.length) {
+            current = target;
+            console.log(`[MesaRuntime] \u{1F500} Condition evaluated as ${isTrue}. Branching to step ${current}`);
+          } else {
+            current++;
+          }
+        } else {
+          current++;
+        }
         const refreshed = await getExecution(execution.id);
-        if (!refreshed || refreshed.status === "PERMANENTLY_FAILED") return;
+        if (!refreshed || refreshed.status === "PERMANENTLY_FAILED" || refreshed.status === "COMPENSATED" || refreshed.status === "COMPENSATION_FAILED") return;
         execution = refreshed;
         await updateExecution(execution.id, { current_step: current });
       } else if (stepRecord.status === "SUSPENDED") {

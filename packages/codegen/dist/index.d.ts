@@ -4,3 +4,4 @@ export declare function generateJSON(flow: FlowDefinition): string;
 export declare function generateCurl(flow: FlowDefinition, runtimeUrl?: string): string;
 export declare function parseSDKCode(code: string): FlowDefinition;
 export declare function generateRunnableAppZip(flow: FlowDefinition): Promise<Blob | Buffer>;
+export declare function generateAppTsxCode(flow: FlowDefinition): string;

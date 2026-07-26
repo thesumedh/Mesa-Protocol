@@ -84,7 +84,7 @@ export async function getFlow(id: string): Promise<FlowRecord | null> {
 
 // ─── Execution Store ──────────────────────────────────────────────────────────
 
-export type ExecutionStatus = 'PENDING' | 'RUNNING' | 'SUSPENDED' | 'COMPLETED' | 'FAILED' | 'PERMANENTLY_FAILED' | 'CANCELLED';
+export type ExecutionStatus = 'PENDING' | 'RUNNING' | 'SUSPENDED' | 'COMPLETED' | 'FAILED' | 'PERMANENTLY_FAILED' | 'COMPENSATED' | 'COMPENSATION_FAILED' | 'CANCELLED';
 
 export interface ExecutionRecord {
   id: string;
@@ -127,7 +127,7 @@ export async function updateExecution(id: string, updates: Partial<ExecutionReco
     params.push(updates.status);
     if (updates.status === 'RUNNING' && !updates.started_at) {
       setClauses.push(`started_at = NOW()`);
-    } else if ((updates.status === 'COMPLETED' || updates.status === 'FAILED' || updates.status === 'CANCELLED') && !updates.completed_at) {
+    } else if ((updates.status === 'COMPLETED' || updates.status === 'FAILED' || updates.status === 'PERMANENTLY_FAILED' || updates.status === 'COMPENSATED' || updates.status === 'COMPENSATION_FAILED' || updates.status === 'CANCELLED') && !updates.completed_at) {
       setClauses.push(`completed_at = NOW()`);
     }
   }

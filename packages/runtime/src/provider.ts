@@ -220,9 +220,11 @@ export class ConditionProvider implements MesaProvider {
     category: 'utility',
     actions: ['evaluate'],
     inputFields: [
-      { key: 'expression', label: 'Condition Expression', type: 'string', required: true, defaultValue: 'depositedAmount >= 100' }
+      { key: 'expression', label: 'Condition Expression', type: 'string', required: true, defaultValue: 'depositedAmount >= 100' },
+      { key: 'ifTrueStep', label: 'Step Index if True', type: 'number', required: false },
+      { key: 'ifFalseStep', label: 'Step Index if False', type: 'number', required: false }
     ],
-    outputs: ['evaluatedResult', 'expression'],
+    outputs: ['evaluatedResult', 'expression', 'ifTrueStep', 'ifFalseStep'],
     mockSupport: true,
     realSupport: true
   };
@@ -231,18 +233,56 @@ export class ConditionProvider implements MesaProvider {
     const expr = (step.params.expression as string) || 'true';
     console.log(`[ConditionProvider] Evaluating expression: "${expr}" over context.shared:`, context.shared);
     let result = true;
-    if (expr.includes('>=')) {
+
+    if (expr === 'true') {
+      result = true;
+    } else if (expr === 'false') {
+      result = false;
+    } else if (expr.includes('==')) {
+      const [varName, valStr] = expr.split('==').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
+      const leftVal = String(context.shared[varName] ?? '');
+      result = leftVal === valStr;
+    } else if (expr.includes('!=')) {
+      const [varName, valStr] = expr.split('!=').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
+      const leftVal = String(context.shared[varName] ?? '');
+      result = leftVal !== valStr;
+    } else if (expr.includes('>=')) {
       const [varName, valStr] = expr.split('>=').map(s => s.trim());
-      const leftVal = Number(context.shared[varName] ?? 100);
+      const leftVal = Number(context.shared[varName] ?? 0);
       const rightVal = Number(valStr);
       result = leftVal >= rightVal;
+    } else if (expr.includes('>')) {
+      const [varName, valStr] = expr.split('>').map(s => s.trim());
+      const leftVal = Number(context.shared[varName] ?? 0);
+      const rightVal = Number(valStr);
+      result = leftVal > rightVal;
+    } else if (expr.includes('<=')) {
+      const [varName, valStr] = expr.split('<=').map(s => s.trim());
+      const leftVal = Number(context.shared[varName] ?? 0);
+      const rightVal = Number(valStr);
+      result = leftVal <= rightVal;
+    } else if (expr.includes('<')) {
+      const [varName, valStr] = expr.split('<').map(s => s.trim());
+      const leftVal = Number(context.shared[varName] ?? 0);
+      const rightVal = Number(valStr);
+      result = leftVal < rightVal;
+    } else if (expr.includes('contains')) {
+      const [varName, valStr] = expr.split('contains').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
+      const leftVal = String(context.shared[varName] ?? '');
+      result = leftVal.includes(valStr);
+    } else if (expr.includes('exists')) {
+      const varName = expr.replace('exists', '').trim();
+      result = context.shared[varName] !== undefined && context.shared[varName] !== null;
     }
+
     console.log(`[ConditionProvider] Evaluation outcome: ${result}`);
     return {
       outcome: 'completed',
       output: {
         evaluatedResult: result,
-        expression: expr
+        expression: expr,
+        ifTrueStep: step.params.ifTrueStep,
+        ifFalseStep: step.params.ifFalseStep
       }
     };
   }

@@ -1,4 +1,7 @@
 import { generateSDKCode, generateJSON, generateCurl, parseSDKCode, generateRunnableAppZip } from './index';
+import * as fs from 'fs';
+import * as path from 'path';
+import JSZip from 'jszip';
 
 async function runCodegenTest() {
   console.log('==================================================');
@@ -124,10 +127,12 @@ async function runCodegenTest() {
   }
 
   // Test 5: generateRunnableAppZip
+  let zipBuffer: Buffer | null = null;
   try {
-    const zipBuffer = await generateRunnableAppZip(sampleFlow);
-    if (zipBuffer && (zipBuffer as Buffer).length > 1000) {
-      console.log(`✔ Test passed: generateRunnableAppZip generates complete app workspace ZIP (${(zipBuffer as Buffer).length} bytes)`);
+    const zipResult = await generateRunnableAppZip(sampleFlow);
+    zipBuffer = zipResult as Buffer;
+    if (zipBuffer && zipBuffer.length > 1000) {
+      console.log(`✔ Test passed: generateRunnableAppZip generates complete app workspace ZIP (${zipBuffer.length} bytes)`);
       passed++;
     } else {
       console.error('✗ Test failed: generateRunnableAppZip output too small or invalid');
@@ -135,6 +140,46 @@ async function runCodegenTest() {
     }
   } catch (err: any) {
     console.error('✗ Test failed: generateRunnableAppZip threw error:', err.message);
+    failed++;
+  }
+
+  // Test 6: Exported App Scaffold Verification
+  try {
+    if (zipBuffer) {
+      const zip = await JSZip.loadAsync(zipBuffer);
+      const scratchDir = path.join(process.cwd(), 'scratch', 'export-test');
+      if (!fs.existsSync(scratchDir)) {
+        fs.mkdirSync(scratchDir, { recursive: true });
+      }
+
+      // Extract zip files into scratch/export-test
+      for (const relativePath of Object.keys(zip.files)) {
+        const file = zip.files[relativePath];
+        if (!file.dir) {
+          const content = await file.async('nodebuffer');
+          const destPath = path.join(scratchDir, relativePath);
+          fs.mkdirSync(path.dirname(destPath), { recursive: true });
+          fs.writeFileSync(destPath, content);
+        }
+      }
+
+      const serverFile = fs.readFileSync(path.join(scratchDir, 'mesa-server.ts'), 'utf8');
+      const pkgFile = fs.readFileSync(path.join(scratchDir, 'package.json'), 'utf8');
+
+      if (
+        serverFile.includes('Mesa.register(flow)') &&
+        serverFile.includes('startServer(port)') &&
+        pkgFile.includes('@mesaprotocol/runtime')
+      ) {
+        console.log('✔ Test passed: Exported app scaffold verified at scratch/export-test (contains auto-registration mesa-server.ts)');
+        passed++;
+      } else {
+        console.error('✗ Test failed: Exported app scaffold missing expected auto-registration logic');
+        failed++;
+      }
+    }
+  } catch (err: any) {
+    console.error('✗ Test failed: Exported app scaffold verification threw error:', err.message);
     failed++;
   }
 

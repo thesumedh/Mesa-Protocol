@@ -229,6 +229,40 @@ async function runEdgeCasesTestSuite() {
   server.close();
 
   // ───────────────────────────────────────────────────────────────────────────
+  // CATEGORY 6: Condition Branching & Saga Compensation
+  // ───────────────────────────────────────────────────────────────────────────
+  console.log('\n📌 CATEGORY 6: Real Condition Branching & Saga Compensation');
+
+  // Test 6.1: ConditionProvider evaluates numeric comparison (>=)
+  const condProvider = getProvider('condition');
+  assert(!!condProvider, 'ConditionProvider registered');
+
+  const condRes1 = await condProvider!.execute(
+    { name: 'cond-1', provider: 'condition', params: { expression: 'depositedAmount >= 100', ifTrueStep: 3, ifFalseStep: 5 } },
+    { executionId: 'ex-1', flowId: 'fl-1', stepIndex: 0, stepId: 'st-1', shared: { depositedAmount: 150 } }
+  );
+  assert(condRes1.output?.evaluatedResult === true, 'Condition evaluated depositedAmount >= 100 as true for amount 150');
+  assert(condRes1.output?.ifTrueStep === 3, 'Condition output preserves ifTrueStep target');
+
+  // Test 6.2: ConditionProvider evaluates string equality (==)
+  const condRes2 = await condProvider!.execute(
+    { name: 'cond-2', provider: 'condition', params: { expression: 'status == APPROVED' } },
+    { executionId: 'ex-2', flowId: 'fl-2', stepIndex: 0, stepId: 'st-2', shared: { status: 'PENDING' } }
+  );
+  assert(condRes2.output?.evaluatedResult === false, 'Condition evaluated status == APPROVED as false for status PENDING');
+
+  // Test 6.3: Compensation Provider execution
+  const compProvider = getProvider('compensation');
+  assert(!!compProvider, 'CompensationProvider registered');
+
+  const compRes = await compProvider!.execute(
+    { name: 'comp-1', provider: 'compensation', params: { refundAddress: 'GBHTYH2NLVWRAPSC3IRRFPG6CFHP5VLODBQUYVSKJ3BZ3QN6HEXZ5DXU', refundAsset: 'USDC' } },
+    { executionId: 'ex-comp', flowId: 'fl-comp', stepIndex: 1, stepId: 'st-comp', shared: {} }
+  );
+  assert(compRes.output?.compensated === true, 'Compensation provider executed refund successfully');
+  assert(compRes.output?.refundAsset === 'USDC', 'Compensation provider output returned correct asset');
+
+  // ───────────────────────────────────────────────────────────────────────────
   // SUMMARY REPORT
   // ───────────────────────────────────────────────────────────────────────────
   console.log('\n===============================================================');

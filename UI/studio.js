@@ -398,7 +398,7 @@ window.downloadStarterZip = async function() {
         zip.file("packages/workflows/flow.json", JSON.stringify(flowObject, null, 2));
 
         // mesa-server.ts
-        zip.file("mesa-server.ts", `import 'dotenv/config';\nimport { startServer } from '@mesaprotocol/runtime';\n\nconst port = Number(process.env.PORT || 3001);\n\nstartServer(port).then(() => {\n  console.log(\`🚀 Mesa Production Runtime Server running on http://localhost:\${port}\`);\n  console.log(\`📊 Dashboard Console: http://localhost:\${port}/dashboard\`);\n}).catch(err => {\n  console.error('Failed to start Mesa Runtime Server:', err);\n});\n`);
+        zip.file("mesa-server.ts", `import 'dotenv/config';\nimport { startServer } from '@mesaprotocol/runtime';\nimport { Mesa } from '@mesaprotocol/sdk';\nimport { flow } from './packages/workflows/mesa.flow';\n\nconst port = Number(process.env.PORT || 3001);\n\nasync function main() {\n  await startServer(port);\n  try {\n    await Mesa.register(flow);\n    console.log(\`✅ Registered Mesa flow: \${flow.id}\`);\n  } catch (err) {\n    console.warn('Auto-registration notice:', (err as Error).message);\n  }\n  console.log(\`🚀 Mesa Production Runtime Server running on http://localhost:\${port}\`);\n  console.log(\`📊 Dashboard Console: http://localhost:\${port}/dashboard\`);\n}\n\nmain().catch(err => {\n  console.error('Failed to start Mesa app:', err);\n  process.exit(1);\n});\n`);
 
         // apps/web/index.html & App.tsx
         zip.file("apps/web/index.html", `<!DOCTYPE html><html><head><title>${flowName} App</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>`);

@@ -78,10 +78,21 @@ export class Scheduler {
       if (!stepRecord) break;
 
       if (stepRecord.status === 'COMPLETED') {
-        current++;
+        if (stepDef.provider === 'condition' && stepRecord.output) {
+          const isTrue = stepRecord.output.evaluatedResult === true;
+          const target = isTrue ? stepDef.params.ifTrueStep : stepDef.params.ifFalseStep;
+          if (typeof target === 'number' && target >= 0 && target <= steps.length) {
+            current = target;
+            console.log(`[MesaRuntime] 🔀 Condition evaluated as ${isTrue}. Branching to step ${current}`);
+          } else {
+            current++;
+          }
+        } else {
+          current++;
+        }
         // Re-fetch execution to get updated shared context
         const refreshed = await store.getExecution(execution.id);
-        if (!refreshed || refreshed.status === 'PERMANENTLY_FAILED') return;
+        if (!refreshed || refreshed.status === 'PERMANENTLY_FAILED' || refreshed.status === 'COMPENSATED' || refreshed.status === 'COMPENSATION_FAILED') return;
         execution = refreshed;
         await store.updateExecution(execution.id, { current_step: current });
       } else if (stepRecord.status === 'SUSPENDED') {
