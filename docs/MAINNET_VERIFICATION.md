@@ -31,6 +31,15 @@ This document contains **100% verified, real live transaction hashes, ledger seq
 - **Status:** `SUCCESS` (Confirmed on-chain)
 - **Stellar Expert Link:** [View Mainnet Settlement Tx #e6632bbf...](https://stellar.expert/explorer/public/tx/e6632bbf00c546f0d4de86bfa4cf691cdd14ea2318b6b41016d1b76a287a9159)
 
+### 3. Mainnet Funds Return Transaction
+- **Transaction Hash:** [`cc631c6019466091d6db54ce262f1726641f1d467ab5a8351695aa841a6dafc6`](https://stellar.expert/explorer/public/tx/cc631c6019466091d6db54ce262f1726641f1d467ab5a8351695aa841a6dafc6)
+- **Ledger Sequence:** `63674150`
+- **Network:** Stellar Public Mainnet (`https://horizon.stellar.org`)
+- **Operation:** `Payment` (3.48998 XLM returned to `GCHYTBPL...`)
+- **Fee Paid:** `0.0000100 XLM` (100 stroops)
+- **Status:** `SUCCESS` (Confirmed on-chain)
+- **Stellar Expert Link:** [View Mainnet Return Tx #cc631c60...](https://stellar.expert/explorer/public/tx/cc631c6019466091d6db54ce262f1726641f1d467ab5a8351695aa841a6dafc6)
+
 ---
 
 ## 📜 Soroban Smart Contracts (Testnet & Mainnet Ready)
