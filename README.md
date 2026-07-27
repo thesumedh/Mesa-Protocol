@@ -83,7 +83,60 @@ Mesa is structured into modular, decoupled workspace packages:
                                │
             ┌──────────────────┼──────────────────┐
             ▼                  ▼                  ▼
-     Stellar Horizon     SEP-24 Anchors     Soroban Contracts
+      Stellar Horizon     SEP-24 Anchors     Soroban Contracts
+```
+
+---
+
+## 📜 Soroban Smart Contracts
+
+Mesa Protocol natively integrates with compiled Soroban Rust smart contracts on Stellar. Smart contract source code is located in [`mesa-protocol/contracts/`](./mesa-protocol/contracts).
+
+### 🛠️ Smart Contracts Included:
+1. **`MesaCore` (`mesa-protocol/contracts/mesa-core`)**: Rotating Savings & Credit Association (ROSCA / Chama) contract managing trustless group savings, rotation orders, security deposits, and emergency consensus pauses.
+2. **`MesaVault` (`mesa-protocol/contracts/mesa-vault`)**: Policy-based dynamic yield & savings vault contract supporting lock periods, automatic asset conversion, and withdrawal rules.
+3. **`MesaFactory` (`mesa-protocol/contracts/mesa-factory`)**: Factory contract for deploying customized `MesaCore` and `MesaVault` instances on demand.
+
+### 📍 Deployed Contract Addresses (Stellar Testnet):
+
+| Contract / Asset | Deployed ID / Address | Type / Description |
+|---|---|---|
+| **`MesaCore` Contract** | `CDWGVPSUXXSGABQ663FVV4TZJH4Q2R3HVAKTKWFFFMWPF23O7KMNS4KU` | Soroban Smart Contract (`WASM Hash: 6e72...92bb`) |
+| **XLM (Native SAC)** | `CDLZFC3SYJYDZT7K67VZ75HPJGWAM3BT2CH4XRVT62JZJU3CLSHQTY2W` | Wrapped Native XLM Token |
+| **USDC (SAC)** | `CCW67CX2SC62R25746RRJV5HK5B2S27EV6G7JUW7K3HQT67WVPF5EUSDC` | Wrapped USDC Token |
+| **EURC (SAC)** | `CCW67CX2SC62R25746RRJV5HK5B2S27EV6G7JUW7K3HQT67WVPF5EEURC` | Wrapped EURC Token |
+| **KES (SAC)** | `CCW67CX2SC62R25746RRJV5HK5B2S27EV6G7JUW7K3HQT67WVPF5EEKES` | Wrapped KES Token |
+
+### 💻 Invoking Soroban Contracts via Mesa SDK
+
+```ts
+import { Mesa } from "@mesaprotocol/sdk";
+
+export const sorobanFlow = Mesa.flow("Soroban Vault Invocation", "soroban-yield-vault")
+  .receive({ asset: "USDC", minAmount: 50, toAddress: "GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV" })
+  .soroban({
+    contractId: "CDWGVPSUXXSGABQ663FVV4TZJH4Q2R3HVAKTKWFFFMWPF23O7KMNS4KU",
+    method: "pay_contribution",
+    args: { amount: 50 }
+  })
+  .build();
+```
+
+### 🔨 Build & Deploy Smart Contracts
+
+```bash
+# 1. Compile Soroban Rust contracts to WASM
+cd mesa-protocol
+cargo build --target wasm32-unknown-unknown --release
+
+# 2. Run Soroban smart contract unit tests
+cargo test
+
+# 3. Deploy WASM binary to Stellar Testnet
+soroban contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/mesa_core.wasm \
+  --source YOUR_STELLAR_SECRET_KEY \
+  --network testnet
 ```
 
 ---
