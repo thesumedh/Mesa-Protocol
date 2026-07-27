@@ -101,11 +101,20 @@ Mesa Protocol natively integrates with compiled Soroban Rust smart contracts on 
 
 | Contract / Asset | Deployed ID / Address | Type / Description |
 |---|---|---|
-| **`MesaCore` Contract** | `CDWGVPSUXXSGABQ663FVV4TZJH4Q2R3HVAKTKWFFFMWPF23O7KMNS4KU` | Soroban Smart Contract (`WASM Hash: 6e72...92bb`) |
-| **XLM (Native SAC)** | `CDLZFC3SYJYDZT7K67VZ75HPJGWAM3BT2CH4XRVT62JZJU3CLSHQTY2W` | Wrapped Native XLM Token |
+| **`MesaCore` Contract** | [`CDWGVPSUXXSGABQ663FVV4TZJH4Q2R3HVAKTKWFFFMWPF23O7KMNS4KU`](https://stellar.expert/explorer/testnet/contract/CDWGVPSUXXSGABQ663FVV4TZJH4Q2R3HVAKTKWFFFMWPF23O7KMNS4KU) | Soroban Smart Contract (`WASM Hash: 6e72...92bb`) |
+| **XLM (Native SAC)** | [`CDLZFC3SYJYDZT7K67VZ75HPJGWAM3BT2CH4XRVT62JZJU3CLSHQTY2W`](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJGWAM3BT2CH4XRVT62JZJU3CLSHQTY2W) | Wrapped Native XLM Token |
 | **USDC (SAC)** | `CCW67CX2SC62R25746RRJV5HK5B2S27EV6G7JUW7K3HQT67WVPF5EUSDC` | Wrapped USDC Token |
 | **EURC (SAC)** | `CCW67CX2SC62R25746RRJV5HK5B2S27EV6G7JUW7K3HQT67WVPF5EEURC` | Wrapped EURC Token |
 | **KES (SAC)** | `CCW67CX2SC62R25746RRJV5HK5B2S27EV6G7JUW7K3HQT67WVPF5EEKES` | Wrapped KES Token |
+
+### ⚡ Verified On-Chain Stellar Transactions (Live Proof):
+
+| Transaction Type | On-Chain Tx Hash | Ledger | Stellar Expert Explorer |
+|---|---|---|---|
+| **Payment Settlement** | `fdbb959095303a9a6f92de4ec22dac2b35456d1b25002772f9b76ec142b33397` | `3829431` | [View Tx #fdbb9590...](https://stellar.expert/explorer/testnet/tx/fdbb959095303a9a6f92de4ec22dac2b35456d1b25002772f9b76ec142b33397) |
+| **Account Creation + Transfer** | `b71f98f2d778bfc86eeec2401f553da0cae25c9bab3b1da819c282499ca471f1` | `3829438` | [View Tx #b71f98f2...](https://stellar.expert/explorer/testnet/tx/b71f98f2d778bfc86eeec2401f553da0cae25c9bab3b1da819c282499ca471f1) |
+
+> 🌐 Full on-chain transaction logs & deployer keypair details are documented in **[`docs/TESTNET_VERIFICATION.md`](./docs/TESTNET_VERIFICATION.md)**.
 
 ### 💻 Invoking Soroban Contracts via Mesa SDK
 
