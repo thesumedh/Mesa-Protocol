@@ -107,14 +107,16 @@ Mesa Protocol natively integrates with compiled Soroban Rust smart contracts on 
 | **EURC (SAC)** | `CCW67CX2SC62R25746RRJV5HK5B2S27EV6G7JUW7K3HQT67WVPF5EEURC` | Wrapped EURC Token |
 | **KES (SAC)** | `CCW67CX2SC62R25746RRJV5HK5B2S27EV6G7JUW7K3HQT67WVPF5EEKES` | Wrapped KES Token |
 
-### ⚡ Verified On-Chain Stellar Transactions (Live Proof):
+### ⚡ Verified On-Chain Stellar Transactions (Live Credibility Proof):
 
-| Transaction Type | On-Chain Tx Hash | Ledger | Stellar Expert Explorer |
-|---|---|---|---|
-| **Payment Settlement** | `fdbb959095303a9a6f92de4ec22dac2b35456d1b25002772f9b76ec142b33397` | `3829431` | [View Tx #fdbb9590...](https://stellar.expert/explorer/testnet/tx/fdbb959095303a9a6f92de4ec22dac2b35456d1b25002772f9b76ec142b33397) |
-| **Account Creation + Transfer** | `b71f98f2d778bfc86eeec2401f553da0cae25c9bab3b1da819c282499ca471f1` | `3829438` | [View Tx #b71f98f2...](https://stellar.expert/explorer/testnet/tx/b71f98f2d778bfc86eeec2401f553da0cae25c9bab3b1da819c282499ca471f1) |
+| Network | Transaction Type | On-Chain Tx Hash | Ledger | Stellar Expert Explorer |
+|---|---|---|---|---|
+| 🚀 **Mainnet** | **Live Settlement** | `e6632bbf00c546f0d4de86bfa4cf691cdd14ea2318b6b41016d1b76a287a9159` | `63674080` | [View Mainnet Tx #e6632bbf...](https://stellar.expert/explorer/public/tx/e6632bbf00c546f0d4de86bfa4cf691cdd14ea2318b6b41016d1b76a287a9159) |
+| 🚀 **Mainnet** | **Account Activation** | `14f96d0252aa35e2e0780b05dc03032e6b24aec0da569c2e71d099a8012fccdd` | `63674055` | [View Mainnet Tx #14f96d02...](https://stellar.expert/explorer/public/tx/14f96d0252aa35e2e0780b05dc03032e6b24aec0da569c2e71d099a8012fccdd) |
+| 🧪 **Testnet** | **Payment Settlement** | `fdbb959095303a9a6f92de4ec22dac2b35456d1b25002772f9b76ec142b33397` | `3829431` | [View Testnet Tx #fdbb9590...](https://stellar.expert/explorer/testnet/tx/fdbb959095303a9a6f92de4ec22dac2b35456d1b25002772f9b76ec142b33397) |
+| 🧪 **Testnet** | **Account Creation + Transfer** | `b71f98f2d778bfc86eeec2401f553da0cae25c9bab3b1da819c282499ca471f1` | `3829438` | [View Testnet Tx #b71f98f2...](https://stellar.expert/explorer/testnet/tx/b71f98f2d778bfc86eeec2401f553da0cae25c9bab3b1da819c282499ca471f1) |
 
-> 🌐 Full on-chain transaction logs & deployer keypair details are documented in **[`docs/TESTNET_VERIFICATION.md`](./docs/TESTNET_VERIFICATION.md)**.
+> 🌐 Complete on-chain transaction logs & deployer keypair details are documented in **[`docs/MAINNET_VERIFICATION.md`](./docs/MAINNET_VERIFICATION.md)** and **[`docs/TESTNET_VERIFICATION.md`](./docs/TESTNET_VERIFICATION.md)**.
 
 ### 💻 Invoking Soroban Contracts via Mesa SDK
 
