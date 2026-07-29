@@ -26,6 +26,7 @@
     "dev": "ts-node src/index.ts",
     "start": "node dist/index.js",
     "test": "ts-node src/test/foundation.test.ts && ts-node src/test/edge-cases.test.ts",
+    "demo:e2e": "ts-node src/test/public-e2e-demo.ts",
     "test:edge": "ts-node src/test/edge-cases.test.ts",
     "test:anchor": "ts-node src/test/anchor.test.ts",
     "test:dashboard": "ts-node src/test/dashboard.test.ts",

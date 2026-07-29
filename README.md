@@ -1,12 +1,19 @@
-# Mesa Protocol — Embedded Finance Engine for Stellar
+# Mesa Protocol — Embedded Financial Workflow Runtime for Stellar
 
-> **Mesa is a durable workflow orchestration engine for building, visually mapping out, and deploying multi-step financial applications on Stellar.**
+> **An alpha-stage durable execution runtime and visual workflow builder for multi-step financial applications on Stellar.**
 
 [![npm version](https://img.shields.io/npm/v/@mesaprotocol/sdk?color=00dbe9&label=%40mesaprotocol%2Fsdk)](https://www.npmjs.com/package/@mesaprotocol/sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
 [![Built on Stellar](https://img.shields.io/badge/Built%20on-Stellar-blueviolet)](https://stellar.org)
+[![Stage: Alpha](https://img.shields.io/badge/Stage-Alpha%20Prototype-yellow.svg)](https://github.com/thesumedh/Mesa-Protocol)
+
+> 🧪 **Project Status**: Alpha Prototype / Infrastructure Research. Mesa provides durable step execution, HMAC webhook resilience, and saga compensation hooks for developer testing and exploration.
 
 ```bash
+# 1. Run reproducible multi-step E2E demo (Suspend -> HMAC Resume -> Saga Rollback):
+npx ts-node packages/runtime/src/test/public-e2e-demo.ts
+
+# 2. Scaffold a new app workspace:
 npx mesa create my-stellar-app --template remittance
 ```
 
