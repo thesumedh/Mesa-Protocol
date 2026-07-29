@@ -143,6 +143,8 @@ Mesa implements security patterns out of the box:
 - **Timestamp Drift Tolerance:** Rejects webhook calls older than 5 minutes (`X-Mesa-Timestamp`) to defeat replay attacks.
 - **Event Idempotency:** Tracks incoming event IDs (`X-Mesa-Event-Id`) in the database to prevent duplicate execution processing.
 
+> 🛡️ **Failure Modes & Security Proof**: Detailed technical documentation on HMAC signature validation, timestamp drift limits, idempotency conflict handling, and automated saga rollback patterns is available in **[`docs/FAILURE_MODES.md`](./docs/FAILURE_MODES.md)**.
+
 > ⚠️ **Security & Audit Disclaimer**: Soroban smart contracts included in this repository are provided for demonstration, testing, and prototype purposes and have not undergone a formal third-party security audit. Exercise appropriate caution before deploying production capital.
 
 ---
