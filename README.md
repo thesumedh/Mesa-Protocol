@@ -97,7 +97,14 @@ Mesa Protocol natively integrates with compiled Soroban Rust smart contracts on 
 2. **`MesaVault` (`mesa-protocol/contracts/mesa-vault`)**: Policy-based dynamic yield & savings vault contract supporting lock periods, automatic asset conversion, and withdrawal rules.
 3. **`MesaFactory` (`mesa-protocol/contracts/mesa-factory`)**: Factory contract for deploying customized `MesaCore` and `MesaVault` instances on demand.
 
-### 📍 Deployed Contract Addresses (Stellar Testnet):
+### 🚀 Deployed Contract Addresses (Stellar Public Mainnet):
+
+| Contract | Mainnet Contract ID | Explorer Link | Status |
+|---|---|---|---|
+| **`MesaCore` Contract** | [`CDIB6CI47O53G4LE5ACZXHKHUGH76VX5WT7Z24G5PK5JP5ARO6GXPI4L`](https://stellar.expert/explorer/public/contract/CDIB6CI47O53G4LE5ACZXHKHUGH76VX5WT7Z24G5PK5JP5ARO6GXPI4L) | [View Mainnet Contract on Stellar Expert](https://stellar.expert/explorer/public/contract/CDIB6CI47O53G4LE5ACZXHKHUGH76VX5WT7Z24G5PK5JP5ARO6GXPI4L) | 🟢 **LIVE ON MAINNET** |
+| **XLM (Native SAC)** | [`CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA`](https://stellar.expert/explorer/public/contract/CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA) | [View Native XLM Asset Contract](https://stellar.expert/explorer/public/contract/CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA) | 🟢 **LIVE ON MAINNET** |
+
+### 🧪 Deployed Contract Addresses (Stellar Testnet):
 
 | Contract / Asset | Deployed ID / Address | Type / Description |
 |---|---|---|
@@ -111,7 +118,8 @@ Mesa Protocol natively integrates with compiled Soroban Rust smart contracts on 
 
 | Network | Transaction Type | On-Chain Tx Hash | Ledger | Stellar Expert Explorer |
 |---|---|---|---|---|
-| 🚀 **Mainnet** | **Live Settlement** | `e6632bbf00c546f0d4de86bfa4cf691cdd14ea2318b6b41016d1b76a287a9159` | `63674080` | [View Mainnet Tx #e6632bbf...](https://stellar.expert/explorer/public/tx/e6632bbf00c546f0d4de86bfa4cf691cdd14ea2318b6b41016d1b76a287a9159) |
+| 🚀 **Mainnet** | **Soroban Contract Invocation (`initialize`)** | `300f3635d5c5043d05dc11f4de79a15f8ed0793342c0daa123a0f3e72b7339ce` | `63701369` | [View Mainnet Contract Invocation Tx #300f3635...](https://stellar.expert/explorer/public/tx/300f3635d5c5043d05dc11f4de79a15f8ed0793342c0daa123a0f3e72b7339ce) |
+| 🚀 **Mainnet** | **Live Settlement Payment** | `e6632bbf00c546f0d4de86bfa4cf691cdd14ea2318b6b41016d1b76a287a9159` | `63674080` | [View Mainnet Tx #e6632bbf...](https://stellar.expert/explorer/public/tx/e6632bbf00c546f0d4de86bfa4cf691cdd14ea2318b6b41016d1b76a287a9159) |
 | 🚀 **Mainnet** | **Account Activation** | `14f96d0252aa35e2e0780b05dc03032e6b24aec0da569c2e71d099a8012fccdd` | `63674055` | [View Mainnet Tx #14f96d02...](https://stellar.expert/explorer/public/tx/14f96d0252aa35e2e0780b05dc03032e6b24aec0da569c2e71d099a8012fccdd) |
 | 🧪 **Testnet** | **Payment Settlement** | `fdbb959095303a9a6f92de4ec22dac2b35456d1b25002772f9b76ec142b33397` | `3829431` | [View Testnet Tx #fdbb9590...](https://stellar.expert/explorer/testnet/tx/fdbb959095303a9a6f92de4ec22dac2b35456d1b25002772f9b76ec142b33397) |
 | 🧪 **Testnet** | **Account Creation + Transfer** | `b71f98f2d778bfc86eeec2401f553da0cae25c9bab3b1da819c282499ca471f1` | `3829438` | [View Testnet Tx #b71f98f2...](https://stellar.expert/explorer/testnet/tx/b71f98f2d778bfc86eeec2401f553da0cae25c9bab3b1da819c282499ca471f1) |
