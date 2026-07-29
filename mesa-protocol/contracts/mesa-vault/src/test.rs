@@ -1,4 +1,4 @@
-wwww#![cfg(test)]
+#![cfg(test)]
 
 use crate::{MesaVault, MesaVaultClient, Policy, Error};
 use soroban_sdk::{

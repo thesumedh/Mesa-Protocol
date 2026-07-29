@@ -2,6 +2,8 @@
 
 > **Security guarantees, cryptographic verification models, key isolation rules, and vulnerability reporting policy for Mesa Protocol.**
 
+> ⚠️ **Notice: Smart Contract Audit Status**: Soroban smart contracts included in this repository (`MesaCore`, `MesaVault`, `MesaFactory`) are provided for demonstration, testing, and prototype purposes and have not undergone a formal third-party security audit. Exercise appropriate caution before deploying production capital.
+
 ---
 
 ## 1. Cryptographic Webhook Security

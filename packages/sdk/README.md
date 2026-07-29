@@ -1,45 +1,34 @@
-# @mesaprotocol/sdk
+# `@mesaprotocol/sdk`
 
-Mesa is a financial workflow orchestration runtime for Stellar. This package contains the developer SDK used to define and execute resilient workflows.
+> **Lightweight Fluent TypeScript SDK for Mesa Protocol.**
 
-## Installation
+[![npm version](https://img.shields.io/npm/v/@mesaprotocol/sdk?color=00dbe9&label=%40mesaprotocol%2Fsdk)](https://www.npmjs.com/package/@mesaprotocol/sdk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
+
+## 📦 Installation
 
 ```bash
 npm install @mesaprotocol/sdk
 ```
 
-## Quickstart
+## 📖 Quickstart
 
-```typescript
-import { Mesa } from "@mesaprotocol/sdk";
+```ts
+import { Mesa } from '@mesaprotocol/sdk';
 
-// Initialize the Mesa Client pointing to your local/hosted runtime
-const mesa = new Mesa({
-  endpoint: "http://localhost:3001"
-});
+Mesa.configure({ runtimeUrl: 'http://localhost:3001' });
 
-// Describe a workflow fluently
-const flow = mesa.flow()
-  .receive({
-    asset: "XLM",
-    minAmount: 10,
-    toAddress: "GBHTYH2NLVWRAPSC3IRRFPG6CFHP5VLODBQUYVSKJ3BZ3QN6HEXZ5DXU"
-  })
-  .delay({
-    seconds: 5
-  })
-  .transfer({
-    to: "GCIE7JJJVTCX4YGSME3FXZQB3GY4MY7PJNW6VXMHPYUDPHBDQN2IYE5Z",
-    asset: "XLM",
-    amount: 10
-  })
+export const flow = Mesa.flow('Cross-Border Remittance', 'remittance-corridor')
+  .receive({ asset: 'USDC', minAmount: 100, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' })
+  .delay({ seconds: 5 })
+  .payment({ amount: 95, to: 'GA4UFVDQRWUZIDKB32U2TVZSXSFAPCZV522UY7OYGM27BJ66MHYIIW3P', senderSecretRef: 'SENDER_SECRET' })
+  .compensate({ provider: 'stellar', refundAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV', refundAsset: 'USDC' })
   .build();
 
-// Register and execute the workflow
-const { executionId } = await mesa.execute(flow);
-console.log(`Execution started: ${executionId}`);
+await Mesa.register(flow);
+const { executionId } = await Mesa.execute(flow);
 ```
 
-## License
+## 📄 License
 
-MIT
+[MIT](./LICENSE)

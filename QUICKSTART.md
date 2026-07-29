@@ -18,13 +18,11 @@ Run the Mesa CLI to create a pre-configured 1-click app workspace:
 npx mesa create my-remittance-app --template remittance
 ```
 
-### Supported Templates:
-- `remittance`: Cross-Border Remittance Corridor (`receive → sep10 → sep24 → path-payment → payout`)
-- `payroll`: Automated Batch Payroll Payouts (`receive → condition → multi-payment`)
-- `vault`: Soroban Smart Contract Yield Vault (`sep10 → sep24 → soroban-invoke`)
-- `escrow`: Savings Circle & Timelocked Escrow (`receive → manual-approval → payment`)
-- `invoice`: Anchor Invoice Settlement (`receive → sep24 → confirm`)
-- `subscription`: Recurring Payment Flow (`receive → delay → payment`)
+### Supported Templates (`--template`):
+- `remittance` — Cross-Border Remittance Corridor (`receive → delay → payment`)
+- `payroll` — Automated Batch Payroll Payouts (`receive → delay → multi-payment`)
+- `escrow` — Savings Circle & Timelocked Escrow (`receive → delay → disburse`)
+- `soroban` — Soroban Smart Contract Yield Vault (`receive → invoke → webhook`)
 
 ---
 

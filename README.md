@@ -1,6 +1,6 @@
 # Mesa Protocol — Embedded Finance Engine for Stellar
 
-> **Mesa is the fastest way to build, visually design, and deploy reliable financial applications on Stellar.**
+> **Mesa is a durable workflow orchestration engine for building, visually mapping out, and deploying multi-step financial applications on Stellar.**
 
 [![npm version](https://img.shields.io/npm/v/@mesaprotocol/sdk?color=00dbe9&label=%40mesaprotocol%2Fsdk)](https://www.npmjs.com/package/@mesaprotocol/sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
@@ -151,11 +151,11 @@ cargo build --target wasm32-unknown-unknown --release
 # 2. Run Soroban smart contract unit tests
 cargo test
 
-# 3. Deploy WASM binary to Stellar Testnet
+# 3. Deploy WASM binary to Stellar Testnet or Public Mainnet
 soroban contract deploy \
   --wasm target/wasm32-unknown-unknown/release/mesa_core.wasm \
   --source YOUR_STELLAR_SECRET_KEY \
-  --network testnet
+  --network testnet # Use --network mainnet for public mainnet deployment
 ```
 
 ---
@@ -205,12 +205,14 @@ Open Mesa Studio locally at **[http://localhost:3000/studio](http://localhost:30
 
 ## 🔒 Security & Replay Protection
 
-Mesa implements production-grade security patterns out of the box:
+Mesa implements security patterns out of the box:
 
 - **Secret Key Isolation (`secretRef`):** Secret keys are never raw strings or committed to code. Key inputs specify reference names (e.g. `"SENDER_SECRET"`), resolved dynamically at execution time from `process.env`.
 - **HMAC SHA-256 Webhook Verification:** Webhook callbacks verify signatures computed over raw body payloads: `X-Mesa-Signature`.
 - **Timestamp Drift Tolerance:** Rejects webhook calls older than 5 minutes (`X-Mesa-Timestamp`) to defeat replay attacks.
 - **Event Idempotency:** Tracks incoming event IDs (`X-Mesa-Event-Id`) in the database to prevent duplicate execution processing.
+
+> ⚠️ **Security & Audit Disclaimer**: Soroban smart contracts included in this repository are provided for demonstration, testing, and prototype purposes and have not undergone a formal third-party security audit. Exercise appropriate caution before deploying production capital.
 
 ---
 

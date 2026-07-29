@@ -1,34 +1,29 @@
-# @mesaprotocol/runtime
+# `@mesaprotocol/runtime`
 
-Mesa is a financial workflow orchestration runtime for Stellar that lets developers build reliable financial workflows without writing custom orchestration code.
+> **Durable Execution Engine, REST API Server, Scheduler & Console for Mesa Protocol.**
 
-This package contains the self-hosted runner and scheduler engine, including the Postgres store schemas, core provider wrappers, and the Developer Console.
+[![npm version](https://img.shields.io/npm/v/@mesaprotocol/runtime?color=00dbe9&label=%40mesaprotocol%2Fruntime)](https://www.npmjs.com/package/@mesaprotocol/runtime)
+[![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
 
-## Installation
+## 📦 Installation
 
 ```bash
 npm install @mesaprotocol/runtime
 ```
 
-## Running the Runtime
+## 📖 Usage
 
-Start the database container:
+```ts
+import { startServer } from '@mesaprotocol/runtime';
 
-```bash
-docker compose up -d
+async function main() {
+  await startServer(3001);
+  console.log('🚀 Mesa Runtime listening on http://localhost:3001');
+}
+
+main();
 ```
 
-Start the runner engine:
+## 📄 License
 
-```bash
-npx @mesaprotocol/runtime
-```
-
-## Open Developer Console
-
-Once running, navigate to the visual timeline console to manage and simulate executions:
-👉 **[http://localhost:3001/dashboard](http://localhost:3001/dashboard)**
-
-## License
-
-MIT
+[MIT](./LICENSE)
