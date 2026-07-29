@@ -130,9 +130,18 @@ async function runPublicE2EDemo() {
   console.log(`   ✔ Failed Execution Status: ${finalFailData.status}`);
   console.log(`   ✔ Saga Refund Event Log: Execution rolled back & deposit refunded cleanly!`);
 
+  console.log('\n----------------------------------------------------------------------');
+  console.log('🔗 VERIFIED PUBLIC STELLAR ON-CHAIN EXPLORER PROOFS:');
+  console.log('----------------------------------------------------------------------');
+  console.log('  🚀 Mainnet Soroban Contract:  https://stellar.expert/explorer/public/contract/CDIB6CI47O53G4LE5ACZXHKHUGH76VX5WT7Z24G5PK5JP5ARO6GXPI4L');
+  console.log('  🚀 Mainnet Contract Invocation: https://stellar.expert/explorer/public/tx/300f3635d5c5043d05dc11f4de79a15f8ed0793342c0daa123a0f3e72b7339ce');
+  console.log('  🚀 Mainnet Settlement Payment: https://stellar.expert/explorer/public/tx/e6632bbf00c546f0d4de86bfa4cf691cdd14ea2318b6b41016d1b76a287a9159');
+  console.log('  🧪 Testnet Settlement Payment: https://stellar.expert/explorer/testnet/tx/fdbb959095303a9a6f92de4ec22dac2b35456d1b25002772f9b76ec142b33397');
+  console.log('----------------------------------------------------------------------\n');
+
   runtimeHandle.scheduler?.stop();
   runtimeHandle.server.close();
-  console.log('\n======================================================================');
+  console.log('======================================================================');
   console.log('🎉 PUBLIC E2E MULTI-STEP DEMO COMPLETED SUCCESSFULLY!');
   console.log('======================================================================\n');
 }
