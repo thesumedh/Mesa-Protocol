@@ -134,7 +134,7 @@ import { Mesa } from "@mesaprotocol/sdk";
 export const sorobanFlow = Mesa.flow("Soroban Vault Invocation", "soroban-yield-vault")
   .receive({ asset: "USDC", minAmount: 50, toAddress: "GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV" })
   .soroban({
-    contractId: "CDWGVPSUXXSGABQ663FVV4TZJH4Q2R3HVAKTKWFFFMWPF23O7KMNS4KU",
+    contractId: "CDIB6CI47O53G4LE5ACZXHKHUGH76VX5WT7Z24G5PK5JP5ARO6GXPI4L",
     method: "pay_contribution",
     args: { amount: 50 }
   })
