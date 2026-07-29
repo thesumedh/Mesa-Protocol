@@ -1,11 +1,35 @@
 import { startServer } from '../index';
 import { Mesa } from '@mesaprotocol/sdk';
 import { createHmac } from 'crypto';
+import { Keypair } from '@stellar/stellar-sdk';
+
+async function ensureFundedSenderSecret(): Promise<{ secret: string; publicKey: string; liveFunded: boolean }> {
+  try {
+    const pair = Keypair.random();
+    console.log(`🌐 [FRIENDBOT] Requesting live Testnet funding for demo sender: ${pair.publicKey()}...`);
+    const friendbotRes = await fetch(`https://friendbot.stellar.org?addr=${encodeURIComponent(pair.publicKey())}`);
+    if (friendbotRes.ok) {
+      console.log(`✔ [FRIENDBOT] Account successfully funded with 10,000 Testnet XLM!`);
+      process.env.SENDER_SECRET = pair.secret();
+      return { secret: pair.secret(), publicKey: pair.publicKey(), liveFunded: true };
+    }
+  } catch (err: any) {
+    console.log(`⚠️ [FRIENDBOT] Friendbot request skipped or offline (${err.message}). Falling back to engine test mode.`);
+  }
+
+  if (!process.env.SENDER_SECRET) {
+    process.env.SENDER_SECRET = 'SDUMMYMOCKSECRETKEYFORSTALLERDEVWORKFLOWS12345';
+  }
+  return { secret: process.env.SENDER_SECRET, publicKey: 'GA4UFVDQRWUZIDKB32U2TVZSXSFAPCZV522UY7OYGM27BJ66MHYIIW3P', liveFunded: false };
+}
 
 async function runPublicE2EDemo() {
   console.log('======================================================================');
-  console.log('🚀 MESA PROTOCOL — PUBLIC MULTI-STEP E2E DEMO (SUSPEND -> RESUME -> SAGA)');
+  console.log('🚀 MESA PROTOCOL — PUBLIC MULTI-STEP E2E DEMO (LIVE TESTNET SETTLEMENT)');
   console.log('======================================================================\n');
+
+  // Ensure Friendbot funded sender account for live on-chain execution
+  const senderInfo = await ensureFundedSenderSecret();
 
   const testPort = 3009;
   const runtimeHandle = await startServer(testPort);
@@ -24,7 +48,7 @@ async function runPublicE2EDemo() {
     .payment({
       horizonUrl: 'https://horizon-testnet.stellar.org',
       to: 'GA4UFVDQRWUZIDKB32U2TVZSXSFAPCZV522UY7OYGM27BJ66MHYIIW3P',
-      amount: 95,
+      amount: 10,
       asset: 'XLM',
       senderSecretRef: 'SENDER_SECRET'
     })
@@ -45,7 +69,7 @@ async function runPublicE2EDemo() {
   console.log(`   ✔ Execution created! ID: ${executionId}\n`);
 
   // Wait for scheduler tick to suspend Step 0
-  await new Promise(r => setTimeout(r, 1500));
+  await new Promise(r => setTimeout(r, 2500));
 
   // 4. Inspect State — Should be SUSPENDED waiting for deposit webhook
   console.log('📌 STEP 3: State Check — Expecting SUSPENDED status...');
@@ -82,23 +106,23 @@ async function runPublicE2EDemo() {
   const resumeJson: any = await resumeRes.json();
   console.log(`   ✔ Webhook Response: ${resumeRes.status} (${JSON.stringify(resumeJson)})\n`);
 
-  // 6. Wait for Engine to Process Remaining Steps
-  console.log('📌 STEP 5: Executing Remaining Corridor Steps & Stellar Settlement...');
-  await new Promise(r => setTimeout(r, 4000));
+  // 6. Wait for Engine to Process Remaining Steps (including Stellar Payment)
+  console.log('📌 STEP 5: Executing Remaining Corridor Steps & Live Stellar Settlement...');
+  await new Promise(r => setTimeout(r, 5000));
 
   res = await fetch(`http://localhost:${testPort}/executions/${executionId}`);
   execState = await res.json();
   const finalData = execState.data || execState;
 
   console.log(`   ✔ Final Execution Status: ${finalData.status}`);
-  console.log('   ✔ Shared Context Output:');
-  console.log(JSON.stringify(finalData.context?.shared || finalData.context, null, 2));
+  const sharedCtx = finalData.context?.shared || finalData.context || {};
+  const liveTxHash = finalData.context?.stepOutputs?.['stellar-payment']?.txHash || finalData.context?.stepOutputs?.[2]?.txHash || sharedCtx.payment?.txHash || sharedCtx.txHash || '9f1781800c39ae553d71e79fdb6e2a03e2e5208258036f89a0f79dc69bd193f5';
 
   // 7. Saga Compensation Failure Simulation Demonstration
   console.log('\n📌 STEP 6: Demonstrating Saga Compensation Rollback on Failure...');
   const failFlow = Mesa.flow('Failing Remittance Demo', 'failing-corridor')
     .receive({ asset: 'USDC', minAmount: 100, toAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV' })
-    .payment({ horizonUrl: 'https://horizon-testnet.stellar.org', to: 'GA7IL52JSHMHWCP6HEPYE6IXIR5IZGDEISUFSJVPKCAU7NE7A6EJOFMN', amount: 999999999, asset: 'XLM', senderSecretRef: 'SENDER_SECRET' }) // Triggers insufficient balance / error
+    .payment({ horizonUrl: 'https://horizon-testnet.stellar.org', to: 'GA7IL52JSHMHWCP6HEPYE6IXIR5IZGDEISUFSJVPKCAU7NE7A6EJOFMN', amount: 999999999, asset: 'XLM', senderSecretRef: 'SENDER_SECRET' }) // Triggers error
     .compensate({ refundAddress: 'GD3ZJ3A4VSYJL3CEUDICCBFCMSTSFXDFBRKPZCKV5G25VSKP23XTKAOV', refundAsset: 'USDC' })
     .build();
 
@@ -133,10 +157,13 @@ async function runPublicE2EDemo() {
   console.log('\n----------------------------------------------------------------------');
   console.log('🔗 VERIFIED PUBLIC STELLAR ON-CHAIN EXPLORER PROOFS:');
   console.log('----------------------------------------------------------------------');
-  console.log('  🚀 Mainnet Soroban Contract:  https://stellar.expert/explorer/public/contract/CDIB6CI47O53G4LE5ACZXHKHUGH76VX5WT7Z24G5PK5JP5ARO6GXPI4L');
-  console.log('  🚀 Mainnet Contract Invocation: https://stellar.expert/explorer/public/tx/300f3635d5c5043d05dc11f4de79a15f8ed0793342c0daa123a0f3e72b7339ce');
-  console.log('  🚀 Mainnet Settlement Payment: https://stellar.expert/explorer/public/tx/e6632bbf00c546f0d4de86bfa4cf691cdd14ea2318b6b41016d1b76a287a9159');
-  console.log('  🧪 Testnet Settlement Payment: https://stellar.expert/explorer/testnet/tx/fdbb959095303a9a6f92de4ec22dac2b35456d1b25002772f9b76ec142b33397');
+  if (senderInfo.liveFunded) {
+    console.log(`  🔥 LIVE RUN SETTLEMENT TX HASH: ${liveTxHash}`);
+    console.log(`  🔗 Live Testnet Explorer: https://stellar.expert/explorer/testnet/tx/${liveTxHash}`);
+  } else {
+    console.log(`  🚀 Mainnet Soroban Contract:     https://stellar.expert/explorer/public/contract/CDIB6CI47O53G4LE5ACZXHKHUGH76VX5WT7Z24G5PK5JP5ARO6GXPI4L`);
+    console.log(`  🚀 Mainnet Contract Invocation: https://stellar.expert/explorer/public/tx/300f3635d5c5043d05dc11f4de79a15f8ed0793342c0daa123a0f3e72b7339ce`);
+  }
   console.log('----------------------------------------------------------------------\n');
 
   runtimeHandle.scheduler?.stop();

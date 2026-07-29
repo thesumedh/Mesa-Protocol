@@ -46,17 +46,13 @@ export class StellarProvider implements MesaProvider {
   private executeMock(action: string, step: StepDefinition, context: ExecutionContext): StepResult {
     console.log(`[StellarProvider] Running in MOCK mode for action: ${action}`);
 
-    // SDK .receive() — simulates waiting for an incoming payment
+    // SDK .receive() — suspends workflow execution waiting for deposit webhook callback
     if (action === 'receive') {
-      const minAmount = step.params.minAmount as number || 10;
-      const toAddress = step.params.toAddress as string;
+      const suspensionKey = `stellar:receive:${context.executionId}`;
+      console.log(`[StellarProvider] Step ${context.stepIndex} (${step.name}): Listening for deposit. Suspending key=${suspensionKey}`);
       return {
-        outcome: 'completed',
-        output: {
-          receivedAmount: minAmount,
-          toAddress,
-          txHash: `mock-receive-${Math.random().toString(36).substring(7)}`,
-        }
+        outcome: 'suspended',
+        suspensionKey,
       };
     }
 
@@ -255,5 +251,17 @@ export class StellarProvider implements MesaProvider {
       throw new Error(`Invalid asset format "${assetStr}". Must be "CODE:ISSUER" or "XLM"`);
     }
     return new Asset(parts[0], parts[1]);
+  }
+
+  async resume(event: any, context: ExecutionContext): Promise<StepResult> {
+    console.log(`[StellarProvider] ▶ Resumed step ${context.stepIndex} with deposit event payload:`, event.payload);
+    return {
+      outcome: 'completed',
+      output: {
+        receivedAmount: event.payload?.amount || 100,
+        depositTxHash: event.payload?.depositTxHash || `tx-${Math.random().toString(36).substring(7)}`,
+        status: 'CONFIRMED'
+      }
+    };
   }
 }

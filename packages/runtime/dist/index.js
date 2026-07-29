@@ -1815,15 +1815,11 @@ var StellarProvider = class {
   executeMock(action, step, context) {
     console.log(`[StellarProvider] Running in MOCK mode for action: ${action}`);
     if (action === "receive") {
-      const minAmount = step.params.minAmount || 10;
-      const toAddress = step.params.toAddress;
+      const suspensionKey = `stellar:receive:${context.executionId}`;
+      console.log(`[StellarProvider] Step ${context.stepIndex} (${step.name}): Listening for deposit. Suspending key=${suspensionKey}`);
       return {
-        outcome: "completed",
-        output: {
-          receivedAmount: minAmount,
-          toAddress,
-          txHash: `mock-receive-${Math.random().toString(36).substring(7)}`
-        }
+        outcome: "suspended",
+        suspensionKey
       };
     }
     if (action === "transfer") {
@@ -1974,6 +1970,17 @@ var StellarProvider = class {
       throw new Error(`Invalid asset format "${assetStr}". Must be "CODE:ISSUER" or "XLM"`);
     }
     return new import_stellar_sdk2.Asset(parts[0], parts[1]);
+  }
+  async resume(event, context) {
+    console.log(`[StellarProvider] \u25B6 Resumed step ${context.stepIndex} with deposit event payload:`, event.payload);
+    return {
+      outcome: "completed",
+      output: {
+        receivedAmount: event.payload?.amount || 100,
+        depositTxHash: event.payload?.depositTxHash || `tx-${Math.random().toString(36).substring(7)}`,
+        status: "CONFIRMED"
+      }
+    };
   }
 };
 
